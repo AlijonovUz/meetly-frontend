@@ -8,8 +8,10 @@ import {
   CheckmarkSquare02Icon,
   Copy01Icon,
   Tick02Icon,
+  Calendar03Icon,
+  Clock01Icon,
 } from "@hugeicons/core-free-icons";
-import { CustomSelect } from "../../components/UI";
+import { CustomSelect, DatePicker, TimePicker } from "../../components/UI";
 import {
   mockMeetingsList,
   mockOrganizers,
@@ -28,7 +30,6 @@ const MeetingsPage = () => {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createdModalData, setCreatedModalData] = useState(null); // { name, link }
-  const [selectedMeetingDetail, setSelectedMeetingDetail] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Filter form state
@@ -50,10 +51,23 @@ const MeetingsPage = () => {
   // Create form state
   const [newMeetingName, setNewMeetingName] = useState("");
   const [newMeetingDesc, setNewMeetingDesc] = useState("");
-  const [newStartDate, setNewStartDate] = useState("");
-  const [newStartTime, setNewStartTime] = useState("");
-  const [newDuration, setNewDuration] = useState("30 daqiqa");
-  const [newRequireApproval, setNewRequireApproval] = useState(false);
+  const [newStartDate, setNewStartDate] = useState("01.01.2026");
+  const [newStartTime, setNewStartTime] = useState("00:00");
+  const [newDuration, setNewDuration] = useState("40 daqiqa");
+  const [newRequireApproval, setNewRequireApproval] = useState(true);
+
+  const durationOptions = useMemo(
+    () => [
+      { value: "15 daqiqa", label: "15 daqiqa" },
+      { value: "30 daqiqa", label: "30 daqiqa" },
+      { value: "40 daqiqa", label: "40 daqiqa" },
+      { value: "45 daqiqa", label: "45 daqiqa" },
+      { value: "1 soat", label: "1 soat" },
+      { value: "1.5 soat", label: "1.5 soat" },
+      { value: "2 soat", label: "2 soat" },
+    ],
+    []
+  );
 
   // Tab counts
   const counts = useMemo(() => {
@@ -81,15 +95,6 @@ const MeetingsPage = () => {
       label: org === "Barchasi" ? "Tashkilotchini tanlang" : org,
     }));
   }, []);
-
-  const durationOptions = [
-    { value: "15 daqiqa", label: "15 daqiqa" },
-    { value: "30 daqiqa", label: "30 daqiqa" },
-    { value: "45 daqiqa", label: "45 daqiqa" },
-    { value: "1 soat", label: "1 soat" },
-    { value: "1.5 soat", label: "1.5 soat" },
-    { value: "2 soat", label: "2 soat" },
-  ];
 
   // Helper date parse
   const parseDateStr = (dateStr) => {
@@ -197,10 +202,10 @@ const MeetingsPage = () => {
   const handleOpenCreateModal = () => {
     setNewMeetingName("");
     setNewMeetingDesc("");
-    setNewStartDate("01.10.2026");
-    setNewStartTime("15:00");
-    setNewDuration("30 daqiqa");
-    setNewRequireApproval(false);
+    setNewStartDate("01.01.2026");
+    setNewStartTime("00:00");
+    setNewDuration("40 daqiqa");
+    setNewRequireApproval(true);
     setCreateModalOpen(true);
   };
 
@@ -298,17 +303,21 @@ const MeetingsPage = () => {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-all cursor-pointer ${isActive
-                    ? "bg-white text-[#1A1D2E] shadow-2xs font-semibold"
-                    : "text-[#5B6078] hover:text-[#1A1D2E]"
-                    }`}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${
+                    isActive
+                      ? "bg-white text-[#1A1D2E] shadow-2xs"
+                      : "text-[#5B6078] hover:text-[#1A1D2E]"
+                  }`}
                 >
-                  <span>{tab.label}</span>
+                  <span className="leading-tight">{tab.label}</span>
                   <span
-                    className={`text-[11px] px-1.5 py-0.5 font-semibold ${tab.isRed
-                      ? `rounded-full font-bold text-white ${tab.count > 0 ? (activeTab === "active" ? "bg-[#EF4444]" : "bg-[#F8D7DA]") : "bg-[#8B90A5]"}`
-                      : `rounded-md ${isActive ? "bg-[#F1F3F9] text-[#1A1D2E]" : "bg-white/80 text-[#8B90A5]"}`
-                      }`}
+                    className={`min-w-[20px] h-[18px] px-1.5 inline-flex items-center justify-center rounded-full text-[11px] font-medium leading-none transition-colors ${
+                      tab.isRed
+                        ? "bg-[#EF4444] text-white"
+                        : isActive
+                        ? "bg-[#F1F3F9] text-[#1A1D2E]"
+                        : "bg-white text-[#8B90A5]"
+                    }`}
                   >
                     {tab.count}
                   </span>
@@ -372,7 +381,7 @@ const MeetingsPage = () => {
               filteredMeetings.map((meeting, index) => (
                 <tr
                   key={meeting.id}
-                  onClick={() => setSelectedMeetingDetail(meeting)}
+                  onClick={() => navigate(`/meetings/${meeting.id}`)}
                   className="hover:bg-[#F8F9FC] transition-colors group cursor-pointer"
                 >
                   {/* Index */}
@@ -429,24 +438,24 @@ const MeetingsPage = () => {
 
       {/* ================= MODAL: YANGI YIG'ILISH ================= */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-xl overflow-visible animate-in zoom-in-95 duration-150 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-[28px] shadow-2xl border border-[#E2E6F2] w-full max-w-xl overflow-visible animate-in zoom-in-95 duration-150 relative p-6 sm:p-7">
             {/* Modal Header */}
-            <div className="px-6 pt-6 pb-2 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-[#1A1D2E] tracking-tight">
+            <div className="flex items-center justify-between pb-3">
+              <h3 className="text-xl sm:text-[22px] font-bold text-[#1A1D2E] tracking-tight">
                 Yangi yig'ilish
               </h3>
               <button
                 type="button"
                 onClick={() => setCreateModalOpen(false)}
-                className="p-1 rounded-lg text-[#8B90A5] hover:text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
               >
-                <HugeiconsIcon icon={Cancel01Icon} size={20} />
+                <HugeiconsIcon icon={Cancel01Icon} size={22} />
               </button>
             </div>
 
             {/* Modal Body / Form */}
-            <form onSubmit={handleCreateMeeting} className="p-6 space-y-4.5">
+            <form onSubmit={handleCreateMeeting} className="space-y-4">
               {/* Meeting Name */}
               <div>
                 <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
@@ -455,11 +464,33 @@ const MeetingsPage = () => {
                 <input
                   type="text"
                   required
+                  maxLength={120}
                   value={newMeetingName}
                   onChange={(e) => setNewMeetingName(e.target.value)}
                   placeholder="Yig'ilish nomini kiriting"
-                  className="w-full bg-white border border-[#E2E6F2] rounded-xl px-4 h-11 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
+                  className="w-full bg-white border border-[#E2E6F2] rounded-2xl px-4 h-12 text-[14px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10 transition-all shadow-2xs"
                 />
+              </div>
+
+              {/* Approval Requirement Card */}
+              <div className="bg-[#F4F6FB] rounded-2xl p-4 sm:p-4.5 border border-[#EBF0FA] flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h4 className="text-[13.5px] font-bold text-[#1A1D2E]">
+                    Tasdiqlash talabi
+                  </h4>
+                  <p className="text-[11.5px] sm:text-[12px] text-[#64748B] leading-relaxed max-w-[420px]">
+                    Yoqilsa, yig‘ilishga qo‘shilmoqchi bo‘lgan har bir ishtirokchini yig‘ilish yaratuvchisi, loyiha menejeri yoki administrator tasdiqlaydi.
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={newRequireApproval}
+                    onChange={(e) => setNewRequireApproval(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-12 h-6.5 bg-[#CBD5E1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[22px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-transparent after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3858C7]"></div>
+                </label>
               </div>
 
               {/* Description */}
@@ -472,7 +503,7 @@ const MeetingsPage = () => {
                   value={newMeetingDesc}
                   onChange={(e) => setNewMeetingDesc(e.target.value)}
                   placeholder="Yig'ilish haqida qisqacha ma'lumot..."
-                  className="w-full bg-white border border-[#E2E6F2] rounded-xl p-3.5 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs resize-none"
+                  className="w-full bg-white border border-[#E2E6F2] rounded-2xl p-4 text-[14px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10 transition-all shadow-2xs resize-none"
                 />
               </div>
 
@@ -481,14 +512,23 @@ const MeetingsPage = () => {
                 {/* Start Date */}
                 <div>
                   <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
-                    Boshlanish sanasi
+                    Boshlanish vaqti
                   </label>
-                  <input
-                    type="text"
+                  <DatePicker
                     value={newStartDate}
-                    onChange={(e) => setNewStartDate(e.target.value)}
-                    placeholder="kun.oy.yil"
-                    className="w-full bg-white border border-[#E2E6F2] rounded-xl px-3.5 h-11 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
+                    onChange={(d) => {
+                      if (!d) {
+                        setNewStartDate("");
+                      } else {
+                        const day = String(d.getDate()).padStart(2, "0");
+                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                        const year = d.getFullYear();
+                        setNewStartDate(`${day}.${month}.${year}`);
+                      }
+                    }}
+                    placeholder="01.01.2026"
+                    className="w-full"
+                    inputClassName="h-12! rounded-2xl! border-[#E2E6F2]! text-[13.5px]! font-medium! text-[#1A1D2E]! focus-visible:border-[#3858C7]! focus-visible:ring-[#3858C7]/10!"
                   />
                 </div>
 
@@ -497,17 +537,15 @@ const MeetingsPage = () => {
                   <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
                     Vaqti
                   </label>
-                  <input
-                    type="text"
+                  <TimePicker
                     value={newStartTime}
-                    onChange={(e) => setNewStartTime(e.target.value)}
-                    placeholder="soat:daqiqa"
-                    className="w-full bg-white border border-[#E2E6F2] rounded-xl px-3.5 h-11 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
+                    onChange={setNewStartTime}
+                    placeholder="00:00"
                   />
                 </div>
 
                 {/* Duration */}
-                <div className="relative z-20">
+                <div>
                   <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
                     Davomiyligi
                   </label>
@@ -515,45 +553,26 @@ const MeetingsPage = () => {
                     value={newDuration}
                     onChange={setNewDuration}
                     options={durationOptions}
-                    placeholder="30 daqiqa"
-                    searchable={false}
-                    className="h-11!"
-                    containerClassName="relative z-20"
-                    menuClassName="z-50 shadow-2xl"
+                    placeholder="40 daqiqa"
+                    className="h-12! rounded-2xl!"
                   />
                 </div>
               </div>
 
-              {/* Toggle: Require Approval */}
-              <div className="flex items-center justify-between py-2">
-                <span className="text-[13.5px] font-medium text-[#1A1D2E]">
-                  Tasdiqlash talabi
-                </span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newRequireApproval}
-                    onChange={(e) => setNewRequireApproval(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-[#E2E6F2] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#CBD5E1] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3F57B3]"></div>
-                </label>
-              </div>
-
               {/* Action Buttons */}
-              <div className="pt-3 flex items-center justify-between gap-3 border-t border-[#E2E6F2]/60">
+              <div className="pt-3 flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="flex items-center gap-1.5 px-3.5 py-3 rounded-xl text-[13.5px] font-semibold text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                  className="flex items-center gap-2 text-[14px] font-bold text-[#1A1D2E] hover:text-black transition-colors cursor-pointer py-2.5 px-2"
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={16} className="text-[#1A1D2E]" />
+                  <HugeiconsIcon icon={Cancel01Icon} size={18} />
                   <span>Bekor qilish</span>
                 </button>
 
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-[#3F57B3] hover:bg-[#344AA5] text-white text-[13.5px] font-semibold px-3.5 py-3 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+                  className="flex items-center gap-2 bg-[#3858C7] hover:bg-[#2F4BB8] text-white text-[14px] font-semibold px-6 py-3 rounded-2xl transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                 >
                   <Check strokeWidth={2.5} size={18} />
                   <span>Yaratish</span>
@@ -625,7 +644,7 @@ const MeetingsPage = () => {
 
       {/* ================= MODAL: FILTRLASH ================= */}
       {filterModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-[600px] overflow-visible p-6 space-y-5 animate-in zoom-in-95 duration-150 relative">
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -725,152 +744,6 @@ const MeetingsPage = () => {
               >
                 <Check strokeWidth={2.5} size={18} />
                 <span>Qo'llash</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL: YIG'ILISH TAFSILOTI (DETAIL MODAL) ================= */}
-      {selectedMeetingDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-[620px] overflow-visible p-6 space-y-5 animate-in zoom-in-95 duration-150 relative">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-[#1A1D2E] tracking-tight">
-                {selectedMeetingDetail.name}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setSelectedMeetingDetail(null)}
-                className="p-1 rounded-lg text-[#8B90A5] hover:text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
-              >
-                <HugeiconsIcon icon={Cancel01Icon} size={20} />
-              </button>
-            </div>
-
-            {/* Taklif havolasi */}
-            <div className="space-y-1.5">
-              <label className="block text-[13px] font-medium text-[#5B6078]">
-                Taklif havolasi
-              </label>
-              <div className="flex items-center justify-between bg-white border border-[#E2E6F2] rounded-2xl px-4 py-2.5 shadow-2xs">
-                <span className="text-[13.5px] font-semibold text-[#1A1D2E] select-all truncate pr-3">
-                  {selectedMeetingDetail.link || "muloqot.app/join/8f3a2c91"}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleCopyLink(selectedMeetingDetail.link || "muloqot.app/join/8f3a2c91")}
-                  className="flex items-center gap-1.5 text-[13px] font-semibold text-[#4763E4] hover:text-[#3A52C7] transition-colors cursor-pointer flex-shrink-0"
-                >
-                  <HugeiconsIcon
-                    icon={copiedLink ? Tick02Icon : Copy01Icon}
-                    size={16}
-                  />
-                  <span>{copiedLink ? "Nusxalandi!" : "Nusxalash"}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Date, Time, Duration Grid */}
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
-                  Boshlanish sanasi
-                </label>
-                <div className="flex items-center bg-white border border-[#E2E6F2] rounded-xl px-3.5 h-11 text-[13.5px] font-medium text-[#1A1D2E] shadow-2xs">
-                  {selectedMeetingDetail.startTime?.split(" ")[0] || "01.10.2026"}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
-                  Vaqti
-                </label>
-                <div className="flex items-center bg-white border border-[#E2E6F2] rounded-xl px-3.5 h-11 text-[13.5px] font-medium text-[#1A1D2E] shadow-2xs">
-                  {selectedMeetingDetail.startTime?.split(" ")[1] || "15:00"}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
-                  Davomiyligi
-                </label>
-                <div className="flex items-center bg-white border border-[#E2E6F2] rounded-xl px-3.5 h-11 text-[13.5px] font-medium text-[#1A1D2E] shadow-2xs">
-                  {selectedMeetingDetail.duration || "30 daqiqa"}
-                </div>
-              </div>
-            </div>
-
-            {/* Ishtirokchilar Section */}
-            <div className="space-y-2.5 pt-1">
-              <h4 className="text-[15px] font-bold text-[#1A1D2E]">
-                Ishtirokchilar
-              </h4>
-
-              <div className="overflow-x-auto max-h-56">
-                <table className="w-full text-left border-collapse min-w-[500px]">
-                  <thead>
-                    <tr className="border-b border-[#E2E6F2] text-[#8B90A5] text-[12.5px] font-medium">
-                      <th className="py-2.5 px-3 font-normal w-10 text-center">№</th>
-                      <th className="py-2.5 px-3 font-normal">F.I.Sh.</th>
-                      <th className="py-2.5 px-3 font-normal text-center">Kirdi</th>
-                      <th className="py-2.5 px-3 font-normal text-center">Chiqdi</th>
-                      <th className="py-2.5 px-3 font-normal text-center">Vaqt</th>
-                      <th className="py-2.5 px-3 font-normal text-right pr-2">Holati</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E2E6F2]/60 text-[13px]">
-                    {selectedMeetingDetail.participants && selectedMeetingDetail.participants.length > 0 ? (
-                      selectedMeetingDetail.participants.map((p, idx) => (
-                        <tr key={p.id || idx} className="hover:bg-[#F8F9FC]/60 transition-colors">
-                          <td className="py-2.5 px-3 text-center text-[#8B90A5] font-medium">
-                            {idx + 1}
-                          </td>
-                          <td className="py-2.5 px-3 font-medium text-[#1A1D2E]">
-                            {p.name}
-                          </td>
-                          <td className="py-2.5 px-3 text-center text-[#1A1D2E] font-medium">
-                            {p.joinTime?.includes(" ") ? p.joinTime.split(" ")[1] : p.joinTime || "14:58"}
-                          </td>
-                          <td className="py-2.5 px-3 text-center text-[#1A1D2E] font-medium">
-                            {p.leaveTime?.includes(" ") ? p.leaveTime.split(" ")[1] : p.leaveTime || "15:31"}
-                          </td>
-                          <td className="py-2.5 px-3 text-center text-[#1A1D2E] font-medium">
-                            {p.spentTime || "33 daqiqa"}
-                          </td>
-                          <td className="py-2.5 px-3 text-right pr-2">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[12px] font-medium text-[#5B6078] bg-[#F1F3F9]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
-                              <span>{p.status || "Qatnashdi"}</span>
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="py-8 text-center text-[#8B90A5] text-[13px]"
-                        >
-                          Hozircha ishtirokchilar yo'q. Havolani yuboring, qo'shilganlar shu yerda ko'rinadi.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Footer / Yopish button */}
-            <div className="flex justify-end pt-2 border-t border-[#E2E6F2]/60">
-              <button
-                type="button"
-                onClick={() => setSelectedMeetingDetail(null)}
-                className="flex items-center gap-2 bg-[#3F57B3] hover:bg-[#344AA5] text-white text-[13.5px] font-semibold px-6 py-2.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
-              >
-                <Check strokeWidth={2.5} size={18} />
-                <span>Yopish</span>
               </button>
             </div>
           </div>

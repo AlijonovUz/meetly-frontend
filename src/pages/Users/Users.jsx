@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Search01Icon,
-  StarIcon,
 } from "@hugeicons/core-free-icons";
 import { CustomSelect } from "../../components/UI";
 import {
@@ -11,6 +10,13 @@ import {
   mockRegions,
   mockDistricts,
 } from "../../data/mockData";
+
+const getInitials = (name) => {
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+};
 
 const Users = () => {
   const navigate = useNavigate();
@@ -44,14 +50,6 @@ const Users = () => {
     { value: "az", label: "A dan Z gacha" },
     { value: "za", label: "Z dan A gacha" },
   ];
-
-  const toggleFavorite = (id, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, isFavorite: !u.isFavorite } : u))
-    );
-  };
 
   const filteredUsers = useMemo(() => {
     return users
@@ -157,28 +155,12 @@ const Users = () => {
                     {index + 1}
                   </td>
 
-                  {/* Full Name with Star Icon */}
+                  {/* Full Name with Avatar Initials */}
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={(e) => toggleFavorite(user.id, e)}
-                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors cursor-pointer ${user.isFavorite
-                            ? "text-[#F59E0B] bg-[#FEF3C7]"
-                            : "text-[#637EEB] hover:bg-[#EEF2FF]"
-                          }`}
-                        title={
-                          user.isFavorite
-                            ? "Saralanganlardan o'chirish"
-                            : "Saralanganlarga qo'shish"
-                        }
-                      >
-                        <HugeiconsIcon
-                          icon={StarIcon}
-                          size={16}
-                          className={user.isFavorite ? "fill-[#F59E0B]" : ""}
-                        />
-                      </button>
+                      <div className="w-8 h-8 rounded-full bg-[#EEF2FF] text-[#4361EE] border border-[#D7E2FC] font-bold text-xs flex items-center justify-center shrink-0 select-none shadow-2xs">
+                        {getInitials(user.fullName)}
+                      </div>
                       <span className="font-medium text-[#1A1D2E] group-hover:text-[#4763E4] transition-colors truncate max-w-[240px]">
                         {user.fullName}
                       </span>

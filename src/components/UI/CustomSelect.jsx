@@ -20,8 +20,36 @@ const CustomSelect = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [placement, setPlacement] = useState("bottom");
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+
+  // Auto detect best placement (top or bottom) based on available screen space
+  const updatePlacement = () => {
+    if (!dropdownRef.current) return;
+    const rect = dropdownRef.current.getBoundingClientRect();
+    const dropdownHeight = 250;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+      setPlacement("top");
+    } else {
+      setPlacement("bottom");
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePlacement();
+      window.addEventListener("scroll", updatePlacement, true);
+      window.addEventListener("resize", updatePlacement);
+    }
+    return () => {
+      window.removeEventListener("scroll", updatePlacement, true);
+      window.removeEventListener("resize", updatePlacement);
+    };
+  }, [isOpen]);
 
   // Normalize options to standard { value, label } format
   const normalizedOptions = useMemo(() => {
@@ -102,7 +130,9 @@ const CustomSelect = ({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className={`absolute left-0 top-full mt-1.5 w-full min-w-[200px] bg-white border border-[#E2E6F2] rounded-2xl shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150 ${menuClassName}`}
+          className={`absolute left-0 ${
+            placement === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5"
+          } w-full min-w-[200px] bg-white border border-[#E2E6F2] rounded-2xl shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150 ${menuClassName}`}
         >
           {/* Search Input inside Menu */}
           {searchable && (

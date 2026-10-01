@@ -5,8 +5,32 @@ import {
   Copy01Icon,
   Tick02Icon,
   ArrowLeft02Icon,
+  ArrowDown01Icon,
 } from "@hugeicons/core-free-icons";
 import { mockMeetingsList } from "../../data/mockData";
+
+// Helper to check if participant joined after meeting start time
+const isParticipantLate = (joinTimeStr, meetingStartTimeStr) => {
+  if (!joinTimeStr || !meetingStartTimeStr) return false;
+
+  const getTimeMinutes = (str) => {
+    if (!str) return null;
+    const parts = str.trim().split(" ");
+    const timePart = parts.length > 1 ? parts[1] : parts[0];
+    if (!timePart || !timePart.includes(":")) return null;
+    const [h, m] = timePart.split(":").map(Number);
+    if (isNaN(h) || isNaN(m)) return null;
+    return h * 60 + m;
+  };
+
+  const joinMins = getTimeMinutes(joinTimeStr);
+  const startMins = getTimeMinutes(meetingStartTimeStr);
+
+  if (joinMins !== null && startMins !== null) {
+    return joinMins > startMins;
+  }
+  return false;
+};
 
 const MeetingDetailPage = () => {
   const { id } = useParams();
@@ -15,7 +39,7 @@ const MeetingDetailPage = () => {
 
   // Find meeting by ID or fallback to the specific mahalla meeting / first meeting
   const meeting =
-    mockMeetingsList.find((m) => m.id === id) ||
+    mockMeetingsList.find((m) => String(m.id) === String(id)) ||
     mockMeetingsList.find((m) => m.id === "13") ||
     mockMeetingsList[0];
 
@@ -30,18 +54,10 @@ const MeetingDetailPage = () => {
   const participants = meeting.participants || [];
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl">
+    <div className="p-5 py-4.5 space-y-4">
       {/* Title */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate("/meetings")}
-            className="p-2 -ml-2 rounded-xl text-[#5B6078] hover:text-[#1A1D2E] hover:bg-[#E8ECF6] transition-colors cursor-pointer"
-            title="Orqaga"
-          >
-            <HugeiconsIcon icon={ArrowLeft02Icon} size={20} />
-          </button>
           <h1 className="text-2xl sm:text-[26px] font-bold text-[#1A1D2E] tracking-tight">
             {meeting.name}
           </h1>
@@ -72,7 +88,7 @@ const MeetingDetailPage = () => {
       </div>
 
       {/* Info Grid (4 fields) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {/* Boshlanish sanasi */}
         <div>
           <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
@@ -122,38 +138,50 @@ const MeetingDetailPage = () => {
           Ishtirokchilar
         </h2>
 
-        <div className="bg-white rounded-2xl border border-[#E2E6F2]/80 overflow-hidden shadow-2xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[700px]">
-              <thead>
-                <tr className="border-b border-[#E2E6F2] bg-[#F8F9FC] text-[#8B90A5] text-[13px] font-medium">
-                  <th className="py-3 px-4 font-normal w-12 text-center">№</th>
-                  <th className="py-3 px-4 font-normal">Ism Sharif</th>
-                  <th className="py-3 px-4 font-normal">Kirgan vaqti</th>
-                  <th className="py-3 px-4 font-normal">Chiqgan vaqti</th>
-                  <th className="py-3 px-4 font-normal">Sarflangan vaqt</th>
-                  <th className="py-3 px-4 font-normal text-right pr-6">Holati</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E2E6F2]/60 text-[13.5px]">
-                {participants.length > 0 ? (
-                  participants.map((p, idx) => (
+        <div className="overflow-auto h-[calc(100vh-460px)]">
+          <table className="w-full text-left border-collapse min-w-[700px]">
+            <thead>
+              <tr className="border-b border-[#E2E6F2] bg-[#F8F9FC] text-[#8B90A5] text-[13px] font-medium">
+                <th className="py-3 px-4 font-normal w-12 text-center">№</th>
+                <th className="py-3 px-4 font-normal">Ism Sharif</th>
+                <th className="py-3 px-4 font-normal">Kirgan vaqti</th>
+                <th className="py-3 px-4 font-normal">Chiqgan vaqti</th>
+                <th className="py-3 px-4 font-normal">Sarflangan vaqt</th>
+                <th className="py-3 px-4 font-normal text-right pr-6">Holati</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#E2E6F2]/60 text-[13.5px]">
+              {participants.length > 0 ? (
+                participants.map((p, idx) => {
+                  const late = isParticipantLate(p.joinTime, meeting.startTime);
+                  return (
                     <tr
                       key={p.id || idx}
-                      className="hover:bg-[#F8F9FC]/60 transition-colors"
+                      className={`transition-colors ${late
+                        ? "bg-[#fdf7f7] hover:bg-[#fff7f7]"
+                        : "hover:bg-[#F8F9FC]/60"
+                        }`}
                     >
                       {/* Index */}
-                      <td className="py-3.5 px-4 text-center text-[#8B90A5] font-medium text-[13px]">
+                      <td
+                        className={`py-3.5 px-4 text-center font-medium text-[13px] ${late ? "text-[#b56d7d]" : "text-[#8B90A5]"
+                          }`}
+                      >
                         {idx + 1}
                       </td>
 
                       {/* Full Name */}
                       <td className="py-3.5 px-4 font-semibold text-[#1A1D2E]">
-                        {p.name}
+                        <span>{p.name}</span>
                       </td>
 
                       {/* Join Time */}
-                      <td className="py-3.5 px-4 text-[#1A1D2E]">
+                      <td
+                        className={`py-3.5 px-4 ${late
+                          ? "font-semibold text-[#b56d7d]"
+                          : "text-[#1A1D2E]"
+                          }`}
+                      >
                         {p.joinTime}
                       </td>
 
@@ -169,26 +197,26 @@ const MeetingDetailPage = () => {
 
                       {/* Status */}
                       <td className="py-3.5 px-4 text-right pr-6">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]/60">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] bg-white border border-[#E2E6F2]/60 shadow-2xs">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
                           <span>{p.status || "Qatnashdi"}</span>
                         </span>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="py-12 px-6 text-center text-[#8B90A5] text-[13.5px]"
-                    >
-                      Hozircha ishtirokchilar yo'q. Havolani yuboring, qo'shilganlar shu yerda ko'rinadi.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="py-12 px-6 text-center text-[#8B90A5] text-[13.5px]"
+                  >
+                    Hozircha ishtirokchilar yo'q. Havolani yuboring, qo'shilganlar shu yerda ko'rinadi.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
