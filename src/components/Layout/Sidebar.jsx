@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   DashboardSquare03Icon,
@@ -16,11 +16,17 @@ import {
   ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
 import { mockUserProfile } from "../../data/mockData";
+import { IoMoon } from "react-icons/io5";
+import { LogOut, ChevronDown } from "lucide-react";
 
 const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [reportsOpen, setReportsOpen] = useState(
+    location.pathname.startsWith("/reports") || true
+  );
   const profileMenuRef = useRef(null);
 
   const mainNavItems = [
@@ -40,10 +46,21 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
       label: "Yig‘ilishlar",
       icon: Folder02Icon,
     },
+  ];
+
+  const reportSubItems = [
     {
-      to: "/reports",
-      label: "Hisobotlar",
-      icon: Analytics01Icon,
+      to: "/reports/meetings",
+      altTo: "/reports",
+      label: "Yig'ilishlar bo'yicha",
+    },
+    {
+      to: "/reports/participants",
+      label: "Ishtirokchilar bo'yicha",
+    },
+    {
+      to: "/reports/organizers",
+      label: "Tashkilotchilar bo'yicha",
     },
   ];
 
@@ -102,14 +119,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           }`}
         >
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-white shadow-xs flex-shrink-0 backdrop-blur-xs">
-              <HugeiconsIcon icon={Message01Icon} size={20} className="text-white" />
-            </div>
-            {!sidebarCollapsed && (
-              <span className="font-bold text-[18px] tracking-tight text-white truncate">
-                Muloqot
-              </span>
-            )}
+            <img src={sidebarCollapsed ? "/logo2.svg" : "/logo.svg"} alt="logo" className="pointer-events-none object-contain" />
           </div>
 
           {/* Toggle Collapse Button */}
@@ -120,7 +130,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 e.stopPropagation();
                 setSidebarCollapsed(true);
               }}
-              className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-white hover:bg-white/10 transition-colors cursor-pointer"
               title="Yig'ish"
             >
               <HugeiconsIcon icon={SidebarLeftIcon} size={20} />
@@ -162,6 +172,75 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 )}
               </NavLink>
             ))}
+
+            {/* Hisobotlar Collapsible Dropdown */}
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (sidebarCollapsed) {
+                    setSidebarCollapsed(false);
+                    setReportsOpen(true);
+                  } else {
+                    setReportsOpen(!reportsOpen);
+                  }
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 cursor-pointer ${
+                  location.pathname.startsWith("/reports")
+                    ? "text-white font-bold"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
+                } ${sidebarCollapsed ? "justify-center px-0" : ""}`}
+                title={sidebarCollapsed ? "Hisobotlar" : undefined}
+              >
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <HugeiconsIcon
+                    icon={Analytics01Icon}
+                    size={20}
+                    className={`flex-shrink-0 transition-colors duration-200 ${
+                      location.pathname.startsWith("/reports")
+                        ? "text-white"
+                        : "text-white/80"
+                    }`}
+                    strokeWidth={2}
+                  />
+                  {!sidebarCollapsed && (
+                    <span className="truncate">Hisobotlar</span>
+                  )}
+                </div>
+                {!sidebarCollapsed && (
+                  <ChevronDown
+                    size={16}
+                    className={`text-white/80 transition-transform duration-200 ${
+                      reportsOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                )}
+              </button>
+
+              {/* Sub-items (Yig'ilishlar, Ishtirokchilar, Tashkilotchilar) */}
+              {!sidebarCollapsed && reportsOpen && (
+                <div className="mt-1 space-y-1 pl-4 pr-1">
+                  {reportSubItems.map((sub) => {
+                    const isSubActive =
+                      location.pathname === sub.to ||
+                      (sub.altTo && location.pathname === sub.altTo);
+                    return (
+                      <NavLink
+                        key={sub.to}
+                        to={sub.to}
+                        className={`block px-4 py-2.5 rounded-xl text-[13px] transition-colors ${
+                          isSubActive
+                            ? "bg-[#2844A8] text-white font-medium"
+                            : "text-white/80 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        {sub.label}
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
         </div>
       </div>
@@ -235,12 +314,12 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           {/* Profile Popover Menu (as in mockup image) */}
           {profileMenuOpen && (
             <div
-              className={`absolute z-50 bg-white text-[#1A1D2E] rounded-2xl shadow-2xl border border-[#E2E6F2] p-4 space-y-3 animate-in fade-in zoom-in-95 duration-150 left-full bottom-0 ml-3 w-64`}
+              className={`absolute z-50 bg-white text-[#1A1D2E] rounded-2xl shadow-2xl border border-[#E2E6F2] p-4 space-y-3 animate-in fade-in zoom-in-95 duration-150 left-full bottom-0 ml-5 w-64`}
             >
               {/* Row 1: Qorong'i mavzu (Dark mode toggle) */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5 text-[13.5px] font-medium text-[#1A1D2E]">
-                  <HugeiconsIcon icon={Moon02Icon} size={18} className="text-[#1A1D2E]" />
+                  <IoMoon size={18} className="text-[#1A1D2E]" />
                   <span>Qorong'i mavzu</span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -264,7 +343,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 className="w-full flex items-center justify-between py-1 text-[13.5px] font-medium text-[#1A1D2E] hover:text-[#3858C7] transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
-                  <HugeiconsIcon icon={UserIcon} size={18} className="text-[#1A1D2E]" />
+                  <img src="/profielcard_icon.svg" alt="" />
                   <span>Shaxsiy kabinet</span>
                 </div>
                 <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-[#8B90A5]" />
@@ -282,7 +361,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                   className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-[#E15241] hover:text-[#B42318] transition-colors cursor-pointer"
                 >
                   <span>Chiqish</span>
-                  <HugeiconsIcon icon={Logout03Icon} size={16} />
+                  <LogOut strokeWidth={2.5} size={16} />
                 </button>
               </div>
             </div>

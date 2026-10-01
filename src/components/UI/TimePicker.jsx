@@ -5,6 +5,26 @@ import { Clock01Icon, FlashIcon } from "@hugeicons/core-free-icons";
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
 
+// Auto mask: raqamlardan "HH:mm" hosil qiladi
+function applyTimeMask(raw) {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+}
+
+// "HH:mm" formatini tekshirish
+function normalizeTime(val) {
+  if (!val || typeof val !== "string") return "00:00";
+  const parts = val.split(":");
+  let h = parseInt(parts[0], 10);
+  let m = parseInt(parts[1] || "0", 10);
+  if (isNaN(h)) h = 0;
+  if (isNaN(m)) m = 0;
+  if (h > 23) h = 23;
+  if (m > 59) m = 59;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 const TimePicker = ({
   value = "00:00",
   onChange,
@@ -14,12 +34,19 @@ const TimePicker = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [placement, setPlacement] = useState("bottom");
+  const [inputText, setInputText] = useState(value || "");
   const containerRef = useRef(null);
+  const inputRef = useRef(null);
   const hoursListRef = useRef(null);
   const minutesListRef = useRef(null);
 
   // Parse current value
   const [currentHour, currentMinute] = (value && value.includes(":") ? value : "00:00").split(":");
+
+  // Tashqi value o'zgarsa, input matnini yangilaymiz
+  useEffect(() => {
+    setInputText(value || "");
+  }, [value]);
 
   // Auto position top / bottom
   const updatePlacement = () => {
@@ -75,13 +102,43 @@ const TimePicker = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleInputChange = (e) => {
+    const raw = e.target.value;
+    const masked = applyTimeMask(raw);
+    setInputText(masked);
+
+    if (masked.length === 5) {
+      const normalized = normalizeTime(masked);
+      onChange?.(normalized);
+    } else if (masked === "") {
+      onChange?.("");
+    }
+  };
+
+  const handleBlur = () => {
+    if (inputText.trim() === "") {
+      return;
+    }
+    if (inputText.length === 5) {
+      const normalized = normalizeTime(inputText);
+      setInputText(normalized);
+      onChange?.(normalized);
+    } else if (inputText.length > 0) {
+      const normalized = normalizeTime(inputText);
+      setInputText(normalized);
+      onChange?.(normalized);
+    }
+  };
+
   const handleSelectHour = (h) => {
     const newTime = `${h}:${currentMinute || "00"}`;
+    setInputText(newTime);
     onChange?.(newTime);
   };
 
   const handleSelectMinute = (m) => {
     const newTime = `${currentHour || "00"}:${m}`;
+    setInputText(newTime);
     onChange?.(newTime);
   };
 
@@ -90,28 +147,41 @@ const TimePicker = ({
     const h = String(now.getHours()).padStart(2, "0");
     const m = String(now.getMinutes()).padStart(2, "0");
     const newTime = `${h}:${m}`;
+    setInputText(newTime);
     onChange?.(newTime);
     setIsOpen(false);
   };
 
   return (
     <div className="relative select-none" ref={containerRef}>
-      {/* Trigger Input/Button */}
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`w-full bg-white border border-[#E2E6F2] rounded-2xl pl-4 pr-10 h-12 text-[13.5px] font-medium text-[#1A1D2E] flex items-center justify-between transition-all shadow-2xs ${
-          isOpen
-            ? "border-[#3858C7] ring-2 ring-[#3858C7]/10"
-            : "hover:border-[#CBD5E1]"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${className}`}
-      >
-        <span>{value || placeholder}</span>
-        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#5B6078] pointer-events-none">
-          <HugeiconsIcon icon={Clock01Icon} size={18} />
-        </div>
-      </button>
+      {/* Input container */}
+      <div className="relative flex items-center">
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputText}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          onFocus={() => !disabled && setIsOpen(true)}
+          placeholder={placeholder}
+          maxLength={5}
+          disabled={disabled}
+          className={`w-full bg-white border border-[#E2E6F2] rounded-2xl pl-3.5 pr-10 h-11 text-[13.5px] font-medium text-[#1A1D2E] outline-none transition-all placeholder:text-[#8B90A5] focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        />
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            if (!disabled) {
+              setIsOpen(!isOpen);
+              inputRef.current?.focus();
+            }
+          }}
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#5B6078] hover:text-[#1A1D2E] transition-colors cursor-pointer flex items-center justify-center"
+        >
+          <HugeiconsIcon icon={Clock01Icon} size={17} />
+        </button>
+      </div>
 
       {/* Popover Dropdown - Minimal & Compact */}
       {isOpen && (
@@ -123,7 +193,7 @@ const TimePicker = ({
           {/* Header */}
           <div className="flex items-center justify-between pb-2 mb-1.5 border-b border-[#F1F3F9]">
             <span className="text-xs font-bold text-[#1A1D2E] tracking-tight">
-              {value || "00:00"}
+              {inputText || value || "00:00"}
             </span>
             <button
               type="button"

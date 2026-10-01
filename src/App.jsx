@@ -11,40 +11,14 @@ import {
   MeetingsPage,
   MeetingDetailPage,
   Profile,
-  ReportsPage,
+  MeetingsReportPage,
+  ParticipantsReportPage,
+  OrganizersReportPage,
   Setting,
   Users,
   UserDetailPage,
 } from "./pages";
 import Layout from "./components/Layout/Layout";
-
-// ---- permission helper ----
-// const usePermissions = () => {
-//   const userPermissions = useSelector((state) => state.references.userPermissions);
-//   const permSet = new Set((userPermissions ?? []).map((p) => p.codename));
-//   const has = (codename) => permSet.has(codename);
-//   const loaded = Array.isArray(userPermissions);
-//   return { has, loaded };
-// };
-
-// ---- generic guard: checkFn(has) => boolean ----
-// const ProtectedRoute = ({ children, checkFn }) => {
-//   const { has, loaded } = usePermissions();
-
-//   if (!loaded) return null; // hali yuklanmagan, hech narsa ko'rsatmaymiz
-
-//   const allowed = checkFn ? checkFn(has) : false;
-//   return allowed ? children : <Navigate to="/" replace />;
-// };
-
-// // ---- root route: permission bo'lsa HomePage, bo'lmasa AIChatPage ----
-// const RootPage = () => {
-//   const { has, loaded } = usePermissions();
-
-//   if (!loaded) return null;
-
-//   return has("view_dashboard_stats") ? <HomePage /> : <AIChatPage />;
-// };
 
 const router = createBrowserRouter([
   {
@@ -57,7 +31,19 @@ const router = createBrowserRouter([
       },
       {
         path: "/reports",
-        element: <ReportsPage />,
+        element: <MeetingsReportPage />,
+      },
+      {
+        path: "/reports/meetings",
+        element: <MeetingsReportPage />,
+      },
+      {
+        path: "/reports/participants",
+        element: <ParticipantsReportPage />,
+      },
+      {
+        path: "/reports/organizers",
+        element: <OrganizersReportPage />,
       },
       {
         path: "/profile",

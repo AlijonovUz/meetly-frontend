@@ -35,7 +35,6 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
     if (pathname === "/meetings") {
       return [
         { label: "Yig'ilishlar", to: "/meetings" },
-        { label: "Barchasi" },
       ];
     }
     if (pathname.startsWith("/meetings/")) {
@@ -49,10 +48,13 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
         { label: meeting.name },
       ];
     }
-    if (pathname === "/reports") {
+    if (pathname.startsWith("/reports")) {
+      let sub = "Yig'ilishlar bo'yicha";
+      if (pathname.includes("participants")) sub = "Ishtirokchilar bo'yicha";
+      if (pathname.includes("organizers")) sub = "Tashkilotchilar bo'yicha";
       return [
         { label: "Hisobotlar", to: "/reports" },
-        { label: "Yig'ilishlar bo'yicha" },
+        { label: sub },
       ];
     }
     if (pathname === "/logs") {
@@ -140,13 +142,13 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
         )}
 
         {/* Contextual Action Button for reports */}
-        {location.pathname === "/reports" && (
+        {location.pathname.startsWith("/reports") && (
           <button
             type="button"
-            onClick={() => {}}
-            className="hidden sm:inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white text-[13px] font-medium h-9 px-4 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+            onClick={() => window.dispatchEvent(new CustomEvent("export-report"))}
+            className="hidden sm:inline-flex items-center gap-2 bg-white hover:bg-white/95 text-[#1A1D2E] text-[13px] font-semibold h-9 px-3.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
           >
-            <HugeiconsIcon icon={Download01Icon} size={18} />
+            <HugeiconsIcon icon={Download01Icon} size={18} strokeWidth={2.5} />
             <span>Yuklab olish</span>
           </button>
         )}
@@ -209,4 +211,4 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
 };
 
 export default Navbar;
-
+

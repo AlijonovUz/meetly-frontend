@@ -249,7 +249,7 @@ export function DatePicker({
      }
 
      return (
-          <div className={cn("relative", className)}>
+          <div className={cn("relative select-none", className)}>
                <input
                     id={fieldId}
                     value={text}
@@ -262,8 +262,8 @@ export function DatePicker({
                          if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true) }
                     }}
                     className={cn(
-                         "h-10 w-full rounded-[10px] border bg-white px-3 pr-10 text-[14px] font-normal text-[#0A0A0A] shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none transition-colors placeholder:text-[#737373] focus-visible:border-[#0052D2] focus-visible:ring-2 focus-visible:ring-[#0052D2]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:text-white",
-                         error ? "border-destructive" : "border-[#E5E5E5] dark:border-white/10",
+                         "h-11 w-full rounded-2xl border border-[#E2E6F2] bg-white pl-3.5 pr-10 text-[13.5px] font-medium text-[#1A1D2E] outline-none transition-all placeholder:text-[#8B90A5] focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10 disabled:cursor-not-allowed disabled:opacity-50",
+                         error && "border-destructive",
                          inputClassName
                     )}
                     {...props}
@@ -276,13 +276,13 @@ export function DatePicker({
                                    type="button"
                                    disabled={disabled}
                                    aria-label="Sanani tanlash"
-                                   className="absolute right-3 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-xl text-[#5B6078] transition-colors hover:bg-[#F4F6FB] hover:text-[#1A1D2E] disabled:opacity-50 cursor-pointer"
+                                   className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-[#5B6078] hover:text-[#1A1D2E] disabled:opacity-50 cursor-pointer"
                               >
-                                   <CalendarIcon className="size-4" />
+                                   <CalendarIcon className="size-[17px]" />
                               </button>
                          }
                     />
-                    <PopoverContent className="w-auto overflow-hidden p-2 bg-white rounded-2xl border border-[#E2E6F2] shadow-2xl" align="start" sideOffset={6}>
+                    <PopoverContent className="w-auto overflow-hidden p-2 bg-white rounded-2xl border border-[#E2E6F2] shadow-2xl z-50" align="start" sideOffset={6}>
                          {calendarNode}
                     </PopoverContent>
                </Popover>

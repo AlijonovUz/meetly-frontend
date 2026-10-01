@@ -109,9 +109,9 @@ const CustomSelect = ({
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2.5 bg-white border border-[#E2E6F2] rounded-xl h-8 px-4 py-2.5 text-[13.5px] font-medium transition-all shadow-2xs ${className} ${
+        className={`w-full flex items-center justify-between gap-2.5 bg-white border border-[#E2E6F2] rounded-2xl h-11 px-3.5 text-[13.5px] font-medium transition-all shadow-2xs ${className} ${
           isOpen
-            ? "border-[#4763E4] ring-2 ring-[#4763E4]/10 text-[#1A1D2E]"
+            ? "border-[#3858C7] ring-2 ring-[#3858C7]/10 text-[#1A1D2E]"
             : "text-[#1A1D2E] hover:border-[#CBD5E1]"
         } ${disabled ? "cursor-default bg-[#FFFFFF] hover:border-[#E2E6F2]" : "cursor-pointer"}`}
       >
@@ -122,7 +122,7 @@ const CustomSelect = ({
           icon={ArrowDown01Icon}
           size={16}
           className={`text-[#5B6078] flex-shrink-0 transition-transform duration-200 ${
-            isOpen ? "rotate-180 text-[#4763E4]" : ""
+            isOpen ? "rotate-180 text-[#3858C7]" : ""
           }`}
         />
       </button>
@@ -166,8 +166,8 @@ const CustomSelect = ({
                     onClick={() => handleSelect(opt.value)}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium text-left transition-colors cursor-pointer ${
                       isSelected
-                        ? "bg-[#EEF2FF] text-[#4763E4] font-semibold"
-                        : "text-[#1A1D2E] hover:bg-[#F8F9FC] hover:text-[#4763E4]"
+                        ? "bg-[#EEF2FB] text-[#3858C7] font-semibold"
+                        : "text-[#1A1D2E] hover:bg-[#F8FAFC] hover:text-[#3858C7]"
                     }`}
                   >
                     <span className="truncate">{opt.label}</span>
@@ -175,7 +175,7 @@ const CustomSelect = ({
                       <HugeiconsIcon
                         icon={Tick02Icon}
                         size={15}
-                        className="text-[#4763E4] flex-shrink-0 ml-2"
+                        className="text-[#3858C7] flex-shrink-0 ml-2"
                       />
                     )}
                   </button>
