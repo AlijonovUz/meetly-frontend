@@ -17,6 +17,7 @@ import {
   Setting,
   Users,
   UserDetailPage,
+  LeandingPage,
 } from "./pages";
 import Layout from "./components/Layout/Layout";
 
@@ -74,6 +75,10 @@ const router = createBrowserRouter([
         element: <Logs />,
       },
     ],
+  },
+  {
+    path: "/leanding",
+    element: <LeandingPage />
   }
 ]);
 

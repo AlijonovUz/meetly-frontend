@@ -36,7 +36,29 @@ const UserDetailPage = () => {
   const [district] = useState("Toshkent tumani");
   const [birthDate] = useState("15.04.2004");
   const [organization] = useState(user.organization || "Raqamli Nazorat");
-  const [meetingFilter, setMeetingFilter] = useState("all"); // "all" | "planned" | "completed"
+  const [meetingFilter, setMeetingFilter] = useState("all"); // "all" | "active" | "planned" | "completed"
+  const [textareaHeight, setTextareaHeight] = useState(90);
+
+  // Drag handler for textarea resize
+  const handleMouseDownResize = (e) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startHeight = textareaHeight;
+
+    const handleMouseMove = (moveEvent) => {
+      const delta = moveEvent.clientY - startY;
+      const newHeight = Math.max(70, Math.min(320, startHeight + delta));
+      setTextareaHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
 
   // Filter meetings
   const filteredMeetings = useMemo(() => {
@@ -44,6 +66,9 @@ const UserDetailPage = () => {
     return mockUserMeetings.filter((m) => m.status === meetingFilter);
   }, [meetingFilter]);
 
+  const activeCount = mockUserMeetings.filter(
+    (m) => m.status === "active"
+  ).length;
   const plannedCount = mockUserMeetings.filter(
     (m) => m.status === "planned"
   ).length;
@@ -215,6 +240,27 @@ const UserDetailPage = () => {
 
           <button
             type="button"
+            onClick={() => setMeetingFilter("active")}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
+              meetingFilter === "active"
+                ? "bg-white text-[#1A1D2E] shadow-xs"
+                : "text-[#5B6078] hover:text-[#1A1D2E]"
+            }`}
+          >
+            <span>Joriy</span>
+            <span
+              className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold ${
+                meetingFilter === "active"
+                  ? "bg-[#F1F3F9] text-[#1A1D2E]"
+                  : "bg-white text-[#8B90A5]"
+              }`}
+            >
+              {activeCount}
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setMeetingFilter("planned")}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
               meetingFilter === "planned"
@@ -295,7 +341,9 @@ const UserDetailPage = () => {
                       <div className="inline-flex items-center gap-2">
                         <span
                           className={`w-2 h-2 rounded-full ${
-                            meeting.status === "planned"
+                            meeting.status === "active"
+                              ? "bg-[#D97706]"
+                              : meeting.status === "planned"
                               ? "bg-[#E15241]"
                               : "bg-[#10B981]"
                           }`}
@@ -348,14 +396,24 @@ const UserDetailPage = () => {
                 <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
                   Sabab *
                 </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={reasonInput}
-                  onChange={(e) => setReasonInput(e.target.value)}
-                  placeholder="Bloklash sababini kiriting"
-                  className="w-full bg-white border border-[#E2E6F2] rounded-2xl p-4 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#D92D20] focus:ring-2 focus:ring-[#D92D20]/10 transition-all shadow-2xs resize-none"
-                />
+                <div className="relative">
+                  <textarea
+                    required
+                    style={{ height: `${textareaHeight}px` }}
+                    value={reasonInput}
+                    onChange={(e) => setReasonInput(e.target.value)}
+                    placeholder="Bloklash sababini kiriting"
+                    className="w-full bg-white border border-[#E2E6F2] rounded-2xl p-4 pb-5 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#D92D20] focus:ring-2 focus:ring-[#D92D20]/10 transition-colors shadow-2xs resize-none"
+                  />
+                  {/* Bottom Center Drag Handle */}
+                  <div
+                    onMouseDown={handleMouseDownResize}
+                    className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center justify-center p-1.5 cursor-ns-resize group select-none"
+                    title="O'lchamni o'zgartirish"
+                  >
+                    <div className="w-10 h-1 rounded-full bg-[#CBD5E1] group-hover:bg-[#94A3B8] transition-colors" />
+                  </div>
+                </div>
               </div>
 
               <div className="pt-2 flex items-center justify-between gap-3">

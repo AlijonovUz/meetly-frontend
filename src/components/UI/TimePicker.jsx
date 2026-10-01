@@ -26,7 +26,7 @@ function normalizeTime(val) {
 }
 
 const TimePicker = ({
-  value = "00:00",
+  value = "",
   onChange,
   placeholder = "00:00",
   className = "",

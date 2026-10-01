@@ -15,13 +15,36 @@ const CreateMeetingModal = ({
 }) => {
   const [newMeetingName, setNewMeetingName] = useState("");
   const [newMeetingDesc, setNewMeetingDesc] = useState("");
-  const [newStartDate, setNewStartDate] = useState("01.01.2026");
-  const [newStartTime, setNewStartTime] = useState("00:00");
-  const [newDuration, setNewDuration] = useState("40 daqiqa");
+  const [newStartDate, setNewStartDate] = useState("");
+  const [newStartTime, setNewStartTime] = useState("");
+  const [newDuration, setNewDuration] = useState("");
   const [newRequireApproval, setNewRequireApproval] = useState(true);
+  const [newAllowJoinBeforeHost, setNewAllowJoinBeforeHost] = useState(false);
 
   const [createdModalData, setCreatedModalData] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [descTextareaHeight, setDescTextareaHeight] = useState(90);
+
+  // Drag handler for textarea resize
+  const handleMouseDownResize = (e) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startHeight = descTextareaHeight;
+
+    const handleMouseMove = (moveEvent) => {
+      const delta = moveEvent.clientY - startY;
+      const newHeight = Math.max(70, Math.min(300, startHeight + delta));
+      setDescTextareaHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
 
   const durationOptions = useMemo(
     () => [
@@ -40,10 +63,12 @@ const CreateMeetingModal = ({
     if (isOpen) {
       setNewMeetingName("");
       setNewMeetingDesc("");
-      setNewStartDate("01.01.2026");
-      setNewStartTime("00:00");
-      setNewDuration("40 daqiqa");
+      setNewStartDate("");
+      setNewStartTime("");
+      setNewDuration("");
       setNewRequireApproval(true);
+      setNewAllowJoinBeforeHost(false);
+      setDescTextareaHeight(90);
       setCreatedModalData(null);
       setCopiedLink(false);
     }
@@ -67,18 +92,20 @@ const CreateMeetingModal = ({
       organizer: "Doston Ochilov",
       createdAt: "01.10.2026 17:25",
       startTime: `${newStartDate || "01.10.2026"} ${newStartTime || "15:00"}`,
-      duration: newDuration,
+      duration: newDuration || "40 daqiqa",
       status: "planned",
       statusLabel: "Rejalashtirilgan",
       link: newLink,
       description: newMeetingDesc,
       requireApproval: newRequireApproval,
+      allowJoinBeforeHost: newAllowJoinBeforeHost,
       participants: [],
     };
 
     if (onMeetingCreated) {
       onMeetingCreated(createdMeeting);
     }
+    window.dispatchEvent(new CustomEvent("meeting-created", { detail: createdMeeting }));
 
     setCreatedModalData({
       name: newMeetingName.trim(),
@@ -93,7 +120,7 @@ const CreateMeetingModal = ({
       {/* ================= MODAL: YANGI YIG'ILISH ================= */}
       {isOpen && !createdModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-[28px] shadow-2xl border border-[#E2E6F2] w-full max-w-xl overflow-visible animate-in zoom-in-95 duration-150 relative p-6 sm:p-7">
+          <div className="bg-white rounded-[28px] shadow-2xl border border-[#E2E6F2] w-full max-w-2xl overflow-visible animate-in zoom-in-95 duration-150 relative p-6 sm:p-7 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3">
               <h3 className="text-xl sm:text-[22px] font-bold text-[#1A1D2E] tracking-tight">
@@ -109,7 +136,7 @@ const CreateMeetingModal = ({
             </div>
 
             {/* Modal Body / Form */}
-            <form onSubmit={handleCreateMeeting} className="space-y-4">
+            <form onSubmit={handleCreateMeeting} className="space-y-3">
               {/* Meeting Name */}
               <div>
                 <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
@@ -132,8 +159,8 @@ const CreateMeetingModal = ({
                   <h4 className="text-[13.5px] font-bold text-[#1A1D2E]">
                     Tasdiqlash talabi
                   </h4>
-                  <p className="text-[11.5px] sm:text-[12px] text-[#64748B] leading-relaxed max-w-[420px]">
-                    Yoqilsa, yig‘ilishga qo‘shilmoqchi bo‘lgan har bir ishtirokchini yig‘ilish yaratuvchisi, loyiha menejeri yoki administrator tasdiqlaydi.
+                  <p className="text-[11.5px] sm:text-[12px] text-[#64748B] leading-relaxed max-w-[500px]">
+                    Yoqilsa, yig‘ilishga qo‘shilmoqchi bo‘lgan har bir ishtirokchini yig‘ilish yaratuvchisi tasdiqlaydi.
                   </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer shrink-0">
@@ -147,18 +174,49 @@ const CreateMeetingModal = ({
                 </label>
               </div>
 
+              {/* Allow Join Before Host Card */}
+              <div className="bg-[#F4F6FB] rounded-2xl p-4 sm:p-4.5 border border-[#EBF0FA] flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h4 className="text-[13.5px] font-bold text-[#1A1D2E]">
+                    Tashkilotchidan oldin kirish
+                  </h4>
+                  <p className="text-[11.5px] sm:text-[12px] text-[#64748B] leading-relaxed max-w-[500px]">
+                    Yoqilsa, ishtirokchilar tashkilotchidan oldin xonaga kirib, o‘zaro gaplashib turishi mumkin. O‘chiq bo‘lsa, tashkilotchi kirmaguncha kutish zalida kutib turishadi.
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={newAllowJoinBeforeHost}
+                    onChange={(e) => setNewAllowJoinBeforeHost(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-12 h-6.5 bg-[#CBD5E1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[22px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-transparent after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3858C7]"></div>
+                </label>
+              </div>
+
               {/* Description */}
               <div>
                 <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
                   Tavsif
                 </label>
-                <textarea
-                  rows={3}
-                  value={newMeetingDesc}
-                  onChange={(e) => setNewMeetingDesc(e.target.value)}
-                  placeholder="Yig'ilish haqida qisqacha ma'lumot..."
-                  className="w-full bg-white border border-[#E2E6F2] rounded-2xl p-4 text-[14px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10 transition-all shadow-2xs resize-none"
-                />
+                <div className="relative">
+                  <textarea
+                    style={{ height: `${descTextareaHeight}px` }}
+                    value={newMeetingDesc}
+                    onChange={(e) => setNewMeetingDesc(e.target.value)}
+                    placeholder="Yig'ilish haqida qisqacha ma'lumot..."
+                    className="w-full bg-white border border-[#E2E6F2] rounded-2xl p-4 pb-6 text-[14px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10 transition-all shadow-2xs resize-none"
+                  />
+                  {/* Resizer bottom center handle */}
+                  <div
+                    onMouseDown={handleMouseDownResize}
+                    className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center justify-center p-1.5 cursor-ns-resize group select-none"
+                    title="O'lchamni o'zgartirish"
+                  >
+                    <div className="w-10 h-1 rounded-full bg-[#CBD5E1] group-hover:bg-[#94A3B8] transition-colors" />
+                  </div>
+                </div>
               </div>
 
               {/* Date, Time, Duration Row */}
@@ -214,7 +272,7 @@ const CreateMeetingModal = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-3 flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={onClose}
