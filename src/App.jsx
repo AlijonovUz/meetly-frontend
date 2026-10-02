@@ -1,9 +1,9 @@
+import React from "react";
 import {
   createBrowserRouter,
-  Navigate,
   RouterProvider,
+  useLocation,
 } from "react-router-dom";
-import { useSelector } from "react-redux";
 
 import {
   Analytics,
@@ -18,68 +18,106 @@ import {
   Users,
   UserDetailPage,
   LeandingPage,
+  NotFoundPage,
+  AuthCallbackPage,
+  BlockedUserScreen,
 } from "./pages";
 import Layout from "./components/Layout/Layout";
+import { isAuthenticated, getCurrentUser } from "./services/auth";
+
+/**
+ * Admin marshrutlarini himoya qiluvchi komponent.
+ * - Foydalanuvchi tizimga kirmagan bo'lsa va "/" ga kirsa: LandingPage ochiladi.
+ * - Foydalanuvchi tizimga kirmagan bo'lsa va to'g'ridan-to'g'ri admin panel linklariga o'tmoqchi bo'lsa: 404 (NotFoundPage) ko'rsatiladi.
+ * - Foydalanuvchi tizimga kirgan bo'lsa va bloklangan bo'lsa (is_blocked === true): Bloklangan foydalanuvchi sahifasi ochiladi.
+ * - Foydalanuvchi tizimga kirgan bo'lsa: Admin paneli (Layout) ochiladi.
+ */
+const AdminRouteGuard = () => {
+  const currentUser = getCurrentUser();
+  if (currentUser?.is_blocked) {
+    return <BlockedUserScreen />;
+  }
+
+  const authed = isAuthenticated();
+  const location = useLocation();
+
+  if (!authed) {
+    if (location.pathname === "/") {
+      return <LeandingPage />;
+    }
+    return <NotFoundPage />;
+  }
+
+  return <Layout />;
+};
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
+    element: <AdminRouteGuard />,
     children: [
       {
         index: true,
         element: <Analytics />,
       },
       {
-        path: "/reports",
+        path: "reports",
         element: <MeetingsReportPage />,
       },
       {
-        path: "/reports/meetings",
+        path: "reports/meetings",
         element: <MeetingsReportPage />,
       },
       {
-        path: "/reports/participants",
+        path: "reports/participants",
         element: <ParticipantsReportPage />,
       },
       {
-        path: "/reports/organizers",
+        path: "reports/organizers",
         element: <OrganizersReportPage />,
       },
       {
-        path: "/profile",
+        path: "profile",
         element: <Profile />,
       },
       {
-        path: "/settings",
+        path: "settings",
         element: <Setting />,
       },
       {
-        path: "/users",
+        path: "users",
         element: <Users />,
       },
       {
-        path: "/users/:id",
+        path: "users/:id",
         element: <UserDetailPage />,
       },
       {
-        path: "/meetings",
+        path: "meetings",
         element: <MeetingsPage />,
       },
       {
-        path: "/meetings/:id",
+        path: "meetings/:id",
         element: <MeetingDetailPage />,
       },
       {
-        path: "/logs",
+        path: "logs",
         element: <Logs />,
       },
     ],
   },
   {
     path: "/leanding",
-    element: <LeandingPage />
-  }
+    element: <LeandingPage />,
+  },
+  {
+    path: "/auth/callback",
+    element: <AuthCallbackPage />,
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
+  },
 ]);
 
 const App = () => {

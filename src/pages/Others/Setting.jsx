@@ -1,48 +1,140 @@
 import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   InformationCircleIcon,
-  ArrowUpRight01Icon,
-  LockIcon,
-  Tick02Icon,
   CheckmarkCircle02Icon,
   Cancel01Icon,
 } from "@hugeicons/core-free-icons";
-import { mockUserProfile } from "../../data/mockData";
 import { PiArrowSquareOutBold } from "react-icons/pi";
-import { Check, Lock } from "lucide-react";
+import { Check, Lock, RefreshCw } from "lucide-react";
+import { getMyProfile, updateOrganization, syncPassportProfile } from "../../services/auth";
+import { setCurrentUser } from "../../store/slice/referencesSlice";
 
 const Setting = () => {
+  const dispatch = useDispatch();
+  const reduxUser = useSelector((state) => state.references?.currentUser);
+  const [profileData, setProfileData] = useState(() => reduxUser || {});
   const [savedOrg, setSavedOrg] = useState(
-    () => localStorage.getItem("user_organization") || mockUserProfile.organization || "Raqamli Nazorat"
+    () => reduxUser?.organization || "Tashkilot kiritilmagan"
   );
-  const [organization, setOrganization] = useState(savedOrg);
+  const [organization, setOrganization] = useState(() => reduxUser?.organization || "");
   const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
-  const isChanged = organization.trim() !== "" && organization.trim() !== savedOrg.trim();
+  useEffect(() => {
+    if (reduxUser) {
+      setProfileData(reduxUser);
+      if (reduxUser.organization) {
+        setSavedOrg(reduxUser.organization);
+        setOrganization(reduxUser.organization);
+      }
+    }
+  }, [reduxUser]);
+
+  useEffect(() => {
+    // API orqali profilni yuklash
+    getMyProfile()
+      .then((data) => {
+        if (data) {
+          setProfileData(data);
+          dispatch(setCurrentUser(data));
+          if (data.organization) {
+            setSavedOrg(data.organization);
+            setOrganization(data.organization);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("Profilni yuklashda xatolik:", err);
+      });
+  }, [dispatch]);
+
+  const isChanged = organization.trim() !== (savedOrg === "Tashkilot kiritilmagan" ? "" : savedOrg.trim());
+
+  const fullName =
+    [profileData.first_name, profileData.last_name, profileData.patronymic]
+      .filter(Boolean)
+      .join(" ") ||
+    profileData.full_name ||
+    "Foydalanuvchi";
+
+  const initials =
+    (
+      (profileData.first_name?.[0] || "") +
+      (profileData.last_name?.[0] || "")
+    ).toUpperCase() || (fullName?.[0] || "F").toUpperCase();
 
   const user = {
-    ...mockUserProfile,
-    region: mockUserProfile.region || "Toshkent viloyati",
-    district: mockUserProfile.district || "Toshkent tumani",
-    birthDate: mockUserProfile.birthDate || "15.04.2004",
-    avatar: mockUserProfile.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+    name: fullName,
+    initials,
+    region: profileData.region_info?.name || profileData.region || "",
+    district: profileData.district_info?.name || profileData.district || "",
+    birthDate: profileData.birth_date || profileData.birthDate || "",
+    avatar: profileData.avatar,
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (!isChanged) return;
-    localStorage.setItem("user_organization", organization);
-    mockUserProfile.organization = organization;
-    setSavedOrg(organization);
-    setIsSaved(true);
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-    setToastMessage({
-      title: "Ma'lumotlaringiz yangilandi",
-      description: `Tashkilot nomi yangilandi: ${organization}. Bugun ${timeStr}`,
-    });
+    if (!isChanged || saving) return;
+    setSaving(true);
+    try {
+      await updateOrganization(organization.trim());
+      setSavedOrg(organization.trim());
+      dispatch(setCurrentUser({ ...profileData, organization: organization.trim() }));
+      setIsSaved(true);
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      setToastMessage({
+        type: "success",
+        title: "Ma'lumotlaringiz yangilandi",
+        description: `Tashkilot nomi yangilandi: ${organization.trim()}. Bugun ${timeStr}`,
+      });
+    } catch (err) {
+      console.error("Tashkilotni saqlashda xatolik:", err);
+      setToastMessage({
+        type: "error",
+        title: "Xatolik",
+        description:
+          err?.response?.data?.error?.errorMsg ||
+          err?.response?.data?.message ||
+          "Tashkilot nomini yangilab bo'lmadi.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSync = async () => {
+    if (syncing) return;
+    setSyncing(true);
+    try {
+      const res = await syncPassportProfile();
+      if (res?.user) {
+        setProfileData(res.user);
+        dispatch(setCurrentUser(res.user));
+      }
+      setToastMessage({
+        type: "success",
+        title: "Sinxronlandi",
+        description: "Profil ma'lumotlari Passport tizimi bilan sinxronlashtirildi.",
+      });
+    } catch (err) {
+      console.error(err);
+      setToastMessage({
+        type: "error",
+        title: "Xatolik",
+        description:
+          err?.response?.data?.error?.errorMsg ||
+          err?.response?.data?.message ||
+          err?.message ||
+          "Passport bilan sinxronlashda xatolik yuz berdi.",
+      });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   // Toast auto-hide
@@ -57,15 +149,35 @@ const Setting = () => {
 
   return (
     <div className="p-6 py-5">
-      {/* Toast Alert (Top-right absolute notification as in Figma) */}
+      {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="bg-white border border-[#10B981]/40 rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md">
-            <div className="text-[#10B981] flex-shrink-0 mt-0.5">
-              <HugeiconsIcon icon={CheckmarkCircle02Icon} size={22} />
+          <div
+            className={`bg-white border rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${
+              toastMessage.type === "error"
+                ? "border-[#FECDCA]"
+                : "border-[#10B981]/40"
+            }`}
+          >
+            <div
+              className={`flex-shrink-0 mt-0.5 ${
+                toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#10B981]"
+              }`}
+            >
+              {toastMessage.type === "error" ? (
+                <div className="w-5.5 h-5.5 rounded-full bg-[#FEF3F2] flex items-center justify-center text-[#D92D20]">
+                  <HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={2.5} />
+                </div>
+              ) : (
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={22} />
+              )}
             </div>
             <div className="flex-1 pr-2">
-              <h4 className="text-[14px] font-bold text-[#1A1D2E] leading-tight">
+              <h4
+                className={`text-[14px] font-bold leading-tight ${
+                  toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#1A1D2E]"
+                }`}
+              >
                 {toastMessage.title}
               </h4>
               <p className="text-[12.5px] text-[#5E6480] mt-1 leading-snug">
@@ -84,19 +196,40 @@ const Setting = () => {
       )}
 
       {/* User Info / Avatar Card */}
-      <div className="flex items-center gap-4.5 mb-8">
-        <div className="relative">
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] object-cover shadow-xs border border-[#E2E6F2]"
-          />
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4.5">
+          <div className="relative">
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] object-cover shadow-xs border border-[#E2E6F2]"
+              />
+            ) : (
+              <div className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] bg-[#EEF2FF] text-[#3858C7] font-bold text-xl md:text-2xl flex items-center justify-center shadow-xs border border-[#D0DCFF]">
+                {user.initials}
+              </div>
+            )}
+          </div>
+          <div>
+            <h2 className="text-[19px] md:text-[20px] font-bold text-[#1A1D2E]">
+              {user.name}
+            </h2>
+            <p className="text-[13px] font-medium text-[#5E6480] mt-0.5">
+              {savedOrg}
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-[19px] md:text-[20px] font-bold text-[#1A1D2E]">
-            {user.name}
-          </h2>
-        </div>
+
+        <button
+          type="button"
+          onClick={handleSync}
+          disabled={syncing}
+          className="hidden sm:inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#E2E6F2] bg-white hover:bg-[#F8FAFC] text-[13px] font-bold text-[#3858C7] transition-all cursor-pointer shadow-xs"
+        >
+          <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />
+          <span>Passport bilan sinxronlash</span>
+        </button>
       </div>
 
       {/* Passport Information Banner */}
@@ -183,15 +316,21 @@ const Setting = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={!isChanged}
-            className={`inline-flex items-center justify-center gap-2 font-bold text-[14.5px] px-4 py-3 rounded-xl transition-all shadow-sm ${
-              isChanged
+            disabled={!isChanged || saving}
+            className={`inline-flex items-center justify-center gap-2 font-bold text-[14.5px] px-5 py-3 rounded-xl transition-all shadow-sm ${
+              isChanged && !saving
                 ? "bg-[#3858C7] hover:bg-[#2C48B0] active:scale-[0.98] text-white cursor-pointer"
                 : "bg-[#3858C7]/50 text-white/80 cursor-not-allowed"
             }`}
           >
-            <Check strokeWidth={2.5} size={18} />
-            <span>Saqlash</span>
+            {saving ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <Check strokeWidth={2.5} size={18} />
+                <span>Saqlash</span>
+              </>
+            )}
           </button>
         </div>
       </form>

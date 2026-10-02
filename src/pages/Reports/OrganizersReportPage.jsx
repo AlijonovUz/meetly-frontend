@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Search, Filter, FileSpreadsheet } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { CheckmarkCircle02Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { DatePicker, CustomSelect } from "../../components/UI";
 import { mockOrganizerReports } from "../../data/mockData";
 
@@ -7,6 +9,7 @@ const OrganizersReportPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterVisible, setIsFilterVisible] = useState(true);
   const [isGenerated, setIsGenerated] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
 
   // Filters
   const [startDate, setStartDate] = useState(null);
@@ -14,10 +17,23 @@ const OrganizersReportPage = () => {
   const [orgOrg, setOrgOrg] = useState("");
   const [organizerName, setOrganizerName] = useState("");
 
+  // Toast auto-hide
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => {
+        setToastMessage(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
   // Export event listener
   useEffect(() => {
     const handleExport = () => {
-      alert("Tashkilotchilar bo'yicha hisobot yuklab olindi (Excel/PDF)");
+      setToastMessage({
+        title: "Hisobot yuklab olindi",
+        description: "Tashkilotchilar bo'yicha hisobot muvaffaqiyatli yuklab olindi (Excel/PDF).",
+      });
     };
     window.addEventListener("export-report", handleExport);
     return () => window.removeEventListener("export-report", handleExport);
@@ -223,6 +239,32 @@ const OrganizersReportPage = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Alert */}
+      {toastMessage && (
+        <div className="fixed top-20 right-6 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-white border border-[#10B981]/40 rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md">
+            <div className="flex-shrink-0 mt-0.5 text-[#10B981]">
+              <HugeiconsIcon icon={CheckmarkCircle02Icon} size={22} />
+            </div>
+            <div className="flex-1 pr-2">
+              <h4 className="text-[14px] font-bold text-[#1A1D2E] leading-tight">
+                {toastMessage.title}
+              </h4>
+              <p className="text-[12.5px] text-[#5E6480] mt-1 leading-snug">
+                {toastMessage.description}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setToastMessage(null)}
+              className="text-[#8B90A5] hover:text-[#1A1D2E] p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} size={16} />
+            </button>
           </div>
         </div>
       )}

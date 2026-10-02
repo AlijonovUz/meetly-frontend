@@ -19,4 +19,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://backend-muloqot.raqamlinazorat.uz',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })

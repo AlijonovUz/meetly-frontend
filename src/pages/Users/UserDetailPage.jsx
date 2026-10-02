@@ -1,43 +1,136 @@
-import { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Cancel01Icon,
-  LockPasswordIcon,
+  CheckmarkCircle02Icon,
 } from "@hugeicons/core-free-icons";
-import { Ban, Lock, Unlock } from "lucide-react";
+import { Ban, Lock, Unlock, Loader2, ArrowLeft, X } from "lucide-react";
 import {
   mockUsersList,
   mockUserMeetings,
 } from "../../data/mockData";
+import {
+  getUserById,
+  toggleUserBlock,
+  getAppealStatus,
+  approveAppeal,
+  rejectAppeal,
+} from "../../services/usersApi";
+import dayjs from "dayjs";
 
 const UserDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Find user by ID or default to first user
-  const user =
-    mockUsersList.find((u) => u.id === id) || mockUsersList[0];
+  // User state
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
 
   // Block state
-  const [isBlocked, setIsBlocked] = useState(user.isBlocked ?? false);
-  const [blockReason, setBlockReason] = useState(
-    user.blockReason || "yig'ilishlarda spam xabarlar yuborgan."
-  );
-  const [blockDate, setBlockDate] = useState("01.10.2026 11:20");
-  const [blockedBy, setBlockedBy] = useState("Doston Ochilov");
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockReason, setBlockReason] = useState("");
+  const [blockDate, setBlockDate] = useState("");
+  const [blockedBy, setBlockedBy] = useState("Administrator");
+  const [appealData, setAppealData] = useState(null);
 
   // Modals
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [unblockModalOpen, setUnblockModalOpen] = useState(false);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [reasonInput, setReasonInput] = useState("");
+  const [rejectReasonInput, setRejectReasonInput] = useState("");
 
-  const [region] = useState("Toshkent viloyati");
-  const [district] = useState("Toshkent tumani");
-  const [birthDate] = useState("15.04.2004");
-  const [organization] = useState(user.organization || "Raqamli Nazorat");
-  const [meetingFilter, setMeetingFilter] = useState("all"); // "all" | "active" | "planned" | "completed"
+  const [meetingFilter, setMeetingFilter] = useState("all");
   const [textareaHeight, setTextareaHeight] = useState(90);
+
+  // Toast auto-hide
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => {
+        setToastMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  // Load user data and appeal (only if user is blocked) by ID from API
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+
+    getUserById(id)
+      .then(async (data) => {
+        if (!isMounted) return;
+        if (data) {
+          setUser(data);
+          const blocked = Boolean(data.is_blocked);
+          setIsBlocked(blocked);
+          setBlockReason(data.blocked_reason || "");
+          const updatedDate = data.updated_at
+            ? dayjs(data.updated_at).format("DD.MM.YYYY HH:mm")
+            : "";
+          setBlockDate(updatedDate);
+
+          // Faqat foydalanuvchi bloklangan bo'lsa shikoyat statusini so'raymiz
+          if (blocked) {
+            try {
+              const appealRes = await getAppealStatus(id);
+              if (!isMounted) return;
+              const raw = appealRes?.data || appealRes;
+              const appeal = raw?.appeal || (Array.isArray(raw) ? raw[0] : raw);
+
+              if (appeal && (appeal.id || appeal.message || appeal.text) && (appeal.status === "PENDING" || !appeal.status)) {
+                setAppealData({
+                  id: appeal.id,
+                  text: appeal.message || appeal.text,
+                  date: appeal.created_at
+                    ? dayjs(appeal.created_at).format("DD.MM.YYYY HH:mm")
+                    : "",
+                  status: appeal.status || "PENDING",
+                  raw: appeal,
+                });
+              } else {
+                let storedAppeal = null;
+                try {
+                  const stored = localStorage.getItem(`user_appeal_${id}`);
+                  if (stored) storedAppeal = JSON.parse(stored);
+                } catch (e) {}
+                setAppealData(storedAppeal);
+              }
+            } catch (err) {
+              console.error("Shikoyat statusini yuklashda xatolik:", err);
+              let storedAppeal = null;
+              try {
+                const stored = localStorage.getItem(`user_appeal_${id}`);
+                if (stored) storedAppeal = JSON.parse(stored);
+              } catch (e) {}
+              if (isMounted) setAppealData(storedAppeal);
+            }
+          } else {
+            setAppealData(null);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("Foydalanuvchini yuklashda xatolik:", err);
+        const fallback = mockUsersList.find((u) => u.id === id) || mockUsersList[0];
+        setUser(fallback);
+        const blocked = fallback?.isBlocked || false;
+        setIsBlocked(blocked);
+        setBlockReason(fallback?.blockReason || "");
+        setAppealData(null);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   // Drag handler for textarea resize
   const handleMouseDownResize = (e) => {
@@ -66,46 +159,185 @@ const UserDetailPage = () => {
     return mockUserMeetings.filter((m) => m.status === meetingFilter);
   }, [meetingFilter]);
 
-  const activeCount = mockUserMeetings.filter(
-    (m) => m.status === "active"
-  ).length;
-  const plannedCount = mockUserMeetings.filter(
-    (m) => m.status === "planned"
-  ).length;
-  const completedCount = mockUserMeetings.filter(
-    (m) => m.status === "completed"
-  ).length;
+  const activeCount = mockUserMeetings.filter((m) => m.status === "active").length;
+  const plannedCount = mockUserMeetings.filter((m) => m.status === "planned").length;
+  const completedCount = mockUserMeetings.filter((m) => m.status === "completed").length;
 
-  const handleConfirmBlock = (e) => {
+  const handleConfirmBlock = async (e) => {
     e.preventDefault();
-    if (!reasonInput.trim()) return;
-    setIsBlocked(true);
-    setBlockReason(reasonInput.trim());
-    setBlockDate("01.10.2026 11:20");
-    setBlockedBy("Doston Ochilov");
-    setBlockModalOpen(false);
+    if (!reasonInput.trim()) {
+      setToastMessage({
+        type: "error",
+        title: "Xatolik",
+        description: "Iltimos, bloklash sababini kiriting.",
+      });
+      return;
+    }
+    if (actionLoading) return;
+    setActionLoading(true);
+
+    try {
+      await toggleUserBlock(id, reasonInput.trim());
+      setIsBlocked(true);
+      setBlockReason(reasonInput.trim());
+      setBlockDate(dayjs().format("DD.MM.YYYY HH:mm"));
+      setBlockedBy("Administrator");
+      setBlockModalOpen(false);
+      setReasonInput("");
+      setToastMessage({
+        type: "success",
+        title: "Foydalanuvchi bloklandi",
+        description: "Foydalanuvchi muvaffaqiyatli bloklandi.",
+      });
+    } catch (err) {
+      console.error("Foydalanuvchini bloklashda xatolik:", err);
+      const errMsg =
+        err?.response?.data?.error?.errorMsg ||
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.errorMsg ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        (Array.isArray(err?.response?.data?.reason) ? err?.response?.data?.reason.join(", ") : err?.response?.data?.reason) ||
+        err?.message ||
+        "Bloklashda xatolik yuz berdi";
+
+      setToastMessage({
+        type: "error",
+        title: "Xatolik",
+        description: errMsg,
+      });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleConfirmUnblock = () => {
-    setIsBlocked(false);
-    setUnblockModalOpen(false);
+  const handleConfirmRejectAppeal = async (e) => {
+    if (e) e.preventDefault();
+    if (!rejectReasonInput.trim()) {
+      setToastMessage({
+        type: "error",
+        title: "Xatolik",
+        description: "Iltimos, e'tirozni rad etish sababini kiriting.",
+      });
+      return;
+    }
+    if (actionLoading) return;
+    setActionLoading(true);
+
+    try {
+      if (appealData?.id) {
+        await rejectAppeal(appealData.id, { reason: rejectReasonInput.trim() });
+      }
+      localStorage.removeItem(`user_appeal_${id}`);
+      setAppealData(null);
+      setRejectModalOpen(false);
+      setRejectReasonInput("");
+      setToastMessage({
+        type: "success",
+        title: "E'tiroz rad etildi",
+        description: "Foydalanuvchi yuborgan e'tiroz muvaffaqiyatli rad etildi.",
+      });
+    } catch (err) {
+      console.error("E'tirozni rad etishda xatolik:", err);
+      const errMsg =
+        err?.response?.data?.error?.errorMsg ||
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.errorMsg ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        (Array.isArray(err?.response?.data?.reason) ? err?.response?.data?.reason.join(", ") : err?.response?.data?.reason) ||
+        err?.message ||
+        "E'tirozni rad etishda xatolik yuz berdi";
+
+      setToastMessage({
+        type: "error",
+        title: "Xatolik",
+        description: errMsg,
+      });
+    } finally {
+      setActionLoading(false);
+    }
   };
+
+  const handleConfirmUnblock = async () => {
+    if (actionLoading) return;
+    setActionLoading(true);
+
+    try {
+      if (appealData?.id) {
+        await approveAppeal(appealData.id);
+      } else {
+        await toggleUserBlock(id, "");
+      }
+      setIsBlocked(false);
+      localStorage.removeItem(`user_appeal_${id}`);
+      setAppealData(null);
+      setUnblockModalOpen(false);
+      setToastMessage({
+        type: "success",
+        title: "Blokdan chiqarildi",
+        description: "Foydalanuvchi muvaffaqiyatli blokdan chiqarildi.",
+      });
+    } catch (err) {
+      console.error("Foydalanuvchini blokdan chiqarishda xatolik:", err);
+      const errMsg =
+        err?.response?.data?.error?.errorMsg ||
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.errorMsg ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Blokdan chiqarishda xatolik yuz berdi";
+
+      setToastMessage({
+        type: "error",
+        title: "Xatolik",
+        description: errMsg,
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <Loader2 size={32} className="animate-spin text-[#3858C7]" />
+        <span className="text-[#5B6078] text-sm font-medium">
+          Foydalanuvchi ma'lumotlari yuklanmoqda...
+        </span>
+      </div>
+    );
+  }
+
+  const fullName =
+    user?.full_name ||
+    `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
+    user?.fullName ||
+    "Noma'lum foydalanuvchi";
+  const avatar =
+    user?.avatar ||
+    "";
+  const regionName = user?.region_info?.name || user?.region || "";
+  const districtName = user?.district_info?.name || user?.district || "";
+  const birthDateStr = user?.birth_date || user?.birthDate || "";
+  const organizationName = user?.organization || "";
 
   return (
     <div className="p-5 px-4.5 space-y-5">
       {/* Top Profile Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-[#E2E6F2] shadow-xs flex-shrink-0 border-2 border-white">
-            <img
-              src={user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80"}
-              alt={user.fullName}
-              className="w-full h-full object-cover"
-            />
+          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-[#E2E6F2] shadow-xs flex-shrink-0 border-2 border-white flex items-center justify-center font-bold text-lg text-[#3858C7]">
+            {avatar ? (
+              <img src={avatar} alt={fullName} className="w-full h-full object-cover" />
+            ) : (
+              (user.first_name?.[0] + "" + user.last_name?.[0] || "U").toUpperCase()
+            )}
           </div>
           <div className="space-y-1">
             <h1 className="text-xl sm:text-2xl font-bold text-[#1A1D2E] tracking-tight">
-              {user.fullName}
+              {fullName}
             </h1>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#F1F3F9] text-xs font-semibold text-[#5B6078]">
               <span
@@ -155,6 +387,49 @@ const UserDetailPage = () => {
         </div>
       )}
 
+      {/* 02.9 Foydalanuvchi, e'tiroz kelgan Card */}
+      {isBlocked && appealData && (
+        <div className="bg-[#F6F8FD] border border-[#D0DCFF] rounded-2xl p-4 sm:p-5 space-y-3.5 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between">
+            <h4 className="text-[14px] font-bold text-[#3858C7]">
+              Foydalanuvchi e'tiroz yubordi
+            </h4>
+            <span className="text-[12.5px] text-[#8B90A5]">
+              {appealData.date || "02.10.2026 10:15"}
+            </span>
+          </div>
+
+          <p className="text-[13.5px] text-[#1A1D2E] leading-relaxed">
+            «{appealData.text || appealData}»
+          </p>
+
+          <div className="flex items-center gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setRejectReasonInput("");
+                setRejectModalOpen(true);
+              }}
+              disabled={actionLoading}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#FECDCA] text-[#D92D20] bg-white hover:bg-[#FEF3F2] text-[13px] font-semibold transition-all cursor-pointer active:scale-95 shadow-2xs"
+            >
+              <X size={15} />
+              <span>Rad etish</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setUnblockModalOpen(true)}
+              disabled={actionLoading}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#3858C7] hover:bg-[#2F4BB8] text-white text-[13px] font-semibold transition-all cursor-pointer active:scale-95 shadow-2xs"
+            >
+              <Unlock size={15} />
+              <span>Blokdan chiqarish</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Static Info Cards (2 columns with lock icons) */}
       <div className="space-y-2.5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -164,7 +439,7 @@ const UserDetailPage = () => {
               Viloyat
             </label>
             <div className="w-full bg-[#FAFAFC] border border-[#E2E6F2] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] select-none shadow-2xs">
-              <span>{user.region || region}</span>
+              <span>{regionName}</span>
               <Lock size={18} className="text-[#8B90A5]" />
             </div>
           </div>
@@ -175,7 +450,7 @@ const UserDetailPage = () => {
               Tuman
             </label>
             <div className="w-full bg-[#FAFAFC] border border-[#E2E6F2] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] select-none shadow-2xs">
-              <span>{user.district || district}</span>
+              <span>{districtName}</span>
               <Lock size={18} className="text-[#8B90A5]" />
             </div>
           </div>
@@ -186,7 +461,7 @@ const UserDetailPage = () => {
               Tug'ulgan sanasi
             </label>
             <div className="w-full bg-[#FAFAFC] border border-[#E2E6F2] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] select-none shadow-2xs">
-              <span>{user.birthDate || birthDate}</span>
+              <span>{dayjs(birthDateStr).format("DD.MM.YYYY")}</span>
               <Lock size={18} className="text-[#8B90A5]" />
             </div>
           </div>
@@ -197,7 +472,7 @@ const UserDetailPage = () => {
               Tashkilot
             </label>
             <div className="w-full bg-[#FAFAFC] border border-[#E2E6F2] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] select-none shadow-2xs">
-              <span>{user.organization || organization}</span>
+              <span>{organizationName}</span>
               <Lock size={18} className="text-[#8B90A5]" />
             </div>
           </div>
@@ -251,7 +526,7 @@ const UserDetailPage = () => {
             <span
               className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold ${
                 meetingFilter === "active"
-                  ? "bg-[#F1F3F9] text-[#1A1D2E]"
+                  ? "bg-[#FFF4ED] text-[#E07A28]"
                   : "bg-white text-[#8B90A5]"
               }`}
             >
@@ -272,7 +547,7 @@ const UserDetailPage = () => {
             <span
               className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold ${
                 meetingFilter === "planned"
-                  ? "bg-[#F1F3F9] text-[#1A1D2E]"
+                  ? "bg-[#EEF4FF] text-[#3858C7]"
                   : "bg-white text-[#8B90A5]"
               }`}
             >
@@ -289,11 +564,11 @@ const UserDetailPage = () => {
                 : "text-[#5B6078] hover:text-[#1A1D2E]"
             }`}
           >
-            <span>O’tkazilgan</span>
+            <span>O'tkazilgan</span>
             <span
               className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold ${
                 meetingFilter === "completed"
-                  ? "bg-[#F1F3F9] text-[#1A1D2E]"
+                  ? "bg-[#EDFBF5] text-[#22C55E]"
                   : "bg-white text-[#8B90A5]"
               }`}
             >
@@ -303,14 +578,16 @@ const UserDetailPage = () => {
         </div>
 
         {/* Meetings Table */}
-        <div className="overflow-auto h-[calc(100vh-515px)]">
+        <div className="bg-transparent overflow-auto h-[calc(100vh-510px)]">
           <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 z-10 bg-[#F8F9FC]">
+            <thead className="sticky top-0 bg-[#F8F9FC] z-10">
               <tr className="border-b border-[#E2E6F2] text-[#8B90A5] text-[13px] font-medium">
-                <th className="py-3 px-4 font-normal w-12 text-left">№</th>
-                <th className="py-3 px-4 font-normal">Nomi</th>
-                <th className="py-3 px-4 font-normal">Yaratilgan sana</th>
-                <th className="py-3 px-4 font-normal text-right">Holati</th>
+                <th className="py-3 px-4 font-normal w-12 text-center">#</th>
+                <th className="py-3 px-4 font-normal">Yig'ilish nomi</th>
+                <th className="py-3 px-4 font-normal">Sana</th>
+                <th className="py-3 px-4 font-normal">Holati</th>
+                <th className="py-3 px-4 font-normal">Qatnashish vaqti</th>
+                <th className="py-3 px-4 font-normal">Izoh</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E6F2]/50 text-[13.5px]">
@@ -318,50 +595,50 @@ const UserDetailPage = () => {
                 filteredMeetings.map((meeting, index) => (
                   <tr
                     key={meeting.id}
-                    onClick={() => window.open(`/meetings/${meeting.id}`, "_blank")}
-                    className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
+                    onClick={() => navigate(`/meetings/${meeting.id}`)}
+                    className="hover:bg-white/60 transition-colors group cursor-pointer"
                   >
-                    {/* Index */}
-                    <td className="py-3.5 px-4 text-[#5B6078] font-medium">
+                    <td className="py-3.5 px-4 text-center text-[#5B6078] font-medium">
                       {index + 1}
                     </td>
-
-                    {/* Name */}
-                    <td className="py-3.5 px-4 font-medium text-[#1A1D2E]">
+                    <td className="py-3.5 px-4 font-medium text-[#1A1D2E] group-hover:text-[#3858C7] transition-colors truncate max-w-[220px]">
                       {meeting.name}
                     </td>
-
-                    {/* Date */}
                     <td className="py-3.5 px-4 text-[#1A1D2E]">
                       {meeting.date}
                     </td>
-
-                    {/* Status */}
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="inline-flex items-center gap-2">
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            meeting.status === "active"
-                              ? "bg-[#D97706]"
-                              : meeting.status === "planned"
-                              ? "bg-[#E15241]"
-                              : "bg-[#10B981]"
-                          }`}
-                        />
-                        <span className="text-[13px] font-medium text-[#5B6078]">
-                          {meeting.statusLabel}
+                    <td className="py-3.5 px-4">
+                      {meeting.status === "active" && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFF4ED] text-[#E07A28] text-xs font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#E07A28]" />
+                          Joriy
                         </span>
-                      </div>
+                      )}
+                      {meeting.status === "planned" && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EEF4FF] text-[#3858C7] text-xs font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#3858C7]" />
+                          Rejalashtirilgan
+                        </span>
+                      )}
+                      {meeting.status === "completed" && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EDFBF5] text-[#22C55E] text-xs font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
+                          O'tkazilgan
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 text-[#1A1D2E] font-medium">
+                      {meeting.participationTime || "—"}
+                    </td>
+                    <td className="py-3.5 px-4 text-[#5B6078] text-[13px] truncate max-w-[200px]">
+                      {meeting.note || "—"}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={4}
-                    className="py-10 text-center text-[#8B90A5] text-sm"
-                  >
-                    Yig'ilishlar mavjud emas
+                  <td colSpan={6} className="py-12 text-center text-[#8B90A5] text-sm">
+                    Yig'ilishlar topilmadi
                   </td>
                 </tr>
               )}
@@ -370,67 +647,69 @@ const UserDetailPage = () => {
         </div>
       </div>
 
-      {/* ================= MODAL: FOYDALANUVCHINI BLOKLASH ================= */}
+      {/* Block Confirmation Modal */}
       {blockModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-[28px] shadow-2xl border border-[#E2E6F2] w-full max-w-lg p-6 sm:p-7 space-y-4 animate-in zoom-in-95 duration-150 relative">
-            <div className="flex items-center justify-between pb-1">
-              <h3 className="text-xl font-bold text-[#1A1D2E]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-[560px] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2]">
+            {/* Modal Header: Title & Close Button */}
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-[19px] sm:text-[20px] text-[#1A1D2E] tracking-tight">
                 Foydalanuvchini bloklash
               </h3>
               <button
                 type="button"
                 onClick={() => setBlockModalOpen(false)}
-                className="p-1 rounded-lg text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="text-[#1A1D2E] hover:text-black p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
               >
-                <HugeiconsIcon icon={Cancel01Icon} size={20} />
+                <X size={18} strokeWidth={2.5} />
               </button>
             </div>
 
-            <p className="text-[13.5px] text-[#5B6078] leading-relaxed">
-              {user.fullName} tizimga kira olmaydi va yig'ilishlarga qo'shila olmaydi. Keyinroq blokdan chiqarish mumkin.
+            {/* Description Text */}
+            <p className="text-[14px] text-[#5B6078] leading-relaxed">
+              {fullName} tizimga kira olmaydi va yig'ilishlarga qo'shila olmaydi. Keyinroq blokdan chiqarish mumkin.
             </p>
 
             <form onSubmit={handleConfirmBlock} className="space-y-4">
               <div>
                 <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
-                  Sabab *
+                  Sabab <span className="text-[#D92D20]">*</span>
                 </label>
-                <div className="relative">
-                  <textarea
-                    required
-                    style={{ height: `${textareaHeight}px` }}
-                    value={reasonInput}
-                    onChange={(e) => setReasonInput(e.target.value)}
-                    placeholder="Bloklash sababini kiriting"
-                    className="w-full bg-white border border-[#E2E6F2] rounded-2xl p-4 pb-5 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#D92D20] focus:ring-2 focus:ring-[#D92D20]/10 transition-colors shadow-2xs resize-none"
-                  />
-                  {/* Bottom Center Drag Handle */}
-                  <div
-                    onMouseDown={handleMouseDownResize}
-                    className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center justify-center p-1.5 cursor-ns-resize group select-none"
-                    title="O'lchamni o'zgartirish"
-                  >
-                    <div className="w-10 h-1 rounded-full bg-[#CBD5E1] group-hover:bg-[#94A3B8] transition-colors" />
-                  </div>
-                </div>
+                <textarea
+                  rows={3}
+                  value={reasonInput}
+                  onChange={(e) => setReasonInput(e.target.value)}
+                  placeholder="Bloklash sababini kiriting"
+                  className="w-full bg-white border border-[#D0DCFF] focus:border-[#D92D20] rounded-2xl p-3.5 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:ring-2 focus:ring-[#D92D20]/10 transition-all resize-none leading-relaxed"
+                  required
+                />
               </div>
 
-              <div className="pt-2 flex items-center justify-between gap-3">
+              {/* Modal Actions */}
+              <div className="flex items-center justify-between pt-1">
                 <button
                   type="button"
                   onClick={() => setBlockModalOpen(false)}
-                  className="flex items-center gap-2 text-[14px] font-bold text-[#1A1D2E] hover:text-black transition-colors cursor-pointer py-2.5 px-2"
+                  className="inline-flex items-center gap-2 text-[#1A1D2E] hover:text-black text-[14px] font-bold py-2.5 px-2 transition-colors cursor-pointer"
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={18} />
+                  <X size={16} strokeWidth={2.5} />
                   <span>Bekor qilish</span>
                 </button>
 
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-[#D92D20] hover:bg-[#B42318] text-white text-[14px] font-semibold px-6 py-3 rounded-xl transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                  disabled={!reasonInput.trim() || actionLoading}
+                  className={`h-11 px-6 rounded-xl font-semibold text-[14px] text-white transition-all shadow-xs flex items-center gap-2 ${
+                    reasonInput.trim() && !actionLoading
+                      ? "bg-[#D92D20] hover:bg-[#B42318] cursor-pointer active:scale-95"
+                      : "bg-[#D92D20]/50 cursor-not-allowed"
+                  }`}
                 >
-                  <Ban size={18} strokeWidth={2.2} />
+                  {actionLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Ban size={17} strokeWidth={2.2} />
+                  )}
                   <span>Bloklash</span>
                 </button>
               </div>
@@ -439,46 +718,171 @@ const UserDetailPage = () => {
         </div>
       )}
 
-      {/* ================= MODAL: BLOKDAN CHIQARISH ================= */}
+      {/* Unblock Confirmation Modal */}
       {unblockModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-[28px] shadow-2xl border border-[#E2E6F2] w-full max-w-lg p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150 relative">
-            <div className="flex items-center justify-between pb-1">
-              <h3 className="text-xl font-bold text-[#1A1D2E]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-[480px] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2]">
+            {/* Modal Header: Title & Close Button */}
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-[19px] sm:text-[20px] text-[#1A1D2E] tracking-tight">
                 Blokdan chiqarish
               </h3>
               <button
                 type="button"
                 onClick={() => setUnblockModalOpen(false)}
-                className="p-1 rounded-lg text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="text-[#1A1D2E] hover:text-black p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
               >
-                <HugeiconsIcon icon={Cancel01Icon} size={20} />
+                <X size={18} strokeWidth={2.5} />
               </button>
             </div>
 
+            {/* Description Text */}
             <p className="text-[14px] text-[#5B6078] leading-relaxed">
-              {user.fullName} yana tizimga kira oladi va yig'ilishlarga qo'shila oladi.
+              {fullName} yana tizimga kira oladi va yig'ilishlarga qo'shila oladi.
             </p>
 
-            <div className="pt-2 flex items-center justify-between gap-3">
+            {/* Modal Actions */}
+            <div className="flex items-center justify-between pt-3">
               <button
                 type="button"
                 onClick={() => setUnblockModalOpen(false)}
-                className="flex items-center gap-2 text-[14px] font-bold text-[#1A1D2E] hover:text-black transition-colors cursor-pointer py-2.5 px-2"
+                className="inline-flex items-center gap-2 text-[#1A1D2E] hover:text-black text-[14px] font-bold py-2.5 px-2 transition-colors cursor-pointer"
               >
-                <HugeiconsIcon icon={Cancel01Icon} size={18} />
+                <X size={16} strokeWidth={2.5} />
                 <span>Bekor qilish</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleConfirmUnblock}
-                className="flex items-center gap-2 bg-[#3858C7] hover:bg-[#2F4BB8] text-white text-[14px] font-semibold px-6 py-3 rounded-xl transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                disabled={actionLoading}
+                className="h-11 px-5 rounded-xl bg-[#3858C7] hover:bg-[#2F4BB8] text-white text-[14px] font-semibold transition-all shadow-xs cursor-pointer active:scale-95 flex items-center gap-2"
               >
-                <Unlock size={18} strokeWidth={2.2} />
+                {actionLoading ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Unlock size={17} strokeWidth={2.2} />
+                )}
                 <span>Blokdan chiqarish</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Appeal Confirmation Modal */}
+      {rejectModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-[560px] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2]">
+            {/* Modal Header: Title & Close Button */}
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-[19px] sm:text-[20px] text-[#1A1D2E] tracking-tight">
+                E'tirozni rad etish
+              </h3>
+              <button
+                type="button"
+                onClick={() => setRejectModalOpen(false)}
+                className="text-[#1A1D2E] hover:text-black p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+              >
+                <X size={18} strokeWidth={2.5} />
+              </button>
+            </div>
+
+            {/* Description Text */}
+            <p className="text-[14px] text-[#5B6078] leading-relaxed">
+              Foydalanuvchi yuborgan e'tirozni rad etish sababini kiriting. Ushbu sabab foydalanuvchiga ko'rsatiladi.
+            </p>
+
+            <form onSubmit={handleConfirmRejectAppeal} className="space-y-4">
+              <div>
+                <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+                  Rad etish sababi <span className="text-[#D92D20]">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={rejectReasonInput}
+                  onChange={(e) => setRejectReasonInput(e.target.value)}
+                  placeholder="E'tirozni rad etish sababini kiriting..."
+                  className="w-full bg-white border border-[#D0DCFF] focus:border-[#D92D20] rounded-2xl p-3.5 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:ring-2 focus:ring-[#D92D20]/10 transition-all resize-none leading-relaxed"
+                  required
+                />
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  onClick={() => setRejectModalOpen(false)}
+                  className="inline-flex items-center gap-2 text-[#1A1D2E] hover:text-black text-[14px] font-bold py-2.5 px-2 transition-colors cursor-pointer"
+                >
+                  <X size={16} strokeWidth={2.5} />
+                  <span>Bekor qilish</span>
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={!rejectReasonInput.trim() || actionLoading}
+                  className={`h-11 px-6 rounded-xl font-semibold text-[14px] text-white transition-all shadow-xs flex items-center gap-2 ${
+                    rejectReasonInput.trim() && !actionLoading
+                      ? "bg-[#D92D20] hover:bg-[#B42318] cursor-pointer active:scale-95"
+                      : "bg-[#D92D20]/50 cursor-not-allowed"
+                  }`}
+                >
+                  {actionLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <X size={17} strokeWidth={2.2} />
+                  )}
+                  <span>Rad etish</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notification Alert */}
+      {toastMessage && (
+        <div className="fixed top-20 right-6 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div
+            className={`bg-white border rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${
+              toastMessage.type === "error"
+                ? "border-[#FECDCA]"
+                : "border-[#10B981]/40"
+            }`}
+          >
+            <div
+              className={`flex-shrink-0 mt-0.5 ${
+                toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#10B981]"
+              }`}
+            >
+              {toastMessage.type === "error" ? (
+                <div className="w-6 h-6 rounded-full bg-[#FEF3F2] flex items-center justify-center text-[#D92D20]">
+                  <HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={2.5} />
+                </div>
+              ) : (
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={22} />
+              )}
+            </div>
+            <div className="flex-1 pr-2">
+              <h4
+                className={`text-[14px] font-bold leading-tight ${
+                  toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#1A1D2E]"
+                }`}
+              >
+                {toastMessage.title}
+              </h4>
+              <p className="text-[12.5px] text-[#5E6480] mt-1 leading-snug">
+                {toastMessage.description}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setToastMessage(null)}
+              className="text-[#8B90A5] hover:text-[#1A1D2E] p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} size={16} />
+            </button>
           </div>
         </div>
       )}
@@ -487,3 +891,4 @@ const UserDetailPage = () => {
 };
 
 export default UserDetailPage;
+

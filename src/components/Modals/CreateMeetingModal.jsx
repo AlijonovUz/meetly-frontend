@@ -297,7 +297,7 @@ const CreateMeetingModal = ({
 
       {/* ================= MODAL: YIG'ILISH YARATILDI (HAVOLA) ================= */}
       {createdModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-lg overflow-hidden p-6 space-y-5 animate-in zoom-in-95 duration-150">
             {/* Header */}
             <div className="flex items-center justify-between">

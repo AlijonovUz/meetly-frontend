@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -21,21 +21,29 @@ import {
   ChartBar,
 } from "lucide-react";
 import { FaTelegramPlane } from "react-icons/fa";
-import { HugeiconsIcon } from "@hugeicons/react";
-
-const PASSPORT_URL = "http://passport.raqamlinazorat.uz";
+import { loginWithPassport, isAuthenticated } from "../../services/auth";
 
 const LeandingPage = () => {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const authed = isAuthenticated();
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText("https://meet.muloqot.uz/m1213-mxr");
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+  const handlePassportLogin = async (e) => {
+    if (e) e.preventDefault();
+    if (authLoading) return;
+    setAuthLoading(true);
+    try {
+      await loginWithPassport();
+    } catch (err) {
+      console.error("Passport login xatosi:", err);
+    } finally {
+      setAuthLoading(false);
+    }
   };
-
+  
   const scrollToSection = (id) => {
     setMobileMenuOpen(false);
     const element = document.getElementById(id);
@@ -69,7 +77,7 @@ const LeandingPage = () => {
 
   return (
     <>
-      <div className="min-h-screen overflow-x-clip px-[120px]! bg-[#F1F3F9] relative text-[#1A1D2E] font-['Manrope',sans-serif] selection:bg-[#3F57B3]/20 selection:text-[#3F57B3]">
+      <div className="min-h-screen overflow-x-clip px-4 sm:px-8 lg:px-[120px] bg-[#F1F3F9] relative text-[#1A1D2E] font-['Manrope',sans-serif] selection:bg-[#3F57B3]/20 selection:text-[#3F57B3]">
 
         <header className="w-full h-[72px] rounded-[28px] bg-[#000000] px-6 sticky top-4 z-50 sm:px-8 flex items-center justify-between shadow-2xl">
           {/* Logo */}
@@ -114,16 +122,33 @@ const LeandingPage = () => {
 
           {/* Right Action buttons */}
           <div className="hidden sm:flex items-center gap-3">
-            {/* Passport Button */}
-            <a
-              href={PASSPORT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-[38px] px-5 rounded-full bg-gradient-to-r from-[#4E75FF] to-[#3B5BDB] hover:opacity-95 text-white text-[13.5px] font-extrabold flex items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer"
-            >
-              <span>Passport</span>
-              <img src="/user.svg" className="pointer-events-none" alt="" />
-            </a>
+            {authed ? (
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="h-[38px] px-5 rounded-full bg-gradient-to-r from-[#5272F0] to-[#3F57B3] hover:opacity-95 text-white text-[13.5px] font-extrabold flex items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer"
+              >
+                <span>Boshqaruv paneli</span>
+                <ArrowRight size={15} />
+              </button>
+            ) : (
+              /* Passport Button */
+              <button
+                type="button"
+                onClick={handlePassportLogin}
+                disabled={authLoading}
+                className="h-[38px] px-5 rounded-full bg-gradient-to-r from-[#4E75FF] to-[#3B5BDB] hover:opacity-95 text-white text-[13.5px] font-extrabold flex items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer"
+              >
+                {authLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <span>Passport</span>
+                    <img src="/user.svg" className="pointer-events-none" alt="" />
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -135,14 +160,59 @@ const LeandingPage = () => {
           </button>
         </header>
 
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden fixed top-24 left-4 right-4 bg-[#000000] text-white p-6 rounded-2xl shadow-2xl z-50 flex flex-col gap-4 border border-white/10 animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => scrollToSection("imkoniyatlar")}
+              className="text-left font-bold text-[15px] py-2 hover:text-[#7F95E6]"
+            >
+              Imkoniyatlar
+            </button>
+            <button
+              onClick={() => scrollToSection("qanday-ishlaydi")}
+              className="text-left font-bold text-[15px] py-2 hover:text-[#7F95E6]"
+            >
+              Qanday ishlaydi
+            </button>
+            <button
+              onClick={() => scrollToSection("statistika")}
+              className="text-left font-bold text-[15px] py-2 hover:text-[#7F95E6]"
+            >
+              Statistika
+            </button>
+            <button
+              onClick={() => scrollToSection("savollar")}
+              className="text-left font-bold text-[15px] py-2 hover:text-[#7F95E6]"
+            >
+              Savollar
+            </button>
+            <div className="pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={handlePassportLogin}
+                disabled={authLoading}
+                className="w-full h-[44px] rounded-full bg-gradient-to-r from-[#4E75FF] to-[#3B5BDB] text-white text-[14px] font-extrabold flex items-center justify-center gap-2"
+              >
+                {authLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <span>Passport orqali kirish</span>
+                    <img src="/user.svg" alt="" className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ================= HERO SECTION & NAVBAR ================= */}
         <section className="relative pt-6 pb-20 md:pb-28">
-          {/* Soft Ambient Gradient Glows (4-rasm: 720x720, 5-rasm: 800x800) */}
-          {/* Top-left light blue gradient blur: 720 x 720 */}
+          {/* Soft Ambient Gradient Glows */}
           <div className="absolute -top-[400px] -left-[400px] w-[720px] h-[720px] rounded-full bg-gradient-to-r from-[#526ED4]/20 to-[#526ED4]/20 blur-[130px] pointer-events-none"></div>
-          {/* Top-right / center light aqua gradient blur: 800 x 800 */}
           <div className="absolute top-[100px] -right-[600px] w-[600px] h-[600px] rounded-full bg-linear-to-br from-[#30C9ED]/25 to-[#30C9ED]/25 blur-[140px] pointer-events-none"></div>
-          <div className="">
+          <div>
             {/* ================= HERO CONTENT ================= */}
             <div className="text-center mt-14 sm:mt-18">
               {/* Eyebrow Tag */}
@@ -155,13 +225,13 @@ const LeandingPage = () => {
                 </span>
               </div>
 
-              {/* Headline (Unbounded 60px) */}
+              {/* Headline */}
               <h1 className="text-[34px] sm:text-[46px] md:text-[56px] lg:text-[60px] font-['Unbounded',sans-serif] font-medium text-[#1A1D2E] tracking-tight leading-[1.14] max-w-[1100px] mx-auto mt-6">
                 Yigʻilishlarni bir joyda <br className="hidden sm:inline" />
                 tashkil eting va kuzating
               </h1>
 
-              {/* Subtitle (Manrope 19px w700) */}
+              {/* Subtitle */}
               <p className="text-[15px] sm:text-[18px] md:text-[19px] font-bold text-[#5B6078] max-w-[860px] mx-auto mt-5 leading-relaxed">
                 Onlayn audio va video yigʻilishlar, taklif havolalari, qatnashishni hisobga olish va hisobotlar. Bitta Passport bilan barcha Raqamli Nazorat xizmatlariga kiring.
               </p>
@@ -169,18 +239,25 @@ const LeandingPage = () => {
               {/* CTA Buttons */}
               <div className="flex flex-wrap items-center justify-center gap-4 mt-8 relative">
                 {/* Primary CTA */}
-                <a
-                  href={PASSPORT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={handlePassportLogin}
+                  disabled={authLoading}
                   className="h-[54px] sm:h-[56px] px-8 rounded-full bg-gradient-to-r from-[#5272F0] to-[#3F57B3] hover:opacity-95 active:scale-[0.98] text-white text-[15px] font-bold inline-flex items-center gap-2.5 shadow-xl shadow-[#4E75FF]/25 hover:shadow-[#4E75FF]/35 transition-all cursor-pointer"
                 >
-                  <span>Passport orqali boshlash</span>
-                  <ArrowRight size={18} strokeWidth={2.5} />
-                </a>
+                  {authLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <span>Passport orqali boshlash</span>
+                      <ArrowRight size={18} strokeWidth={2.5} />
+                    </>
+                  )}
+                </button>
 
                 {/* Secondary CTA */}
                 <button
+                  type="button"
                   onClick={() => scrollToSection("imkoniyatlar")}
                   className="h-[54px] sm:h-[56px] px-8 rounded-full bg-gradient-to-r from-[#3F7AB3] via-[#28B6D8] via-[#31C8ED] to-[#4DA7BD] hover:opacity-95 active:scale-[0.98] text-white text-[15px] font-bold inline-flex items-center gap-2.5 shadow-xl shadow-[#208DBB]/25 hover:shadow-[#208DBB]/35 transition-all cursor-pointer"
                 >
@@ -189,7 +266,7 @@ const LeandingPage = () => {
                 </button>
               </div>
 
-              {/* ================= HERO DASHBOARD PREVIEW & FLOATING CARDS (3.svg, 1.svg, 2.svg) ================= */}
+              {/* ================= HERO DASHBOARD PREVIEW & FLOATING CARDS ================= */}
               <div className="relative mt-14 sm:mt-16 max-w-[1200px] mx-auto">
                 {/* Main Dashboard Image (3.svg) */}
                 <div className="relative w-full">
@@ -200,7 +277,7 @@ const LeandingPage = () => {
                   />
                 </div>
 
-                {/* Float Card 1: Marketing strategiyasi (1.svg - 280x132) */}
+                {/* Float Card 1: Marketing strategiyasi */}
                 <div className="hidden lg:block absolute -left-26 top-[28%] z-20 transition-transform hover:scale-105 duration-300">
                   <img
                     src="/1.svg"
@@ -209,7 +286,7 @@ const LeandingPage = () => {
                   />
                 </div>
 
-                {/* Float Card 2: Oʻrtacha qatnashish (2.svg - 250x150) */}
+                {/* Float Card 2: Oʻrtacha qatnashish */}
                 <div className="hidden lg:block absolute -right-28 top-[40%] z-20 transition-transform hover:scale-105 duration-300">
                   <img
                     src="/2.svg"
@@ -223,11 +300,11 @@ const LeandingPage = () => {
           </div>
         </section>
 
-        {/* ================= STATS COUNTER BAR (1200x112) ================= */}
-        <section className="">
+        {/* ================= STATS COUNTER BAR ================= */}
+        <section>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Stat 1 (Dark: 282x112 r:20) */}
-            <div className="w-full h-[160px] Py-15! rounded-[20px] bg-[#1A1D2E] text-white p-6 flex flex-col justify-between shadow-sm">
+            {/* Stat 1 */}
+            <div className="w-full h-[160px] py-6 rounded-[20px] bg-[#1A1D2E] text-white p-6 flex flex-col justify-between shadow-sm">
               <span className="text-[44px] font-['Unbounded',sans-serif] font-semibold tracking-tight leading-none">
                 1 248
               </span>
@@ -236,8 +313,8 @@ const LeandingPage = () => {
               </span>
             </div>
 
-            {/* Stat 2 (White: 282x112 r:20) */}
-            <div className="w-full h-[160px] Py-10! rounded-[20px] bg-white border border-[#E2E6F2] p-6 flex flex-col justify-between shadow-2xs">
+            {/* Stat 2 */}
+            <div className="w-full h-[160px] py-6 rounded-[20px] bg-white border border-[#E2E6F2] p-6 flex flex-col justify-between shadow-2xs">
               <span className="text-[44px] font-['Unbounded',sans-serif] font-semibold text-[#1A1D2E] tracking-tight leading-none">
                 256
               </span>
@@ -246,8 +323,8 @@ const LeandingPage = () => {
               </span>
             </div>
 
-            {/* Stat 3 (White: 282x112 r:20) */}
-            <div className="w-full h-[160px] Py-10! rounded-[20px] bg-white border border-[#E2E6F2] p-6 flex flex-col justify-between shadow-2xs">
+            {/* Stat 3 */}
+            <div className="w-full h-[160px] py-6 rounded-[20px] bg-white border border-[#E2E6F2] p-6 flex flex-col justify-between shadow-2xs">
               <span className="text-[44px] font-['Unbounded',sans-serif] font-semibold text-[#1A1D2E] tracking-tight leading-none">
                 84%
               </span>
@@ -256,12 +333,12 @@ const LeandingPage = () => {
               </span>
             </div>
 
-            {/* Stat 4 (White with Blue count: 282x112 r:20) */}
-            <div className="w-full h-[160px] Py-10! rounded-[20px] bg-white border border-[#E2E6F2] p-6 flex flex-col justify-between shadow-2xs">
-              <span className="text-[44px] font-['Unbounded',sans-serif] font-semibold text-[1A1D2E] tracking-tight leading-none">
+            {/* Stat 4 */}
+            <div className="w-full h-[160px] py-6 rounded-[20px] bg-white border border-[#E2E6F2] p-6 flex flex-col justify-between shadow-2xs">
+              <span className="text-[44px] font-['Unbounded',sans-serif] font-semibold text-[#1A1D2E] tracking-tight leading-none">
                 30+
               </span>
-              <span className="text-[15px] font-medium text-[#5B6078] ">
+              <span className="text-[15px] font-medium text-[#5B6078]">
                 Raqamli Nazorat loyihasi bitta Passport bilan
               </span>
             </div>
@@ -464,20 +541,26 @@ const LeandingPage = () => {
                 </p>
               </div>
 
-              <a
-                href={PASSPORT_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={handlePassportLogin}
+                disabled={authLoading}
                 className="w-full h-[44px] rounded-full bg-white text-[#3F57B3] text-[14px] font-extrabold flex items-center justify-center gap-2 shadow-sm hover:bg-[#F8FAFC] transition-all cursor-pointer"
               >
-                <span>Passport orqali kirish</span>
-                <ExternalLink size={14} />
-              </a>
+                {authLoading ? (
+                  <div className="w-4 h-4 border-2 border-[#3F57B3] border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <span>Passport orqali kirish</span>
+                    <ExternalLink size={14} />
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </section>
 
-        {/* ================= QANDAY ISHLAYDI SECTION (1440x560, bg #F1F3F9) ================= */}
+        {/* ================= QANDAY ISHLAYDI SECTION ================= */}
         <section id="qanday-ishlaydi" className="py-20">
           <div className="max-w-3xl mb-12">
             <span className="text-[13px] font-extrabold text-[#3F57B3] tracking-wider uppercase block mb-2">
@@ -565,7 +648,7 @@ const LeandingPage = () => {
           </div>
         </section>
 
-        {/* ================= STATISTIKA DARK BLOCK (1200x660 r:24, bg #222222) ================= */}
+        {/* ================= STATISTIKA DARK BLOCK ================= */}
         <section id="statistika" className="py-20">
           <div className="w-full rounded-[24px] bg-[#222222] p-8 sm:p-12 text-white relative overflow-hidden shadow-2xl">
             {/* Background Decorative Ellipse Glow */}
@@ -679,7 +762,7 @@ const LeandingPage = () => {
                       {/* Donut graphic */}
                       <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
                         <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                          {/* Oʻtkazilgan (Green: 184/256 = ~71.9%) */}
+                          {/* Oʻtkazilgan */}
                           <circle
                             cx="50"
                             cy="50"
@@ -690,7 +773,7 @@ const LeandingPage = () => {
                             strokeDasharray="162 226"
                             strokeDashoffset="0"
                           />
-                          {/* Rejalashtirilgan (Blue: 37/256 = ~14.5%) */}
+                          {/* Rejalashtirilgan */}
                           <circle
                             cx="50"
                             cy="50"
@@ -701,7 +784,7 @@ const LeandingPage = () => {
                             strokeDasharray="33 226"
                             strokeDashoffset="-162"
                           />
-                          {/* Joriy (Orange: 2/256 = ~0.8%) */}
+                          {/* Joriy */}
                           <circle
                             cx="50"
                             cy="50"
@@ -712,7 +795,7 @@ const LeandingPage = () => {
                             strokeDasharray="4 226"
                             strokeDashoffset="-195"
                           />
-                          {/* Bekor qilingan (Gray: 33/256 = ~12.9%) */}
+                          {/* Bekor qilingan */}
                           <circle
                             cx="50"
                             cy="50"
@@ -802,11 +885,11 @@ const LeandingPage = () => {
           </div>
         </section>
 
-        {/* ================= PASSPORT INTEGRATION SECTION (1200x) ================= */}
+        {/* ================= PASSPORT INTEGRATION SECTION ================= */}
         <section className="py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center bg-[#FFFFFF] pl-15 rounded-2xl">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center bg-[#FFFFFF] p-6 sm:p-10 lg:pl-15 rounded-2xl">
             {/* Left Content */}
-            <div className="lg:col-span-7 space-y-4 pt-15 pb-10">
+            <div className="lg:col-span-7 space-y-4 pt-4 lg:pt-15 pb-4 lg:pb-10">
               <span className="text-[13px] font-extrabold text-[#3F57B3] tracking-wider uppercase block">
                 YAGONA KIRISH
               </span>
@@ -837,15 +920,21 @@ const LeandingPage = () => {
 
               {/* CTA Button */}
               <div className="pt-2">
-                <a
-                  href={PASSPORT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-[237px] h-[54px] rounded-full bg-gradient-to-r from-[#5272F0] to-[#3F57B3] text-white text-[15px] font-extrabold inline-flex items-center justify-center gap-2 shadow-lg shadow-[#3F57B3]/25 transition-all cursor-pointer"
+                <button
+                  type="button"
+                  onClick={handlePassportLogin}
+                  disabled={authLoading}
+                  className="w-[237px] h-[54px] rounded-full bg-gradient-to-r from-[#5272F0] to-[#3F57B3] text-white text-[15px] font-extrabold inline-flex items-center justify-center gap-2 shadow-lg shadow-[#3F57B3]/25 transition-all cursor-pointer hover:opacity-95"
                 >
-                  <span>Passport orqali kirish</span>
-                  <ExternalLink size={16} />
-                </a>
+                  {authLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <span>Passport orqali kirish</span>
+                      <ExternalLink size={16} />
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -870,15 +959,21 @@ const LeandingPage = () => {
                 </div>
 
                 {/* Telegram Button */}
-                <a
-                  href={PASSPORT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={handlePassportLogin}
+                  disabled={authLoading}
                   className="w-full h-[52px] rounded-[14px] bg-[#229ED9] hover:bg-[#1E8EC4] text-white text-[15px] font-extrabold flex items-center justify-center gap-2.5 shadow-sm transition-all cursor-pointer"
                 >
-                  <FaTelegramPlane size={18} />
-                  <span>Telegram orqali kirish</span>
-                </a>
+                  {authLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <FaTelegramPlane size={18} />
+                      <span>Telegram orqali kirish</span>
+                    </>
+                  )}
+                </button>
 
                 {/* Divider Line */}
                 <div className="flex items-center gap-3">
@@ -888,21 +983,27 @@ const LeandingPage = () => {
                 </div>
 
                 {/* Google Button */}
-                <a
-                  href={PASSPORT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={handlePassportLogin}
+                  disabled={authLoading}
                   className="w-full h-[52px] rounded-[14px] bg-white border border-[#E2E6F2] hover:bg-[#F8FAFC] text-[#1A1D2E] text-[15px] font-extrabold flex items-center justify-center gap-2.5 shadow-2xs transition-all cursor-pointer"
                 >
-                  <img src="/G.svg" className="pointer-events-none" alt="" />
-                  <span>Google orqali davom etish</span>
-                </a>
+                  {authLoading ? (
+                    <div className="w-5 h-5 border-2 border-[#1A1D2E] border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <img src="/G.svg" className="pointer-events-none" alt="" />
+                      <span>Google orqali davom etish</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ================= SAVOLLAR (FAQ) SECTION (bg #F1F3F9) ================= */}
+        {/* ================= SAVOLLAR (FAQ) SECTION ================= */}
         <section id="savollar" className="py-20 pt-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             {/* Left Header */}
@@ -957,7 +1058,7 @@ const LeandingPage = () => {
           </div>
         </section>
 
-        {/* ================= CTA BANNER (1200x300 r:24, bg #3F57B3) ================= */}
+        {/* ================= CTA BANNER ================= */}
         <section className="py-10">
           <div className="w-full h-auto min-h-[300px] rounded-[24px] bg-[linear-gradient(148deg,#5272F0_10%,#3F57B3_83.61%)] p-8 sm:p-14 text-white relative overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
             {/* Decorative Figma Ellipses */}
@@ -975,23 +1076,29 @@ const LeandingPage = () => {
             </div>
 
             {/* White Button */}
-            <a
-              href={PASSPORT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={handlePassportLogin}
+              disabled={authLoading}
               className="w-[263px] h-[56px] rounded-full bg-white text-[#3F57B3] hover:bg-[#F8FAFC] active:scale-[0.98] text-[15px] font-extrabold inline-flex items-center justify-center gap-2.5 shadow-xl shrink-0 relative z-10 transition-all cursor-pointer"
             >
-              <span>Passport orqali boshlash</span>
-              <ArrowRight size={17} strokeWidth={2.5} />
-            </a>
+              {authLoading ? (
+                <div className="w-5 h-5 border-2 border-[#3F57B3] border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <span>Passport orqali boshlash</span>
+                  <ArrowRight size={17} strokeWidth={2.5} />
+                </>
+              )}
+            </button>
           </div>
         </section>
       </div>
 
 
-      {/* ================= FOOTER (1440x200, bg #FFFFFF) ================= */}
-      <footer className="bg-white px-[120px] border-t border-[#EEF1F7] py-12">
-        <div className="! sm:px-6">
+      {/* ================= FOOTER ================= */}
+      <footer className="bg-white px-4 sm:px-8 lg:px-[120px] border-t border-[#EEF1F7] py-12 font-['Manrope',sans-serif]">
+        <div>
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-4">
             {/* Logo */}
             <div className="flex items-center gap-3">
@@ -1041,15 +1148,14 @@ const LeandingPage = () => {
           {/* Bottom Copyright & Link */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px] text-[#8F95A8] font-medium">
             <span>© {new Date().getFullYear()} Raqamli Nazorat. Barcha huquqlar himoyalangan.</span>
-            <a
-              href={PASSPORT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#3F57B3] font-bold hover:underline inline-flex items-center gap-1"
+            <button
+              type="button"
+              onClick={handlePassportLogin}
+              className="text-[#3F57B3] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
             >
               <span>Passport orqali yagona kirish</span>
               <ExternalLink size={13} />
-            </a>
+            </button>
           </div>
         </div>
       </footer>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   DashboardSquare03Icon,
@@ -18,10 +19,12 @@ import {
 import { mockUserProfile } from "../../data/mockData";
 import { IoMoon } from "react-icons/io5";
 import { LogOut, ChevronDown } from "lucide-react";
+import { logout } from "../../services/auth";
 
 const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const currentUser = useSelector((state) => state.references?.currentUser);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(
@@ -99,9 +102,8 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   return (
     <aside
       onClick={handleSidebarClick}
-      className={`h-screen bg-[#3858C7] text-white flex flex-col justify-between transition-all duration-300 ease-in-out select-none flex-shrink-0 relative ${
-        sidebarCollapsed ? "w-[76px] cursor-pointer" : "w-[260px]"
-      }`}
+      className={`h-screen bg-[#3858C7] text-white flex flex-col justify-between transition-all duration-300 ease-in-out select-none flex-shrink-0 relative ${sidebarCollapsed ? "w-[76px] cursor-pointer" : "w-[260px]"
+        }`}
       title={sidebarCollapsed ? "Yon panelni ochish uchun bosing" : undefined}
     >
       {/* Top Header & Main Navigation */}
@@ -114,9 +116,8 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
               setSidebarCollapsed(false);
             }
           }}
-          className={`h-[64px] flex items-center px-4 border-b border-white/15 flex-shrink-0 ${
-            sidebarCollapsed ? "justify-center" : "justify-between"
-          }`}
+          className={`h-[64px] flex items-center px-4 border-b border-white/15 flex-shrink-0 ${sidebarCollapsed ? "justify-center" : "justify-between"
+            }`}
         >
           <div className="flex items-center gap-3 overflow-hidden">
             <img src={sidebarCollapsed ? "/logo2.svg" : "/logo.svg"} alt="logo" className="pointer-events-none object-contain" />
@@ -147,10 +148,9 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 group ${
-                    isActive
-                      ? "bg-[#2844A8] text-white font-bold shadow-2xs"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 group ${isActive
+                    ? "bg-[#2844A8] text-white font-bold shadow-2xs"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
                   } ${sidebarCollapsed ? "justify-center px-0" : ""}`
                 }
                 title={sidebarCollapsed ? item.label : undefined}
@@ -160,9 +160,8 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                     <HugeiconsIcon
                       icon={item.icon}
                       size={20}
-                      className={`flex-shrink-0 transition-colors duration-200 ${
-                        isActive ? "text-white" : "text-white/80 group-hover:text-white"
-                      }`}
+                      className={`flex-shrink-0 transition-colors duration-200 ${isActive ? "text-white" : "text-white/80 group-hover:text-white"
+                        }`}
                       strokeWidth={2}
                     />
                     {!sidebarCollapsed && (
@@ -185,22 +184,20 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                     setReportsOpen(!reportsOpen);
                   }
                 }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 cursor-pointer ${
-                  location.pathname.startsWith("/reports")
-                    ? "text-white font-bold"
-                    : "text-white/80 hover:bg-white/10 hover:text-white"
-                } ${sidebarCollapsed ? "justify-center px-0" : ""}`}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 cursor-pointer ${location.pathname.startsWith("/reports")
+                  ? "text-white font-bold"
+                  : "text-white/80 hover:bg-white/10 hover:text-white"
+                  } ${sidebarCollapsed ? "justify-center px-0" : ""}`}
                 title={sidebarCollapsed ? "Hisobotlar" : undefined}
               >
                 <div className="flex items-center gap-3 overflow-hidden">
                   <HugeiconsIcon
                     icon={Analytics01Icon}
                     size={20}
-                    className={`flex-shrink-0 transition-colors duration-200 ${
-                      location.pathname.startsWith("/reports")
-                        ? "text-white"
-                        : "text-white/80"
-                    }`}
+                    className={`flex-shrink-0 transition-colors duration-200 ${location.pathname.startsWith("/reports")
+                      ? "text-white"
+                      : "text-white/80"
+                      }`}
                     strokeWidth={2}
                   />
                   {!sidebarCollapsed && (
@@ -210,9 +207,8 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 {!sidebarCollapsed && (
                   <ChevronDown
                     size={16}
-                    className={`text-white/80 transition-transform duration-200 ${
-                      reportsOpen ? "rotate-180" : ""
-                    }`}
+                    className={`text-white/80 transition-transform duration-200 ${reportsOpen ? "rotate-180" : ""
+                      }`}
                   />
                 )}
               </button>
@@ -228,11 +224,10 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                       <NavLink
                         key={sub.to}
                         to={sub.to}
-                        className={`block px-4 py-2.5 rounded-xl text-[13px] transition-colors ${
-                          isSubActive
-                            ? "bg-[#2844A8] text-white font-medium"
-                            : "text-white/80 hover:text-white hover:bg-white/5"
-                        }`}
+                        className={`block px-4 py-2.5 rounded-xl text-[13px] transition-colors ${isSubActive
+                          ? "bg-[#2844A8] text-white font-medium"
+                          : "text-white/80 hover:text-white hover:bg-white/5"
+                          }`}
                       >
                         {sub.label}
                       </NavLink>
@@ -254,10 +249,9 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 group ${
-                  isActive
-                    ? "bg-[#2844A8] text-white font-bold shadow-2xs"
-                    : "text-white/80 hover:bg-white/10 hover:text-white"
+                `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 group ${isActive
+                  ? "bg-[#2844A8] text-white font-bold shadow-2xs"
+                  : "text-white/80 hover:bg-white/10 hover:text-white"
                 } ${sidebarCollapsed ? "justify-center px-0" : ""}`
               }
               title={sidebarCollapsed ? item.label : undefined}
@@ -267,9 +261,8 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                   <HugeiconsIcon
                     icon={item.icon}
                     size={20}
-                    className={`flex-shrink-0 transition-colors duration-200 ${
-                      isActive ? "text-white" : "text-white/80 group-hover:text-white"
-                    }`}
+                    className={`flex-shrink-0 transition-colors duration-200 ${isActive ? "text-white" : "text-white/80 group-hover:text-white"
+                      }`}
                     strokeWidth={2}
                   />
                   {!sidebarCollapsed && (
@@ -283,33 +276,60 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
 
         {/* User Profile Card Button */}
         <div className="pt-2 border-t border-white/15 relative">
-          <button
-            type="button"
-            onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-            className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all duration-200 cursor-pointer text-left ${
-              profileMenuOpen ? "bg-[#2844A8]" : "hover:bg-white/10"
-            } ${sidebarCollapsed ? "justify-center p-1" : ""}`}
-            title={`${mockUserProfile.name} (${mockUserProfile.role})`}
-          >
-            {/* Avatar */}
-            <div className="w-9 h-9 rounded-xl bg-white/20 text-white font-bold flex items-center justify-center text-xs shadow-inner flex-shrink-0 backdrop-blur-xs">
-              {mockUserProfile.initial || "D"}
-            </div>
+          {(() => {
+            const displayName =
+              [currentUser?.first_name, currentUser?.last_name, currentUser?.patronymic]
+                .filter(Boolean)
+                .join(" ") ||
+              currentUser?.full_name ||
+              "Foydalanuvchi";
 
-            {/* User Details */}
-            {!sidebarCollapsed && (
-              <div className="flex-1 min-w-0">
-                <div className="text-[13.5px] font-semibold text-white truncate leading-tight">
-                  {mockUserProfile.name}
+            const displayRole = (currentUser?.is_staff ? "Administrator" : "Foydalanuvchi");
+
+            const displayInitials =
+              (
+                (currentUser?.first_name?.[0] || "") +
+                (currentUser?.last_name?.[0] || "")
+              ).toUpperCase() ||
+              (displayName?.[0] || "F").toUpperCase();
+
+            return (
+              <button
+                type="button"
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all duration-200 cursor-pointer text-left ${profileMenuOpen ? "bg-[#2844A8]" : "hover:bg-white/10"
+                  } ${sidebarCollapsed ? "justify-center p-1" : ""}`}
+                title={`${displayName} (${displayRole})`}
+              >
+                {/* Avatar */}
+                <div className="w-9 h-9 rounded-xl bg-white/20 text-white font-bold flex items-center justify-center text-xs shadow-inner flex-shrink-0 backdrop-blur-xs">
+                  {currentUser?.avatar ? (
+                    <img
+                      src={currentUser.avatar}
+                      alt={displayName}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                  ) : (
+                    <span>{displayInitials}</span>
+                  )}
                 </div>
-                <div className="mt-0.5">
-                  <span className="text-[11px] font-medium text-white/70">
-                    {mockUserProfile.role}
-                  </span>
-                </div>
-              </div>
-            )}
-          </button>
+
+                {/* User Details */}
+                {!sidebarCollapsed && (
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13.5px] font-semibold text-white truncate leading-tight">
+                      {displayName}
+                    </div>
+                    <div className="mt-0.5">
+                      <span className="text-[11px] font-medium text-white/70 truncate block">
+                        {displayRole}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </button>
+            );
+          })()}
 
           {/* Profile Popover Menu (as in mockup image) */}
           {profileMenuOpen && (
@@ -350,14 +370,16 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
               </button>
 
               {/* Divider */}
-              <div className="border-t border-[#F1F3F9] pt-2 flex justify-end">
+              <div
+                className="border-t border-[#F1F3F9] pt-2 flex justify-end cursor-pointer"
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  logout();
+                }}
+              >
                 {/* Row 3: Chiqish */}
                 <button
                   type="button"
-                  onClick={() => {
-                    setProfileMenuOpen(false);
-                    alert("Tizimdan chiqildi");
-                  }}
                   className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-[#E15241] hover:text-[#B42318] transition-colors cursor-pointer"
                 >
                   <span>Chiqish</span>

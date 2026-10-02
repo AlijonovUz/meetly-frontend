@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Search,
   Filter,
@@ -6,17 +6,49 @@ import {
   Calendar,
   Clock,
   X,
-  ChevronDown,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { CustomSelect, DatePicker, TimePicker } from "../../components/UI";
-import { mockLogsList } from "../../data/mockData";
+import { getLogs, getLogById } from "../../services/logsApi";
+import dayjs from "dayjs";
+
+const getActionMeta = (action) => {
+  const a = String(action).toLowerCase();
+  if (a === "0" || a === "create") {
+    return { label: "Create", color: "text-[#10B981]", bg: "bg-[#ECFDF5]" };
+  }
+  if (a === "1" || a === "update") {
+    return { label: "Update", color: "text-[#E07A28]", bg: "bg-[#FFF4ED]" };
+  }
+  if (a === "2" || a === "delete") {
+    return { label: "Delete", color: "text-[#EF4444]", bg: "bg-[#FEF2F2]" };
+  }
+  if (a === "3" || a === "access") {
+    return { label: "Access", color: "text-[#3858C7]", bg: "bg-[#EEF2FF]" };
+  }
+  return { label: String(action || ""), color: "text-[#1A1D2E]", bg: "bg-[#F1F3F9]" };
+};
+
+const formatTimestamp = (ts) => {
+  if (!ts) return "";
+  try {
+    const d = new Date(ts);
+    return dayjs(d).format("DD.MM.YYYY HH:mm")
+  } catch (e) {
+    return String(ts);
+  }
+};
 
 const Logs = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  // Search & Filters state
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedLog, setSelectedLog] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Filters state
+  // Filter form states
   const [selectedAction, setSelectedAction] = useState("");
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -31,6 +63,113 @@ const Logs = () => {
     endDate: "",
     endTime: "",
   });
+
+  // Data & Pagination states
+  const [logs, setLogs] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Guards against duplicate concurrent calls
+  const isFetchingRef = useRef(false);
+  const scrollContainerRef = useRef(null);
+
+  // 1. Debounce search input (350ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // 2. Fetch logs with pagination & filters
+  const fetchLogsData = useCallback(
+    async (targetPage, isNextPage = false) => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
+
+      if (isNextPage) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+      setError(null);
+
+      try {
+        const params = {
+          page: targetPage,
+        };
+
+        if (debouncedSearch) {
+          params.search = debouncedSearch;
+        }
+        if (appliedFilters.action !== "" && appliedFilters.action !== "Barchasi") {
+          params.action = appliedFilters.action;
+        }
+        if (appliedFilters.startDate) {
+          // Convert date string (DD.MM.YYYY to YYYY-MM-DD if needed)
+          const sDate = appliedFilters.startDate.includes(".")
+            ? appliedFilters.startDate.split(".").reverse().join("-")
+            : appliedFilters.startDate;
+          params.start_date = sDate;
+        }
+        if (appliedFilters.endDate) {
+          const eDate = appliedFilters.endDate.includes(".")
+            ? appliedFilters.endDate.split(".").reverse().join("-")
+            : appliedFilters.endDate;
+          params.end_date = eDate;
+        }
+
+        const data = await getLogs(params);
+        const newResults = data.results || [];
+
+        setTotalCount(data.count || 0);
+
+        if (isNextPage) {
+          setLogs((prev) => {
+            const existingIds = new Set(prev.map((l) => l.id));
+            const uniqueNew = newResults.filter((l) => !existingIds.has(l.id));
+            return [...prev, ...uniqueNew];
+          });
+        } else {
+          setLogs(newResults);
+        }
+
+        setPage(targetPage);
+        setHasMore(Boolean(data.next && newResults.length > 0));
+      } catch (err) {
+        console.error("Loglarni yuklashda xatolik:", err);
+        setError("Log ma'lumotlarini yuklab bo'lmadi");
+        setHasMore(false);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        isFetchingRef.current = false;
+      }
+    },
+    [debouncedSearch, appliedFilters]
+  );
+
+  // 3. Initial fetch & re-fetch on filter change
+  useEffect(() => {
+    fetchLogsData(1, false);
+  }, [fetchLogsData]);
+
+  // 4. Infinite scroll listener
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 80;
+
+    if (isNearBottom && hasMore && !loading && !loadingMore && !isFetchingRef.current) {
+      fetchLogsData(page + 1, true);
+    }
+  };
 
   const handleApplyFilter = () => {
     setAppliedFilters({
@@ -54,40 +193,38 @@ const Logs = () => {
       startDate: "",
       startTime: "",
       endDate: "",
-      endTime,
+      endTime: "",
     });
     setIsFilterOpen(false);
   };
 
-  // Filter logs logic
-  const filteredLogs = useMemo(() => {
-    return mockLogsList.filter((log) => {
-      // Search term
-      if (searchTerm.trim()) {
-        const query = searchTerm.toLowerCase();
-        const matchesUser = log.user.toLowerCase().includes(query);
-        const matchesTable = log.tableName.toLowerCase().includes(query);
-        const matchesAction = log.action.toLowerCase().includes(query);
-        const matchesIp = log.ipAddress.includes(query);
-        if (!matchesUser && !matchesTable && !matchesAction && !matchesIp) {
-          return false;
-        }
+  const handleLogClick = async (log) => {
+    setSelectedLog(log);
+    if (!log?.id) return;
+    setDetailLoading(true);
+    try {
+      const detailData = await getLogById(log.id);
+      if (detailData) {
+        setSelectedLog(detailData);
       }
-
-      // Action filter
-      if (appliedFilters.action && appliedFilters.action !== "Barchasi") {
-        if (log.action.toLowerCase() !== appliedFilters.action.toLowerCase()) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [searchTerm, appliedFilters]);
+    } catch (err) {
+      console.error("Log detail yuklashda xatolik:", err);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   const hasActiveFilters = Boolean(
     appliedFilters.action || appliedFilters.startDate || appliedFilters.endDate
   );
+
+  const actionOptions = [
+    { value: "", label: "Barchasi" },
+    { value: "0", label: "Create" },
+    { value: "1", label: "Update" },
+    { value: "2", label: "Delete" },
+    { value: "3", label: "Access" },
+  ];
 
   return (
     <div className="p-6 py-5 font-['Manrope',sans-serif]">
@@ -101,9 +238,9 @@ const Logs = () => {
           />
           <input
             type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Izlash"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Izlash (foydalanuvchi, IP, jadval)"
             className="w-full h-10 pl-10 pr-4 rounded-xl border border-[#E2E6F2] bg-[#F4F6FB] text-[13.5px] text-[#1A1D2E] placeholder:text-[#8B90A5] outline-none focus:border-[#3858C7] focus:bg-white focus:ring-2 focus:ring-[#3858C7]/20 transition-all"
           />
         </div>
@@ -126,11 +263,15 @@ const Logs = () => {
         </button>
       </div>
 
-      {/* Logs Table */}
-      <div className="overflow-auto h-[calc(100vh-165px)]">
+      {/* Logs Table with Infinite Scroll */}
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="overflow-auto h-[calc(100vh-165px)] rounded-xl relative"
+      >
         <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b border-[#F1F3F9] text-[#8B90A5] text-[12.5px] font-medium">
+          <thead className="sticky top-0 z-10 bg-[#F8F9FC]">
+            <tr className="border-b border-[#E2E6F2] text-[#8B90A5] text-[12.5px] font-medium">
               <th className="py-3 px-3 w-12 font-medium">№</th>
               <th className="py-3 px-3 font-medium">Foydalanuvchi</th>
               <th className="py-3 px-3 font-medium">Vaqt</th>
@@ -141,43 +282,92 @@ const Logs = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F1F3F9]">
-            {filteredLogs.length > 0 ? (
-              filteredLogs.map((log, index) => (
-                <tr
-                  key={log.id}
-                  onClick={() => setSelectedLog(log)}
-                  className="hover:bg-[#F8FAFC] font-medium cursor-pointer group text-[13.5px] text-[#1A1D2E]"
-                >
-                  <td className="py-4 px-3 text-[#8B90A5]">{index + 1}</td>
-                  <td className="py-4 px-3 truncate max-w-[200px] font-semibold text-[#1A1D2E] group-hover:text-[#3858C7] transition-colors">
-                    {log.user}
-                  </td>
-                  <td className="py-4 px-3 text-[#5E6480]">{log.time}</td>
-                  <td className="py-4 px-3 text-[#5E6480]">
-                    {log.tableName}
-                  </td>
-                  <td className="py-4 px-3">
-                    <span
-                      className={`font-medium ${
-                        log.action === "Create"
-                          ? "text-[#10B981]"
-                          : log.action === "Delete"
-                          ? "text-[#EF4444]"
-                          : "text-[#1A1D2E]"
-                      }`}
+            {loading && logs.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-20 text-center text-[#8B90A5]">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Loader2 size={28} className="animate-spin text-[#3858C7]" />
+                    <span className="text-[13.5px]">Loglar yuklanmoqda...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : error && logs.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-16 text-center text-[#EF4444]">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <span>{error}</span>
+                    <button
+                      type="button"
+                      onClick={() => fetchLogsData(1, false)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3858C7] text-white text-xs font-semibold cursor-pointer"
                     >
-                      {log.action}
-                    </span>
-                  </td>
-                  <td className="py-4 px-3 text-[#5E6480] text-right">{log.recordId}</td>
-                  <td className="py-4 px-3 text-[#5E6480] text-[13px] text-right">
-                    {log.ipAddress}
-                  </td>
-                </tr>
-              ))
+                      <RefreshCw size={13} />
+                      <span>Qayta urinish</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ) : logs.length > 0 ? (
+              <>
+                {logs.map((log, index) => {
+                  const actionMeta = getActionMeta(log.action);
+                  const actorName = log.actor_name || log.actor || "Tizim";
+                  const timeFormatted = formatTimestamp(log.timestamp || log.time);
+                  const tableName = log.content_type_name || log.object_repr || log.tableName || "";
+                  const recordId = log.object_pk || log.object_id || log.recordId || "";
+                  const ipAddr = log.remote_addr || log.ipAddress || "";
+
+                  return (
+                    <tr
+                      key={log.id || index}
+                      onClick={() => handleLogClick(log)}
+                      className="hover:bg-[#F8FAFC] font-medium cursor-pointer group text-[13.5px] text-[#1A1D2E] transition-colors"
+                    >
+                      <td className="py-4 px-3 text-[#8B90A5]">{index + 1}</td>
+                      <td className="py-4 px-3 truncate max-w-[200px] font-semibold text-[#1A1D2E] group-hover:text-[#3858C7] transition-colors">
+                        {actorName}
+                      </td>
+                      <td className="py-4 px-3 text-[#5E6480] whitespace-nowrap">
+                        {timeFormatted}
+                      </td>
+                      <td className="py-4 px-3 text-[#5E6480] truncate max-w-[180px]">
+                        {tableName}
+                      </td>
+                      <td className="py-4 px-3">
+                        <span
+                          className={`font-semibold text-xs px-2.5 py-1 rounded-full ${actionMeta.bg} ${actionMeta.color}`}
+                        >
+                          {actionMeta.label}
+                        </span>
+                      </td>
+                      <td
+                        className="py-4 px-3 text-[#5E6480] text-right text-[13px] truncate max-w-[150px]"
+                        title={recordId}
+                      >
+                        {recordId}
+                      </td>
+                      <td className="py-4 px-3 text-[#5E6480] text-[13px] text-right">
+                        {ipAddr}
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {/* Infinite Scroll loading indicator */}
+                {loadingMore && (
+                  <tr>
+                    <td colSpan={7} className="py-4 text-center text-[#5B6078]">
+                      <div className="inline-flex items-center gap-2 text-xs font-semibold">
+                        <Loader2 size={16} className="animate-spin text-[#3858C7]" />
+                        <span>Ko'proq loglar yuklanmoqda...</span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </>
             ) : (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-[#8B90A5] text-[14px]">
+                <td colSpan={7} className="py-16 text-center text-[#8B90A5] text-[14px]">
                   Hech qanday log topilmadi
                 </td>
               </tr>
@@ -191,7 +381,7 @@ const Logs = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 duration-150 relative">
             {/* Modal Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#F1F3F9]">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -200,8 +390,11 @@ const Logs = () => {
                 >
                   <ArrowLeft size={20} />
                 </button>
-                <h3 className="text-[17px] md:text-[18px] font-bold text-[#1A1D2E]">
-                  Foydalanuvchi va so'rov haqida ma'lumot
+                <h3 className="text-[17px] md:text-[18px] font-bold text-[#1A1D2E] flex items-center gap-2">
+                  <span>Log tafsilotlari</span>
+                  {detailLoading && (
+                    <Loader2 size={16} className="animate-spin text-[#3858C7]" />
+                  )}
                 </h3>
               </div>
               <button
@@ -220,8 +413,8 @@ const Logs = () => {
                 <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
                   Foydalanuvchi
                 </label>
-                <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-white flex items-center text-[13.5px] text-[#1A1D2E] font-medium">
-                  {selectedLog.user}
+                <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center text-[13.5px] text-[#1A1D2E] font-medium">
+                  {selectedLog.actor_name || selectedLog.actor || selectedLog.user || "Tizim"}
                 </div>
               </div>
 
@@ -231,8 +424,8 @@ const Logs = () => {
                   <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
                     Vaqti
                   </label>
-                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-white flex items-center justify-between text-[13.5px] text-[#1A1D2E]">
-                    <span>{selectedLog.time}</span>
+                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center justify-between text-[13.5px] text-[#1A1D2E]">
+                    <span>{formatTimestamp(selectedLog.timestamp || selectedLog.time)}</span>
                     <Calendar size={16} className="text-[#8B90A5]" />
                   </div>
                 </div>
@@ -240,57 +433,55 @@ const Logs = () => {
                   <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
                     IP manzili
                   </label>
-                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-white flex items-center text-[13.5px] text-[#1A1D2E]">
-                    {selectedLog.ipAddress}
+                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center text-[13.5px] text-[#1A1D2E]">
+                    {selectedLog.remote_addr || selectedLog.ipAddress || "—"}
                   </div>
                 </div>
               </div>
 
-              {/* Harakati & Jadval nomi & Yozuv raqami */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              {/* Harakati & Jadval nomi */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
                   <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
                     Harakati
                   </label>
-                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-white flex items-center text-[13.5px] text-[#1A1D2E] font-medium">
-                    {selectedLog.action}
+                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center text-[13.5px] text-[#1A1D2E] font-medium">
+                    {getActionMeta(selectedLog.action).label}
                   </div>
                 </div>
                 <div>
                   <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
-                    Jadval nomi
+                    Jadval / Obyekt
                   </label>
-                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-white flex items-center text-[13.5px] text-[#1A1D2E]">
-                    {selectedLog.tableName}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
-                    Yozuv raqami
-                  </label>
-                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-white flex items-center text-[13.5px] text-[#1A1D2E]">
-                    {selectedLog.recordId}
+                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center text-[13.5px] text-[#1A1D2E] truncate">
+                    {selectedLog.content_type_name || selectedLog.object_repr || selectedLog.tableName || "—"}
                   </div>
                 </div>
               </div>
 
-              {/* Eski qiymat */}
+              {/* Yozuv raqami (Full width) */}
               <div>
                 <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
-                  Eski qiymat
+                  Yozuv raqami
                 </label>
-                <div className="rounded-2xl border border-[#E2E6F2] bg-[#F8FAFC] p-4 font-mono text-[12.5px] text-[#1A1D2E] whitespace-pre min-h-[70px]">
-                  {selectedLog.oldValue || "null"}
+                <div className="min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center text-[13.5px] text-[#1A1D2E] break-all select-all leading-normal">
+                  {selectedLog.object_pk || selectedLog.object_id || selectedLog.recordId || "—"}
                 </div>
               </div>
 
-              {/* Yangi qiymat */}
+              {/* O'zgarishlar / Changes */}
               <div>
                 <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
-                  Yangi qiymat
+                  O'zgarishlar
                 </label>
-                <div className="rounded-2xl border border-[#E2E6F2] bg-[#F8FAFC] p-4 font-mono text-[12.5px] text-[#1A1D2E] whitespace-pre min-h-[70px]">
-                  {selectedLog.newValue || "null"}
+                <div className="rounded-2xl border border-[#E2E6F2] bg-[#F8FAFC] p-4 text-[13px] text-[#1A1D2E] whitespace-pre-wrap overflow-auto min-h-[70px] max-h-[180px] leading-relaxed">
+                  {selectedLog.changes
+                    ? typeof selectedLog.changes === "object"
+                      ? JSON.stringify(selectedLog.changes, null, 2)
+                      : String(selectedLog.changes)
+                    : selectedLog.additional_data
+                    ? JSON.stringify(selectedLog.additional_data, null, 2)
+                    : "O'zgarish ma'lumotlari mavjud emas"}
                 </div>
               </div>
             </div>
@@ -341,11 +532,7 @@ const Logs = () => {
                 <CustomSelect
                   value={selectedAction}
                   onChange={(val) => setSelectedAction(val)}
-                  options={[
-                    { value: "Create", label: "Create" },
-                    { value: "Update", label: "Update" },
-                    { value: "Delete", label: "Delete" },
-                  ]}
+                  options={actionOptions}
                   placeholder="Harakatini tanlang"
                   searchable={false}
                   className="h-11 rounded-xl"
@@ -361,7 +548,7 @@ const Logs = () => {
                   <DatePicker
                     value={startDate}
                     onChange={(d) => setStartDate(d)}
-                    placeholder="01.05.2026"
+                    placeholder="Boshlanish sanasi"
                     className="w-full"
                   />
                   <TimePicker
@@ -373,7 +560,7 @@ const Logs = () => {
                   <DatePicker
                     value={endDate}
                     onChange={(d) => setEndDate(d)}
-                    placeholder="31.05.2026"
+                    placeholder="Tugash sanasi"
                     className="w-full"
                   />
                   <TimePicker
