@@ -205,7 +205,13 @@ const CreateMeetingModal = ({
                   <input
                     type="checkbox"
                     checked={newRequireApproval}
-                    onChange={(e) => setNewRequireApproval(e.target.checked)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setNewRequireApproval(checked);
+                      if (checked) {
+                        setNewAllowJoinBeforeHost(false);
+                      }
+                    }}
                     className="sr-only peer"
                   />
                   <div className="w-12 h-6.5 bg-[#CBD5E1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[22px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-transparent after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3858C7]"></div>
@@ -226,7 +232,13 @@ const CreateMeetingModal = ({
                   <input
                     type="checkbox"
                     checked={newAllowJoinBeforeHost}
-                    onChange={(e) => setNewAllowJoinBeforeHost(e.target.checked)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setNewAllowJoinBeforeHost(checked);
+                      if (checked) {
+                        setNewRequireApproval(false);
+                      }
+                    }}
                     className="sr-only peer"
                   />
                   <div className="w-12 h-6.5 bg-[#CBD5E1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[22px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-transparent after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3858C7]"></div>
@@ -291,6 +303,7 @@ const CreateMeetingModal = ({
                     value={newStartTime}
                     onChange={setNewStartTime}
                     placeholder="00:00"
+                    className="h-12!"
                   />
                 </div>
 

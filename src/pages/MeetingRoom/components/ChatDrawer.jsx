@@ -120,6 +120,8 @@ export default function ChatDrawer({
   messages = [],
   onSendMessage,
   currentUserName = '',
+  currentUserId = '',
+  localIdentity = '',
   typingUsers = [],
   onTyping = null,
 }) {
@@ -314,7 +316,11 @@ export default function ChatDrawer({
               /* Messages List matching Figma */
               <div className="space-y-3.5 py-1">
                 {messages.map((m, idx) => {
-                  const isMe = m.sender === currentUserName || m.isMe
+                  const isMe = Boolean(
+                    m.isMe === true ||
+                    (currentUserId && m.senderId && String(m.senderId) === String(currentUserId)) ||
+                    (localIdentity && m.participantIdentity && String(m.participantIdentity) === String(localIdentity))
+                  )
                   const isStickerMsg = m.isSticker || !!m.sticker
                   const stickerData = typeof m.sticker === 'object' ? m.sticker : { url: m.sticker, name: 'Stiker' }
                   const senderDisplayName = isMe ? 'Siz' : (m.sender || m.senderName || m.sender_name || m.name || m.fullName || m.full_name || m.username || m.userName || 'Ishtirokchi')

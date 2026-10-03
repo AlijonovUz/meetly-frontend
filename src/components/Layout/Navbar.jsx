@@ -5,14 +5,45 @@ import {
   Notification01Icon,
   Menu01Icon,
   Download01Icon,
+  Edit02Icon,
 } from "@hugeicons/core-free-icons";
-import { mockUserProfile, mockNotifications, mockUsersList, mockMeetingsList } from "../../data/mockData";
+import { FaCheck } from "react-icons/fa6";
+import { useNotifications } from "../../context/NotificationContext";
+import { mockUsersList, mockMeetingsList } from "../../data/mockData";
+
+const formatRelativeTime = (dateString) => {
+  if (!dateString) return "Hozirgina";
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return "Hozirgina";
+    if (diffMins < 60) return `${diffMins} daqiqa oldin`;
+    if (diffHours < 24 && date.getDate() === now.getDate()) return `${diffHours} soat oldin`;
+    if (diffDays === 1 || (diffHours < 48 && date.getDate() === now.getDate() - 1)) return "Kecha";
+    return date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
+  } catch (e) {
+    return "";
+  }
+};
 
 const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notifRef = useRef(null);
+
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    openSignatureModal,
+  } = useNotifications();
 
   // Dynamic breadcrumbs based on route
   const getBreadcrumbs = () => {
@@ -137,7 +168,7 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
             className="hidden sm:inline-flex items-center gap-2 bg-white hover:bg-white/95 text-[#1A1D2E] text-[13px] font-semibold px-3.5 py-2 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
           >
             <img src="/meet_icon.svg" alt="" className="pointer-events-none w-4.5 h-4.5" />
-            <span>Yangi yig'ilish</span>
+            <span>Yig'ilish qo'shish</span>
           </button>
         )}
 
@@ -153,54 +184,145 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           </button>
         )}
 
-        {/* Notification Bell Dropdown */}
+        {/* Notification Bell Dropdown (Screenshot 2) */}
         <div className="relative" ref={notifRef}>
           <button
             type="button"
             onClick={() => setNotificationsOpen(!notificationsOpen)}
-            className={`relative flex items-center justify-center w-9 h-9 rounded-xl border transition-all cursor-pointer ${
+            className={`relative flex items-center justify-center w-9.5 h-9.5 rounded-xl transition-all cursor-pointer ${
               notificationsOpen
-                ? "bg-[#E9ECF5] border-[#EEF1F7] text-[#1A1D2E]"
-                : "bg-[#E9ECF5] border-[#EEF1F7] text-[#1A1D2E] hover:bg-[#F1F3F9] hover:text-[#1A1D2E]"
+                ? "bg-white text-[#1A1D2E] shadow-sm"
+                : "bg-[#E9ECF5] text-[#1A1D2E] hover:bg-white"
             }`}
             title="Bildirishnomalar"
           >
             <HugeiconsIcon icon={Notification01Icon} size={20} />
-            {mockUserProfile.unreadNotifications > 0 && (
+            {unreadCount > 0 && (
               <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#EF4444] border-2 border-white rounded-full"></span>
             )}
           </button>
 
-          {/* Notifications Dropdown Panel */}
+          {/* Notifications Dropdown Panel (Screenshot 2) */}
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white text-[#1A1D2E] rounded-2xl shadow-2xl border border-[#E2E6F2] p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="px-3 py-2.5 border-b border-[#F1F3F9] flex items-center justify-between">
-                <span className="font-semibold text-[13px] text-[#1B1F3B]">
-                  Bildirishnomalar
-                </span>
-                <span className="text-[11px] font-semibold bg-[#EEF2FF] text-[#3858C7] px-2 py-0.5 rounded-full">
-                  {mockNotifications.filter((n) => n.unread).length} ta yangi
-                </span>
-              </div>
-              <div className="max-h-72 overflow-y-auto divide-y divide-[#F1F3F9] mt-1">
-                {mockNotifications.map((n) => (
-                  <div
-                    key={n.id}
-                    className={`px-3 py-2.5 rounded-xl hover:bg-[#F8F9FC] transition-colors cursor-pointer flex items-start justify-between gap-2 ${
-                      n.unread ? "bg-[#F4F6FC]/50" : ""
-                    }`}
+            <div className="absolute right-0 mt-2.5 w-84 sm:w-92 bg-white dark:bg-[#12161F] text-[#1A1D2E] dark:text-white rounded-3xl shadow-[0_15px_45px_rgba(0,0,0,0.18)] border border-slate-200/90 dark:border-white/10 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              {/* Header */}
+              <div className="px-3.5 py-3 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
+                    Bildirishnomalar
+                  </span>
+                  {unreadCount > 0 && (
+                    <span className="w-5 h-5 rounded-full bg-[#EF4444] text-white text-[11px] font-bold flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </div>
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllAsRead}
+                    className="text-xs text-[#3B59BA] hover:underline font-medium cursor-pointer"
                   >
-                    <div>
-                      <p className="text-[13px] font-medium text-[#1B1F3B] leading-snug">
-                        {n.title}
-                      </p>
-                      <p className="text-[11px] text-[#8B90A5] mt-0.5">{n.time}</p>
-                    </div>
-                    {n.unread && (
-                      <span className="w-2 h-2 rounded-full bg-[#3858C7] mt-1.5 flex-shrink-0"></span>
-                    )}
+                    Barchasini o'qildi qilish
+                  </button>
+                )}
+              </div>
+
+              {/* List */}
+              <div
+                className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5"
+                style={{ scrollbarWidth: "thin", scrollbarColor: "#CBD5E1 transparent" }}
+              >
+                {notifications.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-slate-400">
+                    Hozircha bildirishnomalar yo'q
                   </div>
-                ))}
+                ) : (
+                  notifications.map((n) => {
+                    const extra = n.extra_data || {};
+                    const isSignatureReq =
+                      extra.type === "signature_request" ||
+                      extra.type === "signature" ||
+                      Boolean(extra.attendance_id) ||
+                      n.title?.toLowerCase().includes("imzo kutilmoqda") ||
+                      n.message?.toLowerCase().includes("imzo bilan tasdiqlang");
+
+                    const isSigned =
+                      Boolean(n.is_signed || extra.is_signed || extra.signature_url) ||
+                      n.title?.toLowerCase().includes("imzo saqlandi");
+
+                    const meetingTitle =
+                      extra.meeting_title ||
+                      extra.title ||
+                      extra.meeting_name ||
+                      "Mahalla raislari yig'ilishi";
+
+                    return (
+                      <div
+                        key={n.id}
+                        onClick={() => !n.is_read && markAsRead(n.id)}
+                        className={`p-3.5 transition-colors flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl cursor-pointer ${
+                          !n.is_read ? "bg-blue-50/30 dark:bg-blue-950/20" : ""
+                        }`}
+                      >
+                        {/* Left Icon Avatar (Screenshot 2) */}
+                        {isSignatureReq && !isSigned ? (
+                          <div className="w-10 h-10 rounded-full bg-[#E8EDFB] text-[#3B59BA] flex items-center justify-center shrink-0">
+                            <HugeiconsIcon icon={Edit02Icon} size={18} strokeWidth={2} />
+                          </div>
+                        ) : isSigned ? (
+                          <div className="w-10 h-10 rounded-full bg-[#E6F8EF] text-[#10B981] flex items-center justify-center shrink-0">
+                            <FaCheck size={16} />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
+                            <HugeiconsIcon icon={Notification01Icon} size={18} strokeWidth={2} />
+                          </div>
+                        )}
+
+                        {/* Content Body */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <h5 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                              {isSignatureReq && !isSigned
+                                ? "Imzo kutilmoqda"
+                                : isSigned
+                                ? "Imzo saqlandi"
+                                : n.title || "Xabarnoma"}
+                            </h5>
+                            <span className="text-[11px] text-slate-400 shrink-0 font-normal">
+                              {formatRelativeTime(n.created_at)}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                            {isSignatureReq && !isSigned
+                              ? `«${meetingTitle}» yakunlandi. Qatnashganingizni imzo bilan tasdiqlang.`
+                              : isSigned
+                              ? `«${meetingTitle}» yig'ilishidagi qatnashishingiz tasdiqlandi.`
+                              : n.message}
+                          </p>
+
+                          {/* "Imzolash" Button (Screenshot 2) */}
+                          {isSignatureReq && !isSigned && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openSignatureModal(n);
+                                setNotificationsOpen(false);
+                              }}
+                              className="mt-2.5 px-4 py-1.5 rounded-xl bg-[#3B59BA] hover:bg-[#324D9E] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
+                            >
+                              <HugeiconsIcon icon={Edit02Icon} size={14} strokeWidth={2} />
+                              <span>Imzolash</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           )}
@@ -211,4 +333,5 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
 };
 
 export default Navbar;
+
 

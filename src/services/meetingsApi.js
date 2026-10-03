@@ -110,3 +110,44 @@ export const removeMeetingParticipant = async (meetingId, payload = {}) => {
   const response = await axiosAPI.post(`meetings/${meetingId}/remove-participant/`, payload);
   return response.data?.data || response.data;
 };
+
+/**
+ * Yig'ilish qatnashuviga imzo qo'yish (Attendance Signature)
+ * Endpoint: POST /api/v1/meetings/attendances/{id}/signature/
+ * @param {string} attendanceId - Yig'ilish qatnashuvi UUID
+ * @param {File|Blob|string|FormData} signaturePayload - Imzo fayli yoki base64
+ */
+export const submitAttendanceSignature = async (attendanceId, signaturePayload) => {
+  let formData;
+
+  if (signaturePayload instanceof FormData) {
+    formData = signaturePayload;
+  } else {
+    formData = new FormData();
+
+    if (typeof signaturePayload === "string" && signaturePayload.startsWith("data:")) {
+      const arr = signaturePayload.split(",");
+      const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      const blob = new Blob([u8arr], { type: mime });
+      formData.append("signature", blob, "signature.png");
+    } else if (signaturePayload instanceof Blob || signaturePayload instanceof File) {
+      formData.append("signature", signaturePayload, "signature.png");
+    } else {
+      formData.append("signature", signaturePayload);
+    }
+  }
+
+  const response = await axiosAPI.post(
+    `meetings/attendances/${attendanceId}/signature/`,
+    formData
+  );
+  return response.data?.data || response.data;
+};
+
+

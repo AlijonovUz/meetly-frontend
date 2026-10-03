@@ -14,7 +14,7 @@ import {
   approveAppeal,
   rejectAppeal,
 } from "../../services/usersApi";
-import { getMeetings } from "../../services/meetingsApi";
+import { getMeetings, getMeetingCounts } from "../../services/meetingsApi";
 import dayjs from "dayjs";
 
 const MEETING_TABS = [
@@ -79,18 +79,20 @@ const UserDetailPage = () => {
     }
   }, [id, meetingFilter]);
 
-  // Fetch count breakdown for tabs
+  // Fetch count breakdown for tabs from /api/v1/meetings/counts/
   const fetchMeetingCounts = useCallback(async () => {
     if (!id) return;
     try {
-      const res = await getMeetings({ organizer: id, page_size: 100 });
-      const list = res.results || [];
-      setMeetingCounts({
-        all: res.count ?? list.length,
-        ongoing: list.filter((m) => m.status === "ongoing" || m.status === "active").length,
-        scheduled: list.filter((m) => m.status === "scheduled" || m.status === "planned").length,
-        completed: list.filter((m) => m.status === "completed").length,
-      });
+      const res = await getMeetingCounts({ organizer: id });
+      const countsData = res?.data || res;
+      if (countsData && typeof countsData === "object") {
+        setMeetingCounts({
+          all: Number(countsData.all ?? 0),
+          ongoing: Number(countsData.ongoing ?? 0),
+          scheduled: Number(countsData.scheduled ?? 0),
+          completed: Number(countsData.completed ?? 0),
+        });
+      }
     } catch (err) {
       console.error("Yig'ilishlar sonini olishda xatolik:", err);
     }

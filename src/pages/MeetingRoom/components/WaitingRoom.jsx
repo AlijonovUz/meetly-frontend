@@ -125,9 +125,19 @@ export default function WaitingRoom({
     }
   }, [localStream, isMicEnabled])
 
-  const displayName = user?.first_name
-    ? `${user.first_name} ${user.last_name || ''}`.trim()
-    : user?.username || 'Foydalanuvchi'
+  const displayName =
+    [user?.last_name, user?.first_name, user?.patronymic]
+      .filter(Boolean)
+      .join(' ')
+      .trim() ||
+    [user?.first_name, user?.last_name]
+      .filter(Boolean)
+      .join(' ')
+      .trim() ||
+    user?.full_name ||
+    user?.name ||
+    user?.username ||
+    'Foydalanuvchi'
 
   const initials = displayName
     ? displayName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()

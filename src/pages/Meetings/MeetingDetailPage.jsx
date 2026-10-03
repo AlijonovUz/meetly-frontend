@@ -370,7 +370,7 @@ const MeetingDetailPage = () => {
         <label className="block text-[13px] font-medium text-[#5B6078]">
           Taklif havolasi
         </label>
-        <div className={`flex items-center justify-between border rounded-2xl px-5 h-12 bg-white border-[#E2E6F2] shadow-2xs transition-colors ${
+        <div className={`flex items-center justify-between border rounded-2xl px-5 h-11 bg-white border-[#E2E6F2] shadow-2xs transition-colors ${
           isEnded ? "cursor-default" : ""
         }`}>
           <span className={`text-[14px] font-bold truncate pr-4 ${
@@ -463,7 +463,7 @@ const MeetingDetailPage = () => {
                   setDurationVal(onlyNums);
                 }}
                 placeholder="30"
-                className="w-full bg-transparent text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none font-semibold text-[13.5px]"
+                className="w-full h-11! bg-transparent text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none font-semibold text-[13.5px]"
               />
               <span className="text-[#8B90A5] text-[13px] font-medium ml-1.5 select-none shrink-0">
                 daqiqa
@@ -593,7 +593,7 @@ const MeetingDetailPage = () => {
                           </span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 text-end">
+                      <td className="py-3.5 px-4 text-end flex items-center justify-end">
                         {p.signature ? (
                           <div className="border border-[#E2E6F2] rounded-xl px-2.5 py-1 w-24 h-9 flex items-center justify-center bg-white shadow-2xs">
                             <img

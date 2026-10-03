@@ -569,7 +569,21 @@ export default function MeetingRoom() {
   // WebSocket reference
   const wsRef = useRef(null)
   const previewStreamRef = useRef(null)
-  const currentUserName = user?.username || user?.first_name || 'Foydalanuvchi'
+  const currentUserName = useMemo(() => {
+    const fromFirstLast = [user?.last_name, user?.first_name, user?.patronymic]
+      .filter(Boolean)
+      .join(' ')
+      .trim() ||
+      [user?.first_name, user?.last_name]
+      .filter(Boolean)
+      .join(' ')
+      .trim() ||
+      user?.full_name ||
+      user?.name ||
+      user?.username ||
+      'Foydalanuvchi'
+    return fromFirstLast
+  }, [user])
 
   const triggerReaction = useCallback((emoji, emojiCode, senderName) => {
     const reactionId = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
@@ -1531,21 +1545,6 @@ export default function MeetingRoom() {
 
   // Lobby sahifasidan "Yig'ilishga kirish" tugmasi bosilganda
   const handleJoinFromLobby = useCallback(() => {
-    // Avtomatik to'liq ekran (Full Screen) rejimiga o'tish
-    if (typeof document !== 'undefined' && !document.fullscreenElement) {
-      try {
-        const docEl = document.documentElement
-        const requestFs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen
-        if (requestFs) {
-          requestFs.call(docEl).catch((err) => {
-            console.warn("Fullscreen request error:", err)
-          })
-        }
-      } catch (err) {
-        console.warn("Fullscreen error:", err)
-      }
-    }
-
     hasClickedJoinRef.current = true
     setIsJoining(true)
     setWaitingState('connecting')
@@ -2404,12 +2403,27 @@ export default function MeetingRoom() {
           const now = new Date()
           const fallbackTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
+          const remoteIdentity = participant?.identity || decoded.participantIdentity || ''
+          const remoteUserId = String(decoded.senderId || decoded.userId || decoded.user_id || remoteIdentity || '')
+          const localUserId = String(user?.id || '')
+          const localIdentity = String(roomRef.current?.localParticipant?.identity || '')
+
+          const isActuallyMe = Boolean(
+            decoded.isMe === true ||
+            (localUserId && remoteUserId && localUserId === remoteUserId) ||
+            (localIdentity && remoteIdentity && localIdentity === remoteIdentity)
+          )
+
           const normalizedMessage = {
             ...decoded,
+            id: decoded.id || `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
             sender: senderDisplayName,
+            senderId: remoteUserId,
+            participantIdentity: remoteIdentity,
             text: decoded.text ?? decoded.message ?? decoded.content ?? '',
             time: decoded.time || fallbackTime,
-            avatar: decoded.avatar || (participant ? resolveParticipantAvatar(participant, participantTracks[participant?.identity]) : '')
+            avatar: decoded.avatar || (participant ? resolveParticipantAvatar(participant, participantTracks[participant?.identity]) : ''),
+            isMe: isActuallyMe
           }
 
           setChatMessages(prev => {
@@ -2418,7 +2432,7 @@ export default function MeetingRoom() {
             return next
           })
           playChatMessageSound()
-          if (!isChatOpenRef.current) {
+          if (!isChatOpenRef.current && !isActuallyMe) {
             setUnreadChatCount(c => c + 1)
             const snippet = normalizedMessage.isSticker
               ? (normalizedMessage.sticker?.char ? `${normalizedMessage.sticker.char} stiker yubordi` : '🎨 Stiker yubordi')
@@ -2972,15 +2986,21 @@ export default function MeetingRoom() {
   const handleSendMessage = async (text, sticker = null) => {
     const now = new Date()
     const formattedTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    const currentUserId = String(user?.id || '')
+    const localIdentity = String(roomRef.current?.localParticipant?.identity || '')
 
     const messageData = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
       type: 'chat',
       text: text || '',
       sticker: sticker || null,
       isSticker: !!sticker,
       sender: currentUserName,
+      senderId: currentUserId,
+      participantIdentity: localIdentity,
       avatar: formatAvatarUrl(user?.avatar) || user?.avatar || '',
-      time: formattedTime
+      time: formattedTime,
+      isMe: true
     }
 
     playChatMessageSound()
@@ -2991,7 +3011,11 @@ export default function MeetingRoom() {
     })
 
     if (roomRef.current?.localParticipant) {
-      const payload = new TextEncoder().encode(JSON.stringify(messageData))
+      const payloadData = {
+        ...messageData,
+        isMe: false // for recipient
+      }
+      const payload = new TextEncoder().encode(JSON.stringify(payloadData))
       await roomRef.current.localParticipant.publishData(payload, { reliable: true })
     }
   }
@@ -3562,19 +3586,6 @@ export default function MeetingRoom() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [screenFocusId])
-
-  // Avtomatik to'liq ekran (Full Screen) rejimiga o'tish (yig'ilishga kirganda)
-  useEffect(() => {
-    if (waitingState === 'in_room' && typeof document !== 'undefined' && !document.fullscreenElement) {
-      try {
-        const docEl = document.documentElement
-        const requestFs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen
-        if (requestFs) {
-          requestFs.call(docEl).catch(() => { })
-        }
-      } catch (e) { }
-    }
-  }, [waitingState])
 
   // Global Keyboard Shortcuts (Ctrl+D: Mic, Ctrl+E: Camera, Ctrl+Alt+H: Hand, Ctrl+L: Chat)
   useEffect(() => {
@@ -4318,6 +4329,8 @@ export default function MeetingRoom() {
           messages={chatMessages}
           onSendMessage={handleSendMessage}
           currentUserName={currentUserName}
+          currentUserId={String(user?.id || '')}
+          localIdentity={String(roomRef.current?.localParticipant?.identity || '')}
           typingUsers={typingUserNames}
           onTyping={handleSendTypingStatus}
         />
