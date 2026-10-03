@@ -4,6 +4,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Room, RoomEvent, VideoPresets, Track, ConnectionQuality, setLogLevel, LogLevel } from 'livekit-client'
 import { getCurrentUser, getMyProfile } from '../../services/auth'
 import { axiosAPI } from '../../services/axiosAPI'
+import { removeMeetingParticipant } from '../../services/meetingsApi'
 import { toast } from '../../Toast/ToastProvider'
 
 try {
@@ -45,7 +46,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
-import { FaExpand, FaCompress, FaMicrophone, FaMicrophoneSlash, FaVideo, FaXmark } from 'react-icons/fa6'
+import { FaExpand, FaCompress, FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaXmark, FaUserXmark } from 'react-icons/fa6'
 import { RiSignalWifiFill, RiSignalWifiOffFill, RiSignalWifi1Fill, RiInformationLine } from 'react-icons/ri'
 import {
   TbBellFilled,
@@ -77,6 +78,12 @@ const renderAlertIcon = (iconOrType, alertType) => {
       return <TbHandStop size={18} className="text-amber-400 shrink-0" />
     case 'mute':
       return <FaMicrophoneSlash size={18} className="text-red-400 shrink-0" />
+    case 'camera_off':
+    case 'camera':
+      return <FaVideoSlash size={18} className="text-red-400 shrink-0" />
+    case 'user_removed':
+    case 'remove_user':
+      return <FaUserXmark size={18} className="text-white shrink-0" />
     default:
       if (iconOrType && typeof iconOrType !== 'string') return iconOrType
       return <RiInformationLine size={18} className="text-blue-400 shrink-0" />
@@ -527,6 +534,24 @@ export default function MeetingRoom() {
       setInRoomAlert(null)
     }, 4000)
   }, [])
+
+  const lastMuteToastTimeRef = useRef(0)
+  const notifyMicMutedByHost = useCallback(() => {
+    const now = Date.now()
+    if (now - lastMuteToastTimeRef.current < 2500) return
+    lastMuteToastTimeRef.current = now
+    toast.warning("Mikrofon o'chirildi", "Tashkilotchi mikrofoningizni o'chirib qo'ydi")
+    triggerInRoomAlert('mute', "Tashkilotchi mikrofoningizni o'chirdi", 'mute')
+  }, [triggerInRoomAlert])
+
+  const lastCameraToastTimeRef = useRef(0)
+  const notifyCameraTurnedOffByHost = useCallback(() => {
+    const now = Date.now()
+    if (now - lastCameraToastTimeRef.current < 2500) return
+    lastCameraToastTimeRef.current = now
+    toast.warning("Kamera o'chirildi", "Tashkilotchi kamerangizni o'chirib qo'ydi")
+    triggerInRoomAlert('camera_off', "Tashkilotchi kamerangizni o'chirdi", 'camera_off')
+  }, [triggerInRoomAlert])
 
   const currentMeetingCode = getMeetingCode(meetingId, meetingDetails?.uid, meetingDetails?.code || rawParamId)
   const currentMeetingUrl = getFullMeetingUrl(meetingId, meetingDetails?.uid, meetingDetails?.code || rawParamId)
@@ -1038,17 +1063,37 @@ export default function MeetingRoom() {
       }
 
       case 'knock_request': {
+        const resolvedName = msg.full_name || msg.name || msg.username || msg.email || msg.phone_number || ''
+        const reqUserId = msg.user_id || msg.guest_id || msg.id || msg.userId || msg.target_user_id || msg.sender_id || resolvedName
+
         // Faqat qabul qilish huquqiga ega bo'lganlar (host, admin, superadmin, loyiha menejeri) ga signal beriladi
         if (canAdmitParticipantsRef.current) {
           playKnockRequestSound()
-          triggerInRoomAlert('bell', `${msg.full_name || msg.username || 'Foydalanuvchi'} yig'ilishga kirishni so'ramoqda`, 'knock')
+          triggerInRoomAlert('bell', `${resolvedName || 'Foydalanuvchi'} yig'ilishga kirishni so'ramoqda`, 'knock')
+        }
+        if (reqUserId) {
+          setPeerProfiles(prev => ({
+            ...prev,
+            [String(reqUserId)]: {
+              id: reqUserId,
+              name: resolvedName,
+              full_name: msg.full_name,
+              email: msg.email,
+              phone_number: msg.phone_number,
+              avatar: msg.avatar,
+              role: 'guest',
+            }
+          }))
         }
         setKnockRequests(prev => {
-          if (prev.some(k => String(k.user_id) === String(msg.user_id))) return prev
+          if (prev.some(k => String(k.user_id) === String(reqUserId))) return prev
           return [...prev, {
-            user_id: msg.user_id,
-            username: msg.username,
-            full_name: msg.full_name,
+            user_id: reqUserId,
+            username: resolvedName || msg.username,
+            full_name: msg.full_name || resolvedName,
+            name: resolvedName,
+            email: msg.email,
+            phone_number: msg.phone_number,
             avatar: msg.avatar
           }]
         })
@@ -1102,8 +1147,7 @@ export default function MeetingRoom() {
         } else if (msg.status === 'waiting_approval') {
           setWaitingState('waiting_approval')
         } else if (msg.status === 'kicked') {
-          setWaitingState('rejected')
-          setRejectedMessage(msg.message || "Siz ushbu yig'ilishdan chiqarilgansiz.")
+          setWaitingState('kicked')
         }
         break
       }
@@ -1121,21 +1165,29 @@ export default function MeetingRoom() {
         break
       }
 
-      case 'participant_removed': {
+      case 'participant_removed':
+      case 'user_removed': {
         const isMe = String(msg.user_id) === String(user?.id) ||
-          (roomRef.current?.localParticipant && String(msg.target_identity) === String(roomRef.current.localParticipant.identity))
+          (roomRef.current?.localParticipant && String(msg.target_identity) === String(roomRef.current.localParticipant.identity)) ||
+          (msg.participant_identity && roomRef.current?.localParticipant && String(msg.participant_identity) === String(roomRef.current.localParticipant.identity))
 
         if (isMe) {
-          toast.error("Yig'ilishdan chiqarildingiz", "Siz yig'ilishdan chiqarildingiz.")
           leaveLiveKit()
-          setWaitingState('rejected')
-          setRejectedMessage("Siz ushbu yig'ilishdan chiqarildingiz.")
           if (wsRef.current) {
             try { wsRef.current.close() } catch {}
             wsRef.current = null
           }
+          setWaitingState('kicked')
         } else {
-          triggerInRoomAlert('info', `${msg.full_name || msg.username || 'Ishtirokchi'} yig'ilishdan chiqarildi`, 'info')
+          const pIdent = msg.participant_identity || msg.target_identity
+          if (pIdent) {
+            setParticipantTracks(prev => {
+              const next = { ...prev }
+              delete next[pIdent]
+              return next
+            })
+            setRemoteParticipants(prev => prev.filter(p => p.identity !== pIdent))
+          }
         }
         break
       }
@@ -1268,14 +1320,15 @@ export default function MeetingRoom() {
               roomRef.current?.localParticipant?.setMicrophoneEnabled(false)
             } catch {}
             setIsMicEnabled(false)
-            toast.info("Ovoz o'chirildi", "Tashkilotchi mikrofoningizni o'chirdi")
-            triggerInRoomAlert('mute', "Tashkilotchi mikrofoningizni o'chirdi", 'mute')
+            isMicEnabledRef.current = false
+            notifyMicMutedByHost()
           } else if (msg.track_source === 'camera' && msg.muted) {
             try {
               roomRef.current?.localParticipant?.setCameraEnabled(false)
             } catch {}
             setIsCameraEnabled(false)
-            toast.info("Kamera o'chirildi", "Tashkilotchi kamerangizni o'chirdi")
+            isCameraEnabledRef.current = false
+            notifyCameraTurnedOffByHost()
           }
         } else if (msg.target_identity) {
           setParticipantTracks(prev => {
@@ -2487,8 +2540,7 @@ export default function MeetingRoom() {
               }
               setIsMicEnabled(false)
               isMicEnabledRef.current = false
-              toast.warning("Mikrofon o'chirildi", "Tashkilotchi mikrofoningizni o'chirib qo'ydi")
-              triggerInRoomAlert('mute', "Tashkilotchi mikrofoningizni o'chirdi", 'mute')
+              notifyMicMutedByHost()
             }
           }
         } else if (decoded.type === 'turn_off_camera') {
@@ -2512,8 +2564,7 @@ export default function MeetingRoom() {
               }
               setIsCameraEnabled(false)
               isCameraEnabledRef.current = false
-              toast.warning("Kamera o'chirildi", "Tashkilotchi kamerangizni o'chirib qo'ydi")
-              triggerInRoomAlert('mute', "Tashkilotchi kamerangizni o'chirdi", 'mute')
+              notifyCameraTurnedOffByHost()
             }
           }
         } else if (decoded.type === 'ask_unmute') {
@@ -2564,6 +2615,28 @@ export default function MeetingRoom() {
           }
           if (decoded.isRequest) {
             broadcastMyProfile(room, false)
+          }
+        } else if (decoded.type === 'participant_removed') {
+          const myIdentity = String(room.localParticipant?.identity || '')
+          const targetId = String(decoded.targetUserId || decoded.targetIdentity || '')
+          const myUserId = String(user?.id || '')
+          if (targetId && (targetId === myIdentity || targetId === myUserId || myIdentity.startsWith(targetId + '_') || targetId.startsWith(myIdentity + '_') || targetId === 'ALL')) {
+            leaveLiveKit()
+            if (wsRef.current) {
+              try { wsRef.current.close() } catch {}
+              wsRef.current = null
+            }
+            setWaitingState('kicked')
+          } else {
+            const pIdent = decoded.targetIdentity || decoded.targetUserId
+            if (pIdent) {
+              setParticipantTracks(prev => {
+                const next = { ...prev }
+                delete next[pIdent]
+                return next
+              })
+              setRemoteParticipants(prev => prev.filter(p => p.identity !== pIdent))
+            }
           }
         }
       } catch (err) {
@@ -3140,6 +3213,69 @@ export default function MeetingRoom() {
     }
   }
 
+  // Tashkilotchi tomonidan ishtirokchini yig'ilishdan chiqarish (Remove Participant)
+  const handleRemoveParticipant = async (targetParticipant) => {
+    if (!isLocalHost || !targetParticipant) return
+    const targetIdentity = targetParticipant.identity || targetParticipant.id
+    const targetUserId = targetParticipant.userId || targetParticipant.user_id || targetParticipant.id || (
+      (() => {
+        const match = String(targetIdentity).match(/^([0-9a-fA-F-]+)/)
+        return match ? match[1] : null
+      })()
+    )
+
+    const displayName = targetParticipant.name || 'Ishtirokchi'
+
+    try {
+      // 1. Call REST API: POST /api/v1/meetings/{id}/remove-participant/
+      const targetMeetingId = meetingDetails?.id || meetingId
+      try {
+        await removeMeetingParticipant(targetMeetingId, {
+          user_id: targetUserId || undefined,
+          participant_identity: String(targetIdentity)
+        })
+      } catch (apiErr) {
+        console.warn("Remove participant API call warning/error:", apiErr)
+      }
+
+      // 2. Send over WebSocket
+      sendWs({
+        action: 'remove_participant',
+        user_id: targetUserId,
+        target_identity: targetIdentity,
+        participant_identity: targetIdentity
+      })
+
+      // 3. Backup over LiveKit data channel
+      try {
+        const payload = new TextEncoder().encode(JSON.stringify({
+          type: 'participant_removed',
+          targetUserId: targetUserId || targetIdentity,
+          targetIdentity: targetIdentity,
+          targetName: displayName,
+          sender: currentUserName
+        }))
+        await roomRef.current?.localParticipant?.publishData(payload, { reliable: true })
+      } catch (lkErr) {
+        console.warn("LiveKit data broadcast error:", lkErr)
+      }
+
+      // 4. Trigger host in-room alert pill (Screenshot 4)
+      triggerInRoomAlert('user_removed', `${displayName} yig'ilishdan chiqarildi`, 'user_removed')
+
+      // 5. Clean up local participant track state
+      setParticipantTracks(prev => {
+        const next = { ...prev }
+        delete next[targetIdentity]
+        return next
+      })
+      setRemoteParticipants(prev => prev.filter(p => p.identity !== targetIdentity))
+    } catch (err) {
+      console.error("Ishtirokchini chiqarishda xatolik:", err)
+      toast.error("Xatolik", "Ishtirokchini chiqarishda xatolik yuz berdi")
+    }
+  }
+
   const handleEndMeetingForAll = async () => {
     try {
       await axiosAPI.post(`/meetings/${meetingId}/close/`)
@@ -3277,30 +3413,19 @@ export default function MeetingRoom() {
     canAdmitParticipantsRef.current = canAdmitParticipants
   }, [canAdmitParticipants])
 
-  // Xonada allaqachon mavjud bo'lgan (boshqa admin qabul qilgan) foydalanuvchilarning knock so'rovlarini tozalash
-  useEffect(() => {
-    if (knockRequests.length === 0 || remoteParticipants.length === 0) return
-    setKnockRequests(prev => {
-      const filtered = prev.filter(req => !isParticipantInRoom(req, remoteParticipants))
-      return filtered.length !== prev.length ? filtered : prev
-    })
-  }, [remoteParticipants, knockRequests.length])
-
-  // Xonaga hali kirmagan faol knock so'rovlari (avatarlarini to'liq qidirib topish)
-  const activeKnockRequests = knockRequests
-    .filter(req => !isParticipantInRoom(req, remoteParticipants))
-    .map(req => {
-      let resolvedAvatar = req.avatar
-      if (!resolvedAvatar) {
-        const dMatch = directoryUsers?.find(u => String(u.id) === String(req.user_id))
-        const pMatch = meetingDetails?.participants_info?.find(u => String(u.id) === String(req.user_id))
-        resolvedAvatar = dMatch?.avatar || pMatch?.avatar || ''
-      }
-      return {
-        ...req,
-        avatar: formatAvatarUrl(resolvedAvatar) || resolvedAvatar || ''
-      }
-    })
+  // Faol knock so'rovlari (avatarlarini to'liq qidirib topish)
+  const activeKnockRequests = knockRequests.map(req => {
+    let resolvedAvatar = req.avatar
+    if (!resolvedAvatar) {
+      const dMatch = directoryUsers?.find(u => String(u.id) === String(req.user_id))
+      const pMatch = meetingDetails?.participants_info?.find(u => String(u.id) === String(req.user_id))
+      resolvedAvatar = dMatch?.avatar || pMatch?.avatar || ''
+    }
+    return {
+      ...req,
+      avatar: formatAvatarUrl(resolvedAvatar) || resolvedAvatar || ''
+    }
+  })
 
   // 3. Local Participant Camera tile
   if (roomRef.current?.localParticipant) {
@@ -3634,6 +3759,50 @@ export default function MeetingRoom() {
                 navigate('/')
               }}
               className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/15 bg-white dark:bg-black text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-xs"
+            >
+              <HugeiconsIcon icon={Home04Icon} size={17} strokeWidth={2.2} />
+              <span>Bosh sahifaga</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render Kicked / Removed by Host state matching Figma design
+  if (waitingState === 'kicked') {
+    const meetingTitle = meetingDetails?.title || meetingState?.title || "Meet nomi"
+
+    return (
+      <div className="fixed inset-0 w-full h-full bg-[#F8FAFC] dark:bg-[#0B0D11] text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 select-none z-50 transition-colors animate-in fade-in duration-300 font-['Manrope',sans-serif]">
+        <div className="text-center max-w-lg w-full my-auto flex flex-col items-center animate-in zoom-in-95 duration-200 px-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Sizni yig'ilishdan chiqarishdi
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2.5 mb-7 text-center max-w-md leading-relaxed font-medium">
+            Tashkilotchi sizni «{meetingTitle}» yig'ilishidan chiqardi. Qayta qo'shilish uchun uning tasdig'i kerak.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                hasClickedJoinRef.current = false
+                setIsJoining(false)
+                setWaitingState('lobby')
+                setNetworkStatus('online')
+              }}
+              className="px-5 py-2.5 rounded-xl bg-[#3B59BA] hover:bg-[#324D9E] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
+            >
+              <HugeiconsIcon icon={Refresh04Icon} size={17} strokeWidth={2.2} />
+              <span>Qo'shilishni so'rash</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                clearStoredChatMessages(meetingId)
+                navigate('/')
+              }}
+              className="px-5 py-2.5 rounded-xl bg-[#EDF2F7] dark:bg-[#1A202C] hover:bg-[#E2E8F0] dark:hover:bg-[#2D3748] text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-2xs"
             >
               <HugeiconsIcon icon={Home04Icon} size={17} strokeWidth={2.2} />
               <span>Bosh sahifaga</span>
@@ -4166,6 +4335,7 @@ export default function MeetingRoom() {
           onAskUnmuteParticipant={handleAskUnmuteParticipant}
           onTurnOffCamera={handleTurnOffCamera}
           onAskTurnOnCamera={handleAskTurnOnCamera}
+          onRemoveParticipant={handleRemoveParticipant}
           onAdmitUser={handleAdmitUser}
           onRejectUser={handleRejectUser}
           currentUserId={roomRef.current?.localParticipant?.identity}

@@ -120,7 +120,7 @@ const CreateMeetingModal = ({
       const createdResponse = await createMeeting(payload);
 
       const code = createdResponse?.code || createdResponse?.id || "";
-      const newLink = `muloqot.app/join/${code}`;
+      const newLink = `https://muloqot.raqamlinazorat.uz/join/${code}`;
 
       if (onMeetingCreated) {
         onMeetingCreated(createdResponse);

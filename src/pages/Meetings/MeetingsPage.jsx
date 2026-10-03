@@ -9,7 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { CustomSelect, DatePicker } from "../../components/UI";
 import { Check, Loader2 } from "lucide-react";
-import { getMeetings } from "../../services/meetingsApi";
+import { getMeetings, getMeetingCounts } from "../../services/meetingsApi";
 import { getUsers } from "../../services/usersApi";
 
 const MeetingsPage = () => {
@@ -107,6 +107,24 @@ const MeetingsPage = () => {
     return dateStr;
   };
 
+  // Fetch tab counts from API (/api/v1/meetings/counts/)
+  const fetchCounts = useCallback(async () => {
+    try {
+      const res = await getMeetingCounts();
+      const countsData = res?.data || res;
+      if (countsData && typeof countsData === "object") {
+        setTabCounts({
+          all: Number(countsData.all ?? 0),
+          ongoing: Number(countsData.ongoing ?? 0),
+          scheduled: Number(countsData.scheduled ?? 0),
+          completed: Number(countsData.completed ?? 0),
+        });
+      }
+    } catch (err) {
+      console.error("Yig'ilishlar sonini yuklashda xatolik:", err);
+    }
+  }, []);
+
   // Fetch meetings from API with 100% backend filtering
   const fetchMeetingsData = useCallback(
     async (tabStatus = activeTab, filters = appliedFilters, searchVal = search) => {
@@ -142,29 +160,12 @@ const MeetingsPage = () => {
           params.created_at_to = formatDateForApi(filters.createdTo, "end");
         }
 
-        const res = await getMeetings(params);
+        const [res] = await Promise.all([
+          getMeetings(params),
+          fetchCounts(),
+        ]);
         const results = res.results || [];
         setMeetings(results);
-
-        // Update tab counts if fetching all
-        if (
-          (!tabStatus || tabStatus === "all") &&
-          !searchVal &&
-          (!filters.organizer || filters.organizer === "Barchasi") &&
-          !filters.startFrom &&
-          !filters.createdFrom
-        ) {
-          setTabCounts({
-            all: results.length,
-            ongoing: results.filter(
-              (m) => m.status === "ongoing" || m.status === "active"
-            ).length,
-            scheduled: results.filter(
-              (m) => m.status === "scheduled" || m.status === "planned"
-            ).length,
-            completed: results.filter((m) => m.status === "completed").length,
-          });
-        }
       } catch (err) {
         console.error("Yig'ilishlarni yuklashda xatolik:", err);
         setError("Yig'ilishlarni yuklab bo'lmadi");
@@ -172,7 +173,7 @@ const MeetingsPage = () => {
         setLoading(false);
       }
     },
-    [activeTab, appliedFilters, search, isStaff]
+    [activeTab, appliedFilters, search, isStaff, fetchCounts]
   );
 
   useEffect(() => {

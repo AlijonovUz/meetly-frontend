@@ -293,7 +293,7 @@ export const mockMeetingsList = [
     duration: "1 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/sprint-101",
+    link: "https://muloqot.raqamlinazorat.uz/join/sprint-101",
     description: "Loyiha sprint vazifalarini rejalashtirish va jamoa a'zolariga taqsimlash",
     requireApproval: false,
     participants: [
@@ -311,7 +311,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/crm-demo-22",
+    link: "https://muloqot.raqamlinazorat.uz/join/crm-demo-22",
     description: "Yangi CRM moduli demo taqdimoti va mijozlar bilan integratsiya",
     requireApproval: false,
     participants: [
@@ -328,7 +328,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/bux-33",
+    link: "https://muloqot.raqamlinazorat.uz/join/bux-33",
     description: "1C buxgalteriya tizimi bilan API integratsiyasi muhokamasi",
     requireApproval: true,
     participants: [
@@ -345,7 +345,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/mobile-ui-44",
+    link: "https://muloqot.raqamlinazorat.uz/join/mobile-ui-44",
     description: "Mobil ilova dizayn tizimi va foydalanuvchi tajribasi tekshiruvi",
     requireApproval: false,
     participants: [
@@ -361,7 +361,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/crm-demo-22",
+    link: "https://muloqot.raqamlinazorat.uz/join/crm-demo-22",
     description: "Yangi CRM moduli demo taqdimoti va mijozlar bilan integratsiya",
     requireApproval: false,
     participants: [
@@ -378,7 +378,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/bux-33",
+    link: "https://muloqot.raqamlinazorat.uz/join/bux-33",
     description: "1C buxgalteriya tizimi bilan API integratsiyasi muhokamasi",
     requireApproval: true,
     participants: [
@@ -395,7 +395,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/mobile-ui-44",
+    link: "https://muloqot.raqamlinazorat.uz/join/mobile-ui-44",
     description: "Mobil ilova dizayn tizimi va foydalanuvchi tajribasi tekshiruvi",
     requireApproval: false,
     participants: [
@@ -411,7 +411,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/crm-demo-22",
+    link: "https://muloqot.raqamlinazorat.uz/join/crm-demo-22",
     description: "Yangi CRM moduli demo taqdimoti va mijozlar bilan integratsiya",
     requireApproval: false,
     participants: [
@@ -428,7 +428,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/bux-33",
+    link: "https://muloqot.raqamlinazorat.uz/join/bux-33",
     description: "1C buxgalteriya tizimi bilan API integratsiyasi muhokamasi",
     requireApproval: true,
     participants: [
@@ -445,7 +445,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/mobile-ui-44",
+    link: "https://muloqot.raqamlinazorat.uz/join/mobile-ui-44",
     description: "Mobil ilova dizayn tizimi va foydalanuvchi tajribasi tekshiruvi",
     requireApproval: false,
     participants: [
@@ -461,7 +461,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/crm-demo-22",
+    link: "https://muloqot.raqamlinazorat.uz/join/crm-demo-22",
     description: "Yangi CRM moduli demo taqdimoti va mijozlar bilan integratsiya",
     requireApproval: false,
     participants: [
@@ -478,7 +478,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/bux-33",
+    link: "https://muloqot.raqamlinazorat.uz/join/bux-33",
     description: "1C buxgalteriya tizimi bilan API integratsiyasi muhokamasi",
     requireApproval: true,
     participants: [
@@ -495,7 +495,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/mobile-ui-44",
+    link: "https://muloqot.raqamlinazorat.uz/join/mobile-ui-44",
     description: "Mobil ilova dizayn tizimi va foydalanuvchi tajribasi tekshiruvi",
     requireApproval: false,
     participants: [
@@ -511,7 +511,7 @@ export const mockMeetingsList = [
     duration: "30 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/sec-audit-55",
+    link: "https://muloqot.raqamlinazorat.uz/join/sec-audit-55",
     description: "Kiberxavfsizlik va ma'lumotlar bazasi ruxsatlari auditi",
     requireApproval: true,
     participants: [
@@ -527,7 +527,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "muloqot.app/join/api-doc-66",
+    link: "https://muloqot.raqamlinazorat.uz/join/api-doc-66",
     description: "Swagger va OpenAPI hujjatlarini yakunlash",
     requireApproval: false,
     participants: [
@@ -543,7 +543,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "active",
     statusLabel: "Joriy",
-    link: "muloqot.app/join/marketing-77",
+    link: "https://muloqot.raqamlinazorat.uz/join/marketing-77",
     description: "Yangi chorak uchun raqamli marketing va reklama rejalari",
     requireApproval: false,
     participants: [
@@ -561,7 +561,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "active",
     statusLabel: "Joriy",
-    link: "muloqot.app/join/annual-88",
+    link: "https://muloqot.raqamlinazorat.uz/join/annual-88",
     description: "Barcha departamentlarning yillik yakuniy hisobotlari taqdimoti",
     requireApproval: false,
     participants: [
@@ -578,7 +578,7 @@ export const mockMeetingsList = [
     duration: "30 daqiqa",
     status: "planned",
     statusLabel: "Rejalashtirilgan",
-    link: "muloqot.app/join/warehouse-99",
+    link: "https://muloqot.raqamlinazorat.uz/join/warehouse-99",
     description: "Ombor hisobi va logistika boshqaruvi tizimini joriy etish",
     requireApproval: false,
     participants: [],
@@ -592,7 +592,7 @@ export const mockMeetingsList = [
     duration: "1 soat",
     status: "planned",
     statusLabel: "Rejalashtirilgan",
-    link: "muloqot.app/join/payment-100",
+    link: "https://muloqot.raqamlinazorat.uz/join/payment-100",
     description: "Payme va Click to'lov tizimlari bilan integratsiya sinovlari",
     requireApproval: true,
     participants: [],
@@ -606,7 +606,7 @@ export const mockMeetingsList = [
     duration: "1 soat",
     status: "planned",
     statusLabel: "Rejalashtirilgan",
-    link: "muloqot.app/join/training-111",
+    link: "https://muloqot.raqamlinazorat.uz/join/training-111",
     description: "Yangi dasturiy ta'minotdan foydalanish bo'yicha amaliy trening",
     requireApproval: false,
     participants: [],
@@ -620,7 +620,7 @@ export const mockMeetingsList = [
     duration: "30 daqiqa",
     status: "planned",
     statusLabel: "Rejalashtirilgan",
-    link: "muloqot.app/join/client-meet-122",
+    link: "https://muloqot.raqamlinazorat.uz/join/client-meet-122",
     description: "Mijozlar talablari va tizim samaradorligi bo'yicha fikr-mulohazalar",
     requireApproval: false,
     participants: [],
@@ -634,7 +634,7 @@ export const mockMeetingsList = [
     duration: "30 daqiqa",
     status: "planned",
     statusLabel: "Rejalashtirilgan",
-    link: "muloqot.app/join/8f3a2c91",
+    link: "https://muloqot.raqamlinazorat.uz/join/8f3a2c91",
     description: "Mahalla fuqarolar yig'inlari raislari bilan oylik monitoring va vazifalar",
     requireApproval: false,
     participants: [

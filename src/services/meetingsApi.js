@@ -89,3 +89,24 @@ export const getMeetingAttendances = async (params = {}) => {
     previous: data?.previous ?? data?.data?.previous ?? null,
   };
 };
+
+/**
+ * Yig'ilishlar sonini olish (statuslar bo'yicha)
+ * Endpoint: GET /api/v1/meetings/counts/
+ * @param {Object} params - ixtiyoriy filtrlash parametrlari
+ */
+export const getMeetingCounts = async (params = {}) => {
+  const response = await axiosAPI.get("meetings/counts/", { params });
+  return response.data?.data || response.data;
+};
+
+/**
+ * Yig'ilishdan qatnashchini chiqarish
+ * Endpoint: POST /api/v1/meetings/{id}/remove-participant/
+ * @param {string} meetingId - yig'ilish ID yoki UUID
+ * @param {Object} payload - { user_id, participant_identity }
+ */
+export const removeMeetingParticipant = async (meetingId, payload = {}) => {
+  const response = await axiosAPI.post(`meetings/${meetingId}/remove-participant/`, payload);
+  return response.data?.data || response.data;
+};
