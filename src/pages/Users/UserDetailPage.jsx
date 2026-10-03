@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -6,10 +6,7 @@ import {
   CheckmarkCircle02Icon,
 } from "@hugeicons/core-free-icons";
 import { Ban, Lock, Unlock, Loader2, ArrowLeft, X } from "lucide-react";
-import {
-  mockUsersList,
-  mockUserMeetings,
-} from "../../data/mockData";
+import { mockUsersList } from "../../data/mockData";
 import {
   getUserById,
   toggleUserBlock,
@@ -17,7 +14,15 @@ import {
   approveAppeal,
   rejectAppeal,
 } from "../../services/usersApi";
+import { getMeetings } from "../../services/meetingsApi";
 import dayjs from "dayjs";
+
+const MEETING_TABS = [
+  { id: "all", label: "Barchasi", countKey: "all" },
+  { id: "ongoing", label: "Joriy", countKey: "ongoing", isRed: true },
+  { id: "scheduled", label: "Rejalashtirilgan", countKey: "scheduled" },
+  { id: "completed", label: "O'tkazilgan", countKey: "completed" },
+];
 
 const UserDetailPage = () => {
   const { id } = useParams();
@@ -43,8 +48,65 @@ const UserDetailPage = () => {
   const [reasonInput, setReasonInput] = useState("");
   const [rejectReasonInput, setRejectReasonInput] = useState("");
 
+  // Meetings state
   const [meetingFilter, setMeetingFilter] = useState("all");
+  const [userMeetings, setUserMeetings] = useState([]);
+  const [meetingsLoading, setMeetingsLoading] = useState(false);
+  const [meetingCounts, setMeetingCounts] = useState({
+    all: 0,
+    ongoing: 0,
+    scheduled: 0,
+    completed: 0,
+  });
   const [textareaHeight, setTextareaHeight] = useState(90);
+
+  // Fetch meetings with organizer filter & status
+  const fetchUserMeetings = useCallback(async () => {
+    if (!id) return;
+    try {
+      setMeetingsLoading(true);
+      const params = { organizer: id };
+      if (meetingFilter && meetingFilter !== "all") {
+        params.status = meetingFilter;
+      }
+      const res = await getMeetings(params);
+      setUserMeetings(res.results || []);
+    } catch (err) {
+      console.error("Foydalanuvchi yig'ilishlarini yuklashda xatolik:", err);
+      setUserMeetings([]);
+    } finally {
+      setMeetingsLoading(false);
+    }
+  }, [id, meetingFilter]);
+
+  // Fetch count breakdown for tabs
+  const fetchMeetingCounts = useCallback(async () => {
+    if (!id) return;
+    try {
+      const res = await getMeetings({ organizer: id, page_size: 100 });
+      const list = res.results || [];
+      setMeetingCounts({
+        all: res.count ?? list.length,
+        ongoing: list.filter((m) => m.status === "ongoing" || m.status === "active").length,
+        scheduled: list.filter((m) => m.status === "scheduled" || m.status === "planned").length,
+        completed: list.filter((m) => m.status === "completed").length,
+      });
+    } catch (err) {
+      console.error("Yig'ilishlar sonini olishda xatolik:", err);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchMeetingCounts();
+    }
+  }, [id, fetchMeetingCounts]);
+
+  useEffect(() => {
+    if (id) {
+      fetchUserMeetings();
+    }
+  }, [id, meetingFilter, fetchUserMeetings]);
 
   // Toast auto-hide
   useEffect(() => {
@@ -153,15 +215,6 @@ const UserDetailPage = () => {
     window.addEventListener("mouseup", handleMouseUp);
   };
 
-  // Filter meetings
-  const filteredMeetings = useMemo(() => {
-    if (meetingFilter === "all") return mockUserMeetings;
-    return mockUserMeetings.filter((m) => m.status === meetingFilter);
-  }, [meetingFilter]);
-
-  const activeCount = mockUserMeetings.filter((m) => m.status === "active").length;
-  const plannedCount = mockUserMeetings.filter((m) => m.status === "planned").length;
-  const completedCount = mockUserMeetings.filter((m) => m.status === "completed").length;
 
   const handleConfirmBlock = async (e) => {
     e.preventDefault();
@@ -492,89 +545,37 @@ const UserDetailPage = () => {
 
         {/* Filter Pills */}
         <div className="inline-flex p-1 bg-[#EEF1F8] rounded-2xl gap-1">
-          <button
-            type="button"
-            onClick={() => setMeetingFilter("all")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
-              meetingFilter === "all"
-                ? "bg-white text-[#1A1D2E] shadow-xs"
-                : "text-[#5B6078] hover:text-[#1A1D2E]"
-            }`}
-          >
-            <span>Barchasi</span>
-            <span
-              className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold ${
-                meetingFilter === "all"
-                  ? "bg-[#F1F3F9] text-[#1A1D2E]"
-                  : "bg-white text-[#8B90A5]"
-              }`}
-            >
-              {mockUserMeetings.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setMeetingFilter("active")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
-              meetingFilter === "active"
-                ? "bg-white text-[#1A1D2E] shadow-xs"
-                : "text-[#5B6078] hover:text-[#1A1D2E]"
-            }`}
-          >
-            <span>Joriy</span>
-            <span
-              className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold ${
-                meetingFilter === "active"
-                  ? "bg-[#FFF4ED] text-[#E07A28]"
-                  : "bg-white text-[#8B90A5]"
-              }`}
-            >
-              {activeCount}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setMeetingFilter("planned")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
-              meetingFilter === "planned"
-                ? "bg-white text-[#1A1D2E] shadow-xs"
-                : "text-[#5B6078] hover:text-[#1A1D2E]"
-            }`}
-          >
-            <span>Rejalashtirilgan</span>
-            <span
-              className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold ${
-                meetingFilter === "planned"
-                  ? "bg-[#EEF4FF] text-[#3858C7]"
-                  : "bg-white text-[#8B90A5]"
-              }`}
-            >
-              {plannedCount}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setMeetingFilter("completed")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
-              meetingFilter === "completed"
-                ? "bg-white text-[#1A1D2E] shadow-xs"
-                : "text-[#5B6078] hover:text-[#1A1D2E]"
-            }`}
-          >
-            <span>O'tkazilgan</span>
-            <span
-              className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold ${
-                meetingFilter === "completed"
-                  ? "bg-[#EDFBF5] text-[#22C55E]"
-                  : "bg-white text-[#8B90A5]"
-              }`}
-            >
-              {completedCount}
-            </span>
-          </button>
+          {MEETING_TABS.map((tab) => {
+            const isActive = meetingFilter === tab.id;
+            const count = meetingCounts[tab.countKey] || 0;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setMeetingFilter(tab.id)}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
+                  isActive
+                    ? "bg-white text-[#1A1D2E] shadow-xs"
+                    : "text-[#5B6078] hover:text-[#1A1D2E]"
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span
+                  className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold transition-colors ${
+                    tab.isRed && !isActive
+                      ? "bg-[#F8D7DA] text-[#DC2626]"
+                      : tab.isRed
+                      ? "bg-[#EF4444] text-white font-bold"
+                      : isActive
+                      ? "bg-[#F1F3F9] text-[#1A1D2E]"
+                      : "bg-white text-[#8B90A5]"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Meetings Table */}
@@ -583,58 +584,70 @@ const UserDetailPage = () => {
             <thead className="sticky top-0 bg-[#F8F9FC] z-10">
               <tr className="border-b border-[#E2E6F2] text-[#8B90A5] text-[13px] font-medium">
                 <th className="py-3 px-4 font-normal w-12 text-center">#</th>
-                <th className="py-3 px-4 font-normal">Yig'ilish nomi</th>
-                <th className="py-3 px-4 font-normal">Sana</th>
-                <th className="py-3 px-4 font-normal">Holati</th>
-                <th className="py-3 px-4 font-normal">Qatnashish vaqti</th>
-                <th className="py-3 px-4 font-normal">Izoh</th>
+                <th className="py-3 px-4 font-normal">Nomi</th>
+                <th className="py-3 px-4 font-normal text-right">Yaratilgan sana</th>
+                <th className="py-3 px-4 font-normal text-right">Holati</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E6F2]/50 text-[13.5px]">
-              {filteredMeetings.length > 0 ? (
-                filteredMeetings.map((meeting, index) => (
-                  <tr
-                    key={meeting.id}
-                    onClick={() => navigate(`/meetings/${meeting.id}`)}
-                    className="hover:bg-white/60 transition-colors group cursor-pointer"
-                  >
-                    <td className="py-3.5 px-4 text-center text-[#5B6078] font-medium">
-                      {index + 1}
-                    </td>
-                    <td className="py-3.5 px-4 font-medium text-[#1A1D2E] group-hover:text-[#3858C7] transition-colors truncate max-w-[220px]">
-                      {meeting.name}
-                    </td>
-                    <td className="py-3.5 px-4 text-[#1A1D2E]">
-                      {meeting.date}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      {meeting.status === "active" && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFF4ED] text-[#E07A28] text-xs font-semibold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#E07A28]" />
-                          Joriy
-                        </span>
-                      )}
-                      {meeting.status === "planned" && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EEF4FF] text-[#3858C7] text-xs font-semibold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#3858C7]" />
-                          Rejalashtirilgan
-                        </span>
-                      )}
-                      {meeting.status === "completed" && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EDFBF5] text-[#22C55E] text-xs font-semibold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
-                          O'tkazilgan
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-[#1A1D2E] font-medium">
-                      {meeting.participationTime || "—"}
-                    </td>
-                    <td className="py-3.5 px-4 text-[#5B6078] text-[13px] truncate max-w-[200px]">
-                      {meeting.note || "—"}
-                    </td>
-                  </tr>
-                ))
+              {meetingsLoading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-[#8B90A5] text-sm">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 text-[#4763E4] animate-spin" />
+                      <span>Yuklanmoqda...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : userMeetings.length > 0 ? (
+                userMeetings.map((meeting, index) => {
+                  const status = meeting.status;
+                  return (
+                    <tr
+                      key={meeting.id || index}
+                      onClick={() => navigate(`/meetings/${meeting.id}`)}
+                      className="hover:bg-white/60 transition-colors group cursor-pointer"
+                    >
+                      <td className="py-3.5 px-4 text-center text-[#5B6078] font-medium">
+                        {index + 1}
+                      </td>
+                      <td className="py-3.5 px-4 font-medium text-[#1A1D2E] group-hover:text-[#3858C7] transition-colors truncate max-w-[250px]">
+                        {meeting.title || meeting.name || "Nomsiz yig'ilish"}
+                      </td>
+                      <td className="py-3.5 text-right px-4 text-[#1A1D2E]">
+                        {meeting.created_at
+                          ? dayjs(meeting.created_at).format("DD.MM.YYYY HH:mm")
+                          : ""}
+                      </td>
+                      <td className="py-3.5 px- text-end">
+                        {(status === "ongoing" || status === "active") && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFF4ED] text-[#E07A28] text-xs font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#E07A28]" />
+                            Joriy
+                          </span>
+                        )}
+                        {(status === "scheduled" || status === "planned") && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EEF4FF] text-[#3858C7] text-xs font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#3858C7]" />
+                            Rejalashtirilgan
+                          </span>
+                        )}
+                        {status === "completed" && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EDFBF5] text-[#22C55E] text-xs font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
+                            O'tkazilgan
+                          </span>
+                        )}
+                        {status === "cancelled" && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FEF2F2] text-[#DC2626] text-xs font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
+                            Bekor qilingan
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-[#8B90A5] text-sm">

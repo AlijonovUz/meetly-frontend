@@ -1,9 +1,15 @@
-import React from "react";
 import {
   createBrowserRouter,
   RouterProvider,
   useLocation,
+  Navigate,
+  useParams,
 } from "react-router-dom";
+
+const DirectMeetingRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/join/${id}`} replace />;
+};
 
 import {
   Analytics,
@@ -21,6 +27,7 @@ import {
   NotFoundPage,
   AuthCallbackPage,
   BlockedUserScreen,
+  MeetingRoom,
 } from "./pages";
 import Layout from "./components/Layout/Layout";
 import { isAuthenticated, getCurrentUser } from "./services/auth";
@@ -105,6 +112,14 @@ const router = createBrowserRouter([
         element: <Logs />,
       },
     ],
+  },
+  {
+    path: "/join/:id",
+    element: <MeetingRoom />,
+  },
+  {
+    path: "/meeting/:id",
+    element: <DirectMeetingRedirect />,
   },
   {
     path: "/leanding",

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Loader2, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useSelector } from "react-redux";
+import { Plus, Loader2 } from "lucide-react";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { getDashboardStats } from "../../services/reportsApi";
+import dayjs from "dayjs";
 
 const PERIOD_OPTIONS = [
   { id: "today", label: "Bugun" },
@@ -12,6 +14,18 @@ const PERIOD_OPTIONS = [
 ];
 
 const Analytics = () => {
+  // Current user info to check is_staff
+  const reduxUser = useSelector((state) => state.references?.currentUser);
+  const storedUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("currentUser") || "{}");
+    } catch {
+      return {};
+    }
+  }, []);
+  const currentUser = reduxUser || storedUser;
+  const isStaff = Boolean(currentUser?.is_staff);
+
   const [selectedPeriod, setSelectedPeriod] = useState("30 kun");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -188,9 +202,9 @@ const Analytics = () => {
 
   // Holat bo'yicha (Donut chart) hisob-kitoblari
   const statusChartData = useMemo(() => {
-    const statusObj = dashboardData?.status_breakdown;
-    const total = statusObj?.total ?? 0;
-    const byStatus = statusObj?.by_status || [];
+    const statusObj = dashboardData?.status_breakdown || dashboardData?.user_status_breakdown;
+    const total = statusObj?.total ?? (Array.isArray(statusObj?.by_status) ? statusObj.by_status.reduce((acc, curr) => acc + (curr.count || 0), 0) : 0);
+    const byStatus = statusObj?.by_status || (Array.isArray(statusObj) ? statusObj : []);
 
     const circumference = 376.99; // 2 * PI * 60
 
@@ -212,13 +226,14 @@ const Analytics = () => {
       const pct = (st.count ?? 0) / total;
       const dashLength = pct * circumference;
       const color =
-        st.key === "completed"
+        st.color ||
+        (st.key === "completed" || st.key === "attended"
           ? "#10B981"
           : st.key === "scheduled"
           ? "#3858C7"
-          : st.key === "ongoing"
+          : st.key === "ongoing" || st.key === "late"
           ? "#F97316"
-          : "#98A2B3";
+          : "#98A2B3");
 
       const slice = {
         key: st.key,
@@ -247,7 +262,7 @@ const Analytics = () => {
       }));
     }
 
-    // Default fallback
+    // Default 6 days
     return [
       { day: "Du", fullName: "Dushanba", value: 0, isPeak: false },
       { day: "Se", fullName: "Seshanba", value: 0, isPeak: false },
@@ -258,7 +273,7 @@ const Analytics = () => {
     ];
   }, [dashboardData]);
 
-  // Faol tashkilotchilar
+  // Faol tashkilotchilar (Staff)
   const topOrganizers = useMemo(() => {
     const list = dashboardData?.top_organizers;
     if (list && Array.isArray(list) && list.length > 0) {
@@ -281,6 +296,11 @@ const Analytics = () => {
     return [];
   }, [dashboardData]);
 
+  // Imzolarim (User)
+  const userSignatures = useMemo(() => {
+    return dashboardData?.signatures || dashboardData?.my_signatures || dashboardData?.pending_signatures || [];
+  }, [dashboardData]);
+
   // Bugungi yig'ilishlar
   const todayMeetings = useMemo(() => {
     return dashboardData?.today_meetings || [];
@@ -291,7 +311,7 @@ const Analytics = () => {
     const st = (status || "").toLowerCase();
     if (st === "completed" || st === "o'tkazilgan") {
       return (
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#10B981] bg-[#ECFDF5] px-2 py-0.5 rounded-full whitespace-nowrap">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#10B981] bg-[#ECFDF5] px-2.5 py-1 rounded-full whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
           {statusDisplay || "O'tkazilgan"}
         </span>
@@ -299,7 +319,7 @@ const Analytics = () => {
     }
     if (st === "ongoing" || st === "joriy") {
       return (
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#F97316] bg-[#FFF7ED] px-2 py-0.5 rounded-full whitespace-nowrap">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#F97316] bg-[#FFF7ED] px-2.5 py-1 rounded-full whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
           {statusDisplay || "Joriy"}
         </span>
@@ -307,14 +327,14 @@ const Analytics = () => {
     }
     if (st === "scheduled" || st === "rejalashtirilgan") {
       return (
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#3858C7] bg-[#EEF2FB] px-2 py-0.5 rounded-full whitespace-nowrap">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#3858C7] bg-[#EEF2FB] px-2.5 py-1 rounded-full whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full bg-[#3858C7]"></span>
           {statusDisplay || "Rejalashtirilgan"}
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-full whitespace-nowrap">
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#64748B] bg-[#F1F5F9] px-2.5 py-1 rounded-full whitespace-nowrap">
         <span className="w-1.5 h-1.5 rounded-full bg-[#94A3B8]"></span>
         {statusDisplay || "Bekor qilingan"}
       </span>
@@ -323,38 +343,48 @@ const Analytics = () => {
 
   // Card ma'lumotlari
   const cards = dashboardData?.cards;
-  const usersCard = cards?.users;
-  const totalMeetingsCard = cards?.total_meetings;
-  const currentMeetingsCard = cards?.current_meetings;
-  const avgAttendanceCard = cards?.avg_attendance_rate;
+  const card1 = cards?.users || cards?.attended_meetings || cards?.my_attended_meetings;
+  const card2 = cards?.total_meetings || cards?.attendance_rate || cards?.avg_attendance_rate;
+  const card3 = cards?.current_meetings || cards?.pending_signatures || cards?.signatures;
+  const card4 = cards?.avg_attendance_rate || cards?.time_spent || cards?.duration;
 
   // Header Subtitle sanasi
   const formattedSubtitle = useMemo(() => {
     const period = dashboardData?.period;
-    if (period?.start_date && period?.end_date) {
-      const endD = new Date(period.end_date);
-      const months = [
-        "yanvar", "fevral", "mart", "aprel", "may", "iyun",
-        "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"
-      ];
-      const dateStr = `${endD.getDate()}-${months[endD.getMonth()]}, ${endD.getFullYear()}`;
-      return `${dateStr} | Tanlangan davr: ${selectedPeriod}`;
-    }
-    const today = new Date();
     const months = [
       "yanvar", "fevral", "mart", "aprel", "may", "iyun",
       "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"
     ];
-    return `${today.getDate()}-${months[today.getMonth()]}, ${today.getFullYear()} | Oxirgi 30 kun`;
-  }, [dashboardData, selectedPeriod]);
+
+    if (period?.start_date && period?.end_date) {
+      const endD = new Date(period.end_date);
+      const dateStr = `${endD.getDate()}-${months[endD.getMonth()]}, ${endD.getFullYear()}`;
+      if (!isStaff) {
+        return `${dateStr} | Oxirgi ${selectedPeriod}, o'zgarish oldingi ${selectedPeriod}ga nisbatan`;
+      }
+      return `${dateStr} | Tanlangan davr: ${selectedPeriod}`;
+    }
+
+    const today = new Date();
+    const dateStr = `${today.getDate()}-${months[today.getMonth()]}, ${today.getFullYear()}`;
+    if (!isStaff) {
+      return `${dateStr} | Oxirgi 30 kun, o'zgarish oldingi 30 kunga nisbatan`;
+    }
+    return `${dateStr} | Oxirgi 30 kun`;
+  }, [dashboardData, selectedPeriod, isStaff]);
 
   return (
     <div className="p-6 py-5 font-['Manrope',sans-serif] min-h-screen">
       {/* Top Header Row */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div>
+          {!isStaff && (
+            <div className="text-[12px] font-semibold text-[#8B90A5] mb-0.5">
+              Dashboard
+            </div>
+          )}
           <h1 className="text-[22px] md:text-[24px] font-bold text-[#1A1D2E] flex items-center gap-2.5">
-            <span>Dashboard</span>
+            <span>{isStaff ? "Dashboard" : "Mening statistikam"}</span>
             {loading && (
               <Loader2 className="w-4 h-4 text-[#3858C7] animate-spin" />
             )}
@@ -413,113 +443,142 @@ const Analytics = () => {
 
       {/* 4 KPI Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        {/* Card 1: Foydalanuvchilar */}
+        {/* Card 1: Foydalanuvchilar / Qatnashgan yig'ilishlarim */}
         <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 flex items-center justify-between shadow-2xs">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
-              FOYDALANUVCHILAR
+              {card1?.label || (isStaff ? "FOYDALANUVCHILAR" : "QATNASHGAN YIG'ILISHLARIM")}
             </span>
             <div className="text-[26px] font-extrabold text-[#1A1D2E] my-1 tracking-tight">
-              {usersCard?.current !== undefined
-                ? Number(usersCard.current).toLocaleString("uz-UZ")
-                : "—"}
+              {card1?.current !== undefined
+                ? Number(card1.current).toLocaleString("uz-UZ")
+                : card1?.count !== undefined
+                ? Number(card1.count).toLocaleString("uz-UZ")
+                : "0"}
             </div>
-            {usersCard?.change_percentage !== undefined && (
+            {card1?.change_percentage !== undefined ? (
               <div
                 className={`inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg ${
-                  usersCard.change_percentage >= 0
+                  card1.change_percentage >= 0
                     ? "text-[#10B981] bg-[#ECFDF5]"
                     : "text-[#EF4444] bg-[#FEF2F2]"
                 }`}
               >
-                <span>{usersCard.change_percentage >= 0 ? "↑" : "↓"}</span>
+                <span>{card1.change_percentage >= 0 ? "↑" : "↓"}</span>
                 <span>
-                  {usersCard.change_percentage >= 0 ? "+" : ""}
-                  {usersCard.change_percentage}%
+                  {card1.change_percentage >= 0 ? "+" : ""}
+                  {card1.change_percentage}%
                 </span>
               </div>
-            )}
+            ) : card1?.change_count !== undefined ? (
+              <div className="inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg text-[#10B981] bg-[#ECFDF5]">
+                <span>↑</span>
+                <span>+{card1.change_count} ta</span>
+              </div>
+            ) : null}
           </div>
-          {renderMiniBars(usersCard?.sparkline)}
+          {renderMiniBars(card1?.sparkline)}
         </div>
 
-        {/* Card 2: Jami yig'ilishlar */}
+        {/* Card 2: Jami yig'ilishlar / Qatnashish foizim */}
         <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 flex items-center justify-between shadow-2xs">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
-              JAMI YIG'ILISHLAR
+              {card2?.label || (isStaff ? "JAMI YIG'ILISHLAR" : "QATNASHISH FOIZIM")}
             </span>
             <div className="text-[26px] font-extrabold text-[#1A1D2E] my-1 tracking-tight">
-              {totalMeetingsCard?.current !== undefined
-                ? Number(totalMeetingsCard.current).toLocaleString("uz-UZ")
-                : "—"}
+              {card2?.current !== undefined
+                ? isStaff
+                  ? Number(card2.current).toLocaleString("uz-UZ")
+                  : `${card2.current}%`
+                : "0"}
             </div>
-            {totalMeetingsCard?.change_percentage !== undefined && (
+            {card2?.change_percentage !== undefined && (
               <div
                 className={`inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg ${
-                  totalMeetingsCard.change_percentage >= 0
+                  card2.change_percentage >= 0
                     ? "text-[#10B981] bg-[#ECFDF5]"
                     : "text-[#EF4444] bg-[#FEF2F2]"
                 }`}
               >
-                <span>{totalMeetingsCard.change_percentage >= 0 ? "↑" : "↓"}</span>
+                <span>{card2.change_percentage >= 0 ? "↑" : "↓"}</span>
                 <span>
-                  {totalMeetingsCard.change_percentage >= 0 ? "+" : ""}
-                  {totalMeetingsCard.change_percentage}%
+                  {card2.change_percentage >= 0 ? "+" : ""}
+                  {card2.change_percentage}%
                 </span>
               </div>
             )}
           </div>
-          {renderMiniBars(totalMeetingsCard?.sparkline)}
+          {renderMiniBars(card2?.sparkline)}
         </div>
 
-        {/* Card 3: Joriy yig'ilishlar */}
+        {/* Card 3: Joriy yig'ilishlar / Imzo kutilmoqda */}
         <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 flex items-center justify-between shadow-2xs">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
-              JORIY YIGʻILISHLAR
+              {card3?.label || (isStaff ? "JORIY YIGʻILISHLAR" : "IMZO KUTILMOQDA")}
             </span>
             <div className="text-[26px] font-extrabold text-[#1A1D2E] my-1 tracking-tight">
-              {currentMeetingsCard?.count !== undefined
-                ? Number(currentMeetingsCard.count).toLocaleString("uz-UZ")
-                : "—"}
+              {card3?.count !== undefined
+                ? Number(card3.count).toLocaleString("uz-UZ")
+                : card3?.current !== undefined
+                ? Number(card3.current).toLocaleString("uz-UZ")
+                : "0"}
             </div>
-            <div className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-[#F97316] bg-[#FFF7ED] px-2 py-0.5 rounded-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
-              <span>Hozir o'tmoqda</span>
-            </div>
+            {isStaff ? (
+              <div className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-[#F97316] bg-[#FFF7ED] px-2 py-0.5 rounded-lg">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
+                <span>Hozir o'tmoqda</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-2.5 py-0.5 rounded-lg">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D97706]"></span>
+                <span>Imzolash kerak</span>
+              </div>
+            )}
           </div>
-          {renderMiniBars(currentMeetingsCard?.sparkline)}
+          {renderMiniBars(card3?.sparkline)}
         </div>
 
-        {/* Card 4: O'rtacha qatnashish */}
+        {/* Card 4: O'rtacha qatnashish / Sarflangan vaqt */}
         <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 flex items-center justify-between shadow-2xs">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
-              O'RTACHA QATNASHISH
+              {card4?.label || (isStaff ? "O'RTACHA QATNASHISH" : "SARFLANGAN VAQT")}
             </span>
             <div className="text-[26px] font-extrabold text-[#1A1D2E] my-1 tracking-tight">
-              {avgAttendanceCard?.current !== undefined
-                ? `${avgAttendanceCard.current}%`
-                : "—"}
+              {card4?.current !== undefined
+                ? isStaff
+                  ? `${card4.current}%`
+                  : typeof card4.current === "string"
+                  ? card4.current
+                  : `${card4.current} soat`
+                : isStaff
+                ? "0%"
+                : "0 soat"}
             </div>
-            {avgAttendanceCard?.change_percentage !== undefined && (
+            {card4?.change_percentage !== undefined ? (
               <div
                 className={`inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg ${
-                  avgAttendanceCard.change_percentage >= 0
+                  card4.change_percentage >= 0
                     ? "text-[#10B981] bg-[#ECFDF5]"
                     : "text-[#EF4444] bg-[#FEF2F2]"
                 }`}
               >
-                <span>{avgAttendanceCard.change_percentage >= 0 ? "↑" : "↓"}</span>
+                <span>{card4.change_percentage >= 0 ? "↑" : "↓"}</span>
                 <span>
-                  {avgAttendanceCard.change_percentage >= 0 ? "+" : ""}
-                  {avgAttendanceCard.change_percentage}%
+                  {card4.change_percentage >= 0 ? "+" : ""}
+                  {card4.change_percentage}%
                 </span>
               </div>
-            )}
+            ) : card4?.change != null ? (
+              <div className="inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg text-[#10B981] bg-[#ECFDF5]">
+                <span>↑</span>
+                <span>+{card4.change} soat</span>
+              </div>
+            ) : null}
           </div>
-          {renderMiniBars(avgAttendanceCard?.sparkline)}
+          {renderMiniBars(card4?.sparkline)}
         </div>
       </div>
 
@@ -529,75 +588,90 @@ const Analytics = () => {
         <div className="lg:col-span-2 bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
             <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
-              YIG'ILISHLAR DINAMIKASI, {dashboardData?.dynamics?.weeks?.length || 12} HAFTA
+              {isStaff
+                ? `YIG'ILISHLAR DINAMIKASI, ${dashboardData?.dynamics?.weeks?.length || 12} HAFTA`
+                : `MENING QATNASHISHIM, ${dashboardData?.dynamics?.weeks?.length || 12} HAFTA`}
             </span>
             <div className="flex items-center gap-2 text-[12px] font-medium text-[#5E6480]">
               <span className="w-2 h-2 rounded-full bg-[#3858C7]"></span>
-              <span>O'tkazilgan yig'ilishlar</span>
+              <span>{isStaff ? "O'tkazilgan yig'ilishlar" : "Qatnashgan yig'ilishlarim"}</span>
             </div>
           </div>
 
           {/* Smooth Area Curve SVG with Tooltip */}
-          <div className="relative w-full h-56 pt-2">
-            <svg
-              viewBox="0 0 600 200"
-              className="w-full h-full overflow-visible"
-              preserveAspectRatio="none"
-            >
-              <defs>
-                <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3858C7" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#3858C7" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
+          <div className="relative w-full h-56 pt-2 flex items-stretch">
+            {/* Y Axis for non-staff */}
+            {!isStaff && (
+              <div className="flex flex-col justify-between text-[11px] font-medium text-[#8B90A5] pr-3 select-none pb-1">
+                <span>4</span>
+                <span>3</span>
+                <span>2</span>
+                <span>1</span>
+                <span>0</span>
+              </div>
+            )}
 
-              {/* Grid Horizontal Lines */}
-              <line x1="0" y1="20" x2="600" y2="20" stroke="#F1F3F9" strokeWidth="1" />
-              <line x1="0" y1="65" x2="600" y2="65" stroke="#F1F3F9" strokeWidth="1" />
-              <line x1="0" y1="110" x2="600" y2="110" stroke="#F1F3F9" strokeWidth="1" />
-              <line x1="0" y1="155" x2="600" y2="155" stroke="#F1F3F9" strokeWidth="1" />
-              <line x1="0" y1="195" x2="600" y2="195" stroke="#E2E6F2" strokeWidth="1" />
+            <div className="relative flex-1 w-full h-full">
+              <svg
+                viewBox="0 0 600 200"
+                className="w-full h-full overflow-visible"
+                preserveAspectRatio="none"
+              >
+                <defs>
+                  <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3858C7" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#3858C7" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
 
-              {/* Area Fill */}
-              <path
-                d={dynamicsCurve.areaPath}
-                fill="url(#curveGradient)"
-                className="transition-all duration-500"
-              />
+                {/* Grid Horizontal Lines */}
+                <line x1="0" y1="20" x2="600" y2="20" stroke="#F1F3F9" strokeWidth="1" />
+                <line x1="0" y1="65" x2="600" y2="65" stroke="#F1F3F9" strokeWidth="1" />
+                <line x1="0" y1="110" x2="600" y2="110" stroke="#F1F3F9" strokeWidth="1" />
+                <line x1="0" y1="155" x2="600" y2="155" stroke="#F1F3F9" strokeWidth="1" />
+                <line x1="0" y1="195" x2="600" y2="195" stroke="#E2E6F2" strokeWidth="1" />
 
-              {/* Smooth Stroke Line */}
-              <path
-                d={dynamicsCurve.linePath}
-                fill="none"
-                stroke="#3858C7"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                className="transition-all duration-500"
-              />
+                {/* Area Fill */}
+                <path
+                  d={dynamicsCurve.areaPath}
+                  fill="url(#curveGradient)"
+                  className="transition-all duration-500"
+                />
 
-              {/* Active Point at the end */}
-              <circle
-                cx={dynamicsCurve.lastPoint.x}
-                cy={dynamicsCurve.lastPoint.y}
-                r="4.5"
-                fill="#3858C7"
-                stroke="#FFFFFF"
-                strokeWidth="2"
-                className="transition-all duration-500"
-              />
-            </svg>
+                {/* Smooth Stroke Line */}
+                <path
+                  d={dynamicsCurve.linePath}
+                  fill="none"
+                  stroke="#3858C7"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  className="transition-all duration-500"
+                />
 
-            {/* Custom Tooltip on Active Point */}
-            <div className="absolute right-4 top-2 bg-[#1A1D2E] text-white text-[11.5px] font-semibold px-2.5 py-1 rounded-lg shadow-lg pointer-events-none">
-              {dashboardData?.dynamics?.current_week_count ??
-                dynamicsCurve.lastPoint.count ??
-                0}{" "}
-              ta, shu hafta
+                {/* Active Point at the end */}
+                <circle
+                  cx={dynamicsCurve.lastPoint.x}
+                  cy={dynamicsCurve.lastPoint.y}
+                  r="4.5"
+                  fill="#3858C7"
+                  stroke="#FFFFFF"
+                  strokeWidth="2"
+                  className="transition-all duration-500"
+                />
+              </svg>
+
+              {/* Custom Tooltip on Active Point */}
+              <div className="absolute right-4 top-16 bg-[#1A1D2E] text-white text-[11.5px] font-semibold px-2.5 py-1 rounded-lg shadow-lg pointer-events-none">
+                {dashboardData?.dynamics?.current_week_count ??
+                  dynamicsCurve.lastPoint.count ??
+                  0}{" "}
+                ta, shu hafta
+              </div>
             </div>
           </div>
 
           {/* X Axis Labels */}
-          <div className="flex items-center justify-between text-[11px] text-[#8B90A5] mt-3 px-1 overflow-x-auto">
+          <div className={`flex items-center justify-between text-[11px] text-[#8B90A5] mt-3 px-1 overflow-x-auto ${!isStaff ? "pl-7" : ""}`}>
             {dynamicsCurve.labels.length > 0 ? (
               dynamicsCurve.labels
                 .filter((_, idx, arr) => {
@@ -628,7 +702,7 @@ const Analytics = () => {
         {/* Right: Status Donut Chart (1 col) */}
         <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
           <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase mb-3">
-            HOLAT BO'YICHA
+            {isStaff ? "HOLAT BO'YICHA" : "MENING YIG'ILISHLARIM"}
           </span>
 
           {/* Donut Chart */}
@@ -675,12 +749,13 @@ const Analytics = () => {
           {/* Status Breakdown Legend */}
           <div className="space-y-2 mt-3 pt-3 border-t border-[#F1F3F9]">
             {statusChartData.items.map((st) => {
-              const color =
-                st.key === "completed"
+              const colorClass =
+                st.color ? "" :
+                st.key === "completed" || st.key === "attended"
                   ? "bg-[#10B981]"
                   : st.key === "scheduled"
                   ? "bg-[#3858C7]"
-                  : st.key === "ongoing"
+                  : st.key === "ongoing" || st.key === "late"
                   ? "bg-[#F97316]"
                   : "bg-[#98A2B3]";
 
@@ -690,8 +765,11 @@ const Analytics = () => {
                   className="flex items-center justify-between text-[12.5px]"
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`w-2.5 h-2.5 rounded-full ${color}`}></span>
-                    <span className="text-[#5E6480]">{st.label}</span>
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full ${colorClass}`}
+                      style={st.color ? { backgroundColor: st.color } : {}}
+                    ></span>
+                    <span className="text-[#5E6480] font-medium">{st.label}</span>
                   </div>
                   <div className="font-semibold text-[#1A1D2E]">
                     {st.count ?? 0}{" "}
@@ -712,14 +790,16 @@ const Analytics = () => {
         <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
             <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
-              BUGUNGI YIG'ILISHLAR
+              {isStaff ? "BUGUNGI YIG'ILISHLAR" : "BUGUNGI YIG'ILISHLARIM"}
             </span>
-            <Link
-              to="/meetings"
-              className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] hover:text-[#2844A8] transition-colors"
-            >
-              Barchasi <FaArrowRightLong size={12} />
-            </Link>
+            {isStaff && (
+              <Link
+                to="/meetings"
+                className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] hover:text-[#2844A8] transition-colors"
+              >
+                Barchasi <FaArrowRightLong size={12} />
+              </Link>
+            )}
           </div>
 
           <div className="space-y-3 flex-1">
@@ -731,14 +811,7 @@ const Analytics = () => {
               </div>
             ) : (
               todayMeetings.slice(0, 5).map((m, idx) => {
-                const time =
-                  m.time ||
-                  (m.start_time
-                    ? new Date(m.start_time).toLocaleTimeString("uz-UZ", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : "—");
+                const time = m.time || (m.start_date ? dayjs(m.start_date).format("HH:mm") : m.start_time || "—");
                 const title = m.title || m.name || "Nomsiz yig'ilish";
                 const organizer =
                   m.organizer_name ||
@@ -753,7 +826,7 @@ const Analytics = () => {
                       idx < todayMeetings.length - 1 ? "border-b border-[#F8FAFC]" : ""
                     }`}
                   >
-                    <div className="flex items-start gap-3 min-w-0 pr-2">
+                    <div className="flex items-center gap-3 min-w-0 pr-2">
                       <span className="text-[12.5px] font-bold text-[#1A1D2E] min-w-[42px] shrink-0">
                         {time}
                       </span>
@@ -777,7 +850,7 @@ const Analytics = () => {
         {/* Col 2: Qatnashish, hafta kunlari */}
         <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 px-6 shadow-2xs flex flex-col">
           <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase mb-4">
-            QATNASHISH, HAFTA KUNLARI
+            {isStaff ? "QATNASHISH, HAFTA KUNLARI" : "QATNASHISHIM, HAFTA KUNLARI"}
           </span>
 
           <div className="flex-1 flex items-end justify-between gap-2 pb-1 min-h-[180px]">
@@ -818,48 +891,95 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Col 3: Faol tashkilotchilar */}
-        <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-start">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
-              FAOL TASHKILOTCHILAR
-            </span>
-            <Link
-              to="/reports/organizers"
-              className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] hover:text-[#2844A8] transition-colors"
-            >
-              Barchasi <FaArrowRightLong size={12} />
-            </Link>
-          </div>
+        {/* Col 3: Faol tashkilotchilar (Staff) / Imzolarim (User) */}
+        {isStaff ? (
+          <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-start">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
+                FAOL TASHKILOTCHILAR
+              </span>
+              <Link
+                to="/reports/organizers"
+                className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] hover:text-[#2844A8] transition-colors"
+              >
+                Barchasi <FaArrowRightLong size={12} />
+              </Link>
+            </div>
 
-          <div className="space-y-3.5 flex-1">
-            {topOrganizers.length === 0 ? (
-              <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5]">
-                <p className="text-[13px] font-medium">
-                  Faol tashkilotchilar mavjud emas
-                </p>
-              </div>
-            ) : (
-              topOrganizers.slice(0, 5).map((org, idx) => (
-                <div key={idx}>
-                  <div className="flex items-center justify-between text-[12.5px] font-semibold text-[#1A1D2E] mb-1">
-                    <span className="truncate pr-2">{org.name}</span>
-                    <span className="shrink-0">{org.count} ta</span>
-                  </div>
-                  <div className="w-full bg-[#F1F3F9] h-2 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${Math.max(org.percentage, 4)}%`,
-                        backgroundColor: org.color,
-                      }}
-                    ></div>
-                  </div>
+            <div className="space-y-3.5 flex-1">
+              {topOrganizers.length === 0 ? (
+                <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5]">
+                  <p className="text-[13px] font-medium">
+                    Faol tashkilotchilar mavjud emas
+                  </p>
                 </div>
-              ))
-            )}
+              ) : (
+                topOrganizers.slice(0, 5).map((org, idx) => (
+                  <div key={idx}>
+                    <div className="flex items-center justify-between text-[12.5px] font-semibold text-[#1A1D2E] mb-1">
+                      <span className="truncate pr-2">{org.name}</span>
+                      <span className="shrink-0">{org.count} ta</span>
+                    </div>
+                    <div className="w-full bg-[#F1F3F9] h-2 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.max(org.percentage, 4)}%`,
+                          backgroundColor: org.color,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
+                IMZOLARIM
+              </span>
+              <Link
+                to="/reports/signatures"
+                className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] hover:text-[#2844A8] transition-colors"
+              >
+                Barchasi <FaArrowRightLong size={12} />
+              </Link>
+            </div>
+
+            <div className="space-y-3.5 flex-1">
+              {userSignatures.length === 0 ? (
+                <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5]">
+                  <p className="text-[13px] font-medium">
+                    Imzolar mavjud emas
+                  </p>
+                </div>
+              ) : (
+                userSignatures.map((sig, idx) => {
+                  const isPending = sig.status === "pending" || sig.status === "kutilmoqda";
+                  return (
+                    <div
+                      key={sig.id || idx}
+                      className="flex items-center justify-between text-[13px] py-0.5"
+                    >
+                      <span className="font-semibold text-[#1A1D2E] truncate pr-2">
+                        {sig.title || sig.name || "Hujjat"}
+                      </span>
+                      <span
+                        className={`font-bold text-[12.5px] shrink-0 ${
+                          isPending ? "text-[#E07A28]" : "text-[#10B981]"
+                        }`}
+                      >
+                        {sig.status_display || (isPending ? "Kutilmoqda" : "Imzolangan")}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { CustomSelect } from "../../components/UI";
 import { getUsers } from "../../services/usersApi";
 import { getRegions, getDistricts } from "../../services/referencesApi";
+import dayjs from "dayjs";
 
 const getInitials = (name) => {
   if (!name) return "U";
@@ -185,7 +186,7 @@ const Users = () => {
       {/* Filter and Search Bar */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Search Input */}
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative">
           <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B90A5]">
             <HugeiconsIcon icon={Search01Icon} size={18} />
           </div>
@@ -194,7 +195,7 @@ const Users = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Ism Sharifi bo'yicha izlash"
-            className="w-full bg-white border border-[#E2E6F2] rounded-xl pl-10 pr-4 h-9 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
+            className="w-[250px] bg-white border border-[#E2E6F2] rounded-xl pl-10 pr-4 h-8 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
           />
         </div>
 
@@ -206,6 +207,7 @@ const Users = () => {
             options={regionOptions}
             placeholder="Viloyat"
             searchPlaceholder="Viloyat izlash..."
+            className="h-8! rounded-xl"
           />
         </div>
 
@@ -218,6 +220,7 @@ const Users = () => {
             placeholder="Tuman"
             searchPlaceholder="Tuman izlash..."
             disabled={districtOptions.length <= 1 && !selectedRegion}
+            className="h-8! rounded-xl"
           />
         </div>
 
@@ -229,6 +232,7 @@ const Users = () => {
             options={sortOptions}
             placeholder="Saralash"
             showSearch={false}
+            className="h-8! rounded-xl"
           />
         </div>
       </div>
@@ -287,7 +291,7 @@ const Users = () => {
                   const organization = user.organization || "";
                   const regionName = user.region_info?.name || user.region || "";
                   const districtName = user.district_info?.name || user.district || "";
-                  const birthDate = user.birth_date || user.birthDate || "";
+                  const birthDate = dayjs(user.birth_date).isValid() ? dayjs(user.birth_date).format("DD.MM.YYYY") : "";
 
                   return (
                     <tr

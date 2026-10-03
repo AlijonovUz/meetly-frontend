@@ -26,6 +26,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/ws': {
+        target: 'https://backend-muloqot.raqamlinazorat.uz',
+        changeOrigin: true,
+        ws: true,
+        secure: false,
+      },
     },
   },
 })

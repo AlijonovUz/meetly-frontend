@@ -5,8 +5,9 @@ import {
   Copy01Icon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { CustomSelect, DatePicker, TimePicker } from "../UI";
+import { createMeeting } from "../../services/meetingsApi";
 
 const CreateMeetingModal = ({
   isOpen,
@@ -17,13 +18,15 @@ const CreateMeetingModal = ({
   const [newMeetingDesc, setNewMeetingDesc] = useState("");
   const [newStartDate, setNewStartDate] = useState("");
   const [newStartTime, setNewStartTime] = useState("");
-  const [newDuration, setNewDuration] = useState("");
+  const [newDuration, setNewDuration] = useState("40");
   const [newRequireApproval, setNewRequireApproval] = useState(true);
   const [newAllowJoinBeforeHost, setNewAllowJoinBeforeHost] = useState(false);
 
   const [createdModalData, setCreatedModalData] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [descTextareaHeight, setDescTextareaHeight] = useState(90);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState(null);
 
   // Drag handler for textarea resize
   const handleMouseDownResize = (e) => {
@@ -46,18 +49,12 @@ const CreateMeetingModal = ({
     window.addEventListener("mouseup", handleMouseUp);
   };
 
-  const durationOptions = useMemo(
-    () => [
-      { value: "15 daqiqa", label: "15 daqiqa" },
-      { value: "30 daqiqa", label: "30 daqiqa" },
-      { value: "40 daqiqa", label: "40 daqiqa" },
-      { value: "45 daqiqa", label: "45 daqiqa" },
-      { value: "1 soat", label: "1 soat" },
-      { value: "1.5 soat", label: "1.5 soat" },
-      { value: "2 soat", label: "2 soat" },
-    ],
-    []
-  );
+  const parseDurationMinutes = (val) => {
+    if (typeof val === "number") return val;
+    if (!val) return 40;
+    const num = parseInt(val, 10);
+    return isNaN(num) || num <= 0 ? 40 : num;
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -65,12 +62,14 @@ const CreateMeetingModal = ({
       setNewMeetingDesc("");
       setNewStartDate("");
       setNewStartTime("");
-      setNewDuration("");
+      setNewDuration("40");
       setNewRequireApproval(true);
       setNewAllowJoinBeforeHost(false);
       setDescTextareaHeight(90);
       setCreatedModalData(null);
       setCopiedLink(false);
+      setFormError(null);
+      setIsSubmitting(false);
     }
   }, [isOpen]);
 
@@ -80,37 +79,70 @@ const CreateMeetingModal = ({
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const handleCreateMeeting = (e) => {
+  const handleCreateMeeting = async (e) => {
     e.preventDefault();
     if (!newMeetingName.trim()) return;
 
-    const randomHash = Math.random().toString(36).substring(2, 10);
-    const newLink = `muloqot.app/join/${randomHash}`;
-    const createdMeeting = {
-      id: Date.now().toString(),
-      name: newMeetingName.trim(),
-      organizer: "Doston Ochilov",
-      createdAt: "01.10.2026 17:25",
-      startTime: `${newStartDate || "01.10.2026"} ${newStartTime || "15:00"}`,
-      duration: newDuration || "40 daqiqa",
-      status: "planned",
-      statusLabel: "Rejalashtirilgan",
-      link: newLink,
-      description: newMeetingDesc,
-      requireApproval: newRequireApproval,
-      allowJoinBeforeHost: newAllowJoinBeforeHost,
-      participants: [],
-    };
+    try {
+      setIsSubmitting(true);
+      setFormError(null);
 
-    if (onMeetingCreated) {
-      onMeetingCreated(createdMeeting);
+      // Construct start_date ISO string
+      let startDateObj = new Date();
+      if (newStartDate) {
+        const parts = newStartDate.split(".");
+        if (parts.length === 3) {
+          const d = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10) - 1;
+          const y = parseInt(parts[2], 10);
+          startDateObj = new Date(y, m, d);
+        }
+      }
+
+      if (newStartTime) {
+        const [hh, mm] = newStartTime.split(":").map(Number);
+        if (!isNaN(hh) && !isNaN(mm)) {
+          startDateObj.setHours(hh, mm, 0, 0);
+        }
+      }
+
+      const durationMinutes = parseDurationMinutes(newDuration);
+
+      const payload = {
+        title: newMeetingName.trim(),
+        description: newMeetingDesc.trim() || null,
+        start_date: startDateObj.toISOString(),
+        duration: durationMinutes,
+        requires_approval: newRequireApproval,
+        allow_join_before_host: newAllowJoinBeforeHost,
+      };
+
+      const createdResponse = await createMeeting(payload);
+
+      const code = createdResponse?.code || createdResponse?.id || "";
+      const newLink = `muloqot.app/join/${code}`;
+
+      if (onMeetingCreated) {
+        onMeetingCreated(createdResponse);
+      }
+      window.dispatchEvent(
+        new CustomEvent("meeting-created", { detail: createdResponse })
+      );
+
+      setCreatedModalData({
+        name: createdResponse.title || newMeetingName.trim(),
+        link: newLink,
+      });
+    } catch (err) {
+      console.error("Yig'ilish yaratishda xatolik:", err);
+      setFormError(
+        err?.response?.data?.detail ||
+          err?.response?.data?.message ||
+          "Yig'ilish yaratishda xatolik yuz berdi"
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-    window.dispatchEvent(new CustomEvent("meeting-created", { detail: createdMeeting }));
-
-    setCreatedModalData({
-      name: newMeetingName.trim(),
-      link: newLink,
-    });
   };
 
   if (!isOpen && !createdModalData) return null;
@@ -119,7 +151,7 @@ const CreateMeetingModal = ({
     <>
       {/* ================= MODAL: YANGI YIG'ILISH ================= */}
       {isOpen && !createdModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150 font-['Manrope',sans-serif]">
           <div className="bg-white rounded-[28px] shadow-2xl border border-[#E2E6F2] w-full max-w-2xl overflow-visible animate-in zoom-in-95 duration-150 relative p-6 sm:p-7 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3">
@@ -134,6 +166,12 @@ const CreateMeetingModal = ({
                 <HugeiconsIcon icon={Cancel01Icon} size={22} />
               </button>
             </div>
+
+            {formError && (
+              <div className="mb-3 p-3 bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm rounded-xl">
+                {formError}
+              </div>
+            )}
 
             {/* Modal Body / Form */}
             <form onSubmit={handleCreateMeeting} className="space-y-3">
@@ -261,18 +299,27 @@ const CreateMeetingModal = ({
                   <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
                     Davomiyligi
                   </label>
-                  <CustomSelect
-                    value={newDuration}
-                    onChange={setNewDuration}
-                    options={durationOptions}
-                    placeholder="40 daqiqa"
-                    className="h-12! rounded-2xl!"
-                  />
+                  <div className="flex items-center bg-white border border-[#E2E6F2] rounded-2xl px-4 h-12 text-[14px] text-[#1A1D2E] focus-within:border-[#3858C7] focus-within:ring-2 focus-within:ring-[#3858C7]/10 transition-all shadow-2xs">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={newDuration}
+                      onChange={(e) => {
+                        const onlyNums = e.target.value.replace(/\D/g, "");
+                        setNewDuration(onlyNums);
+                      }}
+                      placeholder="40"
+                      className="w-full bg-transparent text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none font-medium text-[14px]"
+                    />
+                    <span className="text-[#8B90A5] text-[13.5px] font-medium ml-1.5 select-none shrink-0">
+                      daqiqa
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-3 pt-2">
                 <button
                   type="button"
                   onClick={onClose}
@@ -284,10 +331,15 @@ const CreateMeetingModal = ({
 
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-[#3858C7] hover:bg-[#2F4BB8] text-white text-[14px] font-semibold px-6 py-3 rounded-2xl transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 bg-[#3858C7] hover:bg-[#2F4BB8] disabled:opacity-50 text-white text-[14px] font-semibold px-6 py-3 rounded-2xl transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                 >
-                  <Check strokeWidth={2.5} size={18} />
-                  <span>Yaratish</span>
+                  {isSubmitting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check strokeWidth={2.5} size={18} />
+                  )}
+                  <span>{isSubmitting ? "Yaratilmoqda..." : "Yaratish"}</span>
                 </button>
               </div>
             </form>
@@ -297,8 +349,8 @@ const CreateMeetingModal = ({
 
       {/* ================= MODAL: YIG'ILISH YARATILDI (HAVOLA) ================= */}
       {createdModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-lg overflow-hidden p-6 space-y-5 animate-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in duration-150 font-['Manrope',sans-serif]">
+          <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-[600px] overflow-hidden p-6 space-y-5 animate-in zoom-in-95 duration-150">
             {/* Header */}
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-[#1A1D2E] tracking-tight">

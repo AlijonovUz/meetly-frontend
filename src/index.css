@@ -1,4 +1,6 @@
+@import './styles/variables.css';
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 @layer base {
   body {
@@ -7,4 +9,380 @@
     background-color: #F8F9FC;
     -webkit-font-smoothing: antialiased;
   }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Voice wave animations for speaking participant */
+@keyframes voiceWave1 {
+
+  0%,
+  100% {
+    height: 4px;
+  }
+
+  50% {
+    height: 14px;
+  }
+}
+
+@keyframes voiceWave2 {
+
+  0%,
+  100% {
+    height: 6px;
+  }
+
+  50% {
+    height: 18px;
+  }
+}
+
+@keyframes voiceWave3 {
+
+  0%,
+  100% {
+    height: 3px;
+  }
+
+  50% {
+    height: 12px;
+  }
+}
+
+.animate-voice-wave-1 {
+  animation: voiceWave1 0.6s ease-in-out infinite alternate;
+}
+
+.animate-voice-wave-2 {
+  animation: voiceWave2 0.42s ease-in-out infinite alternate;
+}
+
+.animate-voice-wave-3 {
+  animation: voiceWave3 0.7s ease-in-out infinite alternate;
+}
+
+/* Floating Live Reactions (Google Meet style) — Ultra Smooth Continuous Float */
+@keyframes reactionFloatUp {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.5);
+    opacity: 0;
+  }
+
+  5% {
+    transform: translate3d(calc(var(--drift-x, 20px) * 0.55), -24px, 0) scale(0.9);
+    opacity: 0.85;
+  }
+
+  10% {
+    transform: translate3d(calc(var(--drift-x, 20px) * 0.95), -48px, 0) scale(1.15);
+    opacity: 1;
+  }
+
+  15% {
+    transform: translate3d(calc(var(--drift-x, 20px) * 0.98), -72px, 0) scale(1.12);
+    opacity: 1;
+  }
+
+  20% {
+    transform: translate3d(calc(var(--drift-x, 20px) * 0.65), -96px, 0) scale(1.08);
+    opacity: 1;
+  }
+
+  25% {
+    transform: translate3d(0, -120px, 0) scale(1.04);
+    opacity: 1;
+  }
+
+  30% {
+    transform: translate3d(calc(var(--drift-x, 20px) * -0.65), -144px, 0) scale(1.02);
+    opacity: 1;
+  }
+
+  35% {
+    transform: translate3d(calc(var(--drift-x, 20px) * -0.98), -168px, 0) scale(1.0);
+    opacity: 1;
+  }
+
+  40% {
+    transform: translate3d(calc(var(--drift-x, 20px) * -0.95), -192px, 0) scale(1.0);
+    opacity: 1;
+  }
+
+  45% {
+    transform: translate3d(calc(var(--drift-x, 20px) * -0.55), -216px, 0) scale(1.0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate3d(0, -240px, 0) scale(1.0);
+    opacity: 1;
+  }
+
+  55% {
+    transform: translate3d(calc(var(--drift-x, 20px) * 0.55), -264px, 0) scale(1.0);
+    opacity: 1;
+  }
+
+  60% {
+    transform: translate3d(calc(var(--drift-x, 20px) * 0.95), -288px, 0) scale(1.0);
+    opacity: 1;
+  }
+
+  65% {
+    transform: translate3d(calc(var(--drift-x, 20px) * 0.98), -312px, 0) scale(0.98);
+    opacity: 0.95;
+  }
+
+  70% {
+    transform: translate3d(calc(var(--drift-x, 20px) * 0.65), -336px, 0) scale(0.96);
+    opacity: 0.9;
+  }
+
+  75% {
+    transform: translate3d(0, -360px, 0) scale(0.94);
+    opacity: 0.8;
+  }
+
+  80% {
+    transform: translate3d(calc(var(--drift-x, 20px) * -0.55), -384px, 0) scale(0.92);
+    opacity: 0.7;
+  }
+
+  85% {
+    transform: translate3d(calc(var(--drift-x, 20px) * -0.9), -408px, 0) scale(0.88);
+    opacity: 0.55;
+  }
+
+  90% {
+    transform: translate3d(calc(var(--drift-x, 20px) * -0.65), -432px, 0) scale(0.85);
+    opacity: 0.35;
+  }
+
+  95% {
+    transform: translate3d(calc(var(--drift-x, 20px) * -0.25), -456px, 0) scale(0.8);
+    opacity: 0.15;
+  }
+
+  100% {
+    transform: translate3d(0, -480px, 0) scale(0.75);
+    opacity: 0;
+  }
+}
+
+.animate-reaction-float {
+  animation: reactionFloatUp 1.8s linear forwards;
+  will-change: transform, opacity;
+}
+
+/* Custom scrollbar — global */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--stroke-strong) transparent;
+}
+
+.dark * {
+  scrollbar-color: var(--bg-elevation-3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--stroke-strong);
+  border-radius: 99px;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: var(--bg-elevation-3);
+}
+
+/* modal-scroll alias (kept for compatibility) */
+.modal-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--stroke-strong);
+  border-radius: 99px;
+}
+
+.dark .modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--bg-elevation-3);
+}
+
+/* Date/time input — dark mode color fix */
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="time"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+input[type="time"]::-webkit-datetime-edit-text,
+input[type="time"]::-webkit-datetime-edit-hour-field,
+input[type="time"]::-webkit-datetime-edit-minute-field {
+  color: var(--text-strong);
+  transition: color 0.2s;
+}
+
+/* Kanban ustun ichidagi scroll ko'rinmasin */
+.kanban-col-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Google Meet Real Layout Morphing View Transitions (Real Position & Size Swapping) */
+::view-transition-group(*) {
+  animation-duration: 0.55s;
+  animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  overflow: hidden;
+  border-radius: 1.5rem;
+}
+
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 0.55s;
+  animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  mix-blend-mode: normal;
+  height: 100%;
+  width: 100%;
+  border-radius: 1.5rem;
+}
+
+/* Translucent Liquid Glass Droplet Control Bar (Matching Figma Image 2) */
+.glass-droplet-bar {
+  background: rgba(226, 231, 240, 0.78);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 10px 28px -4px rgba(26, 31, 46, 0.12),
+    0 3px 8px -2px rgba(26, 31, 46, 0.06),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.8);
+}
+
+.dark .glass-droplet-bar {
+  background: #0B0D11 !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5) !important;
+}
+
+.glass-droplet-btn {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.90) 0%, rgba(240, 244, 250, 0.65) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 2px 6px -1px rgba(26, 31, 46, 0.08),
+    inset 0 1.5px 2px rgba(255, 255, 255, 1),
+    inset 0 -1px 2px rgba(195, 205, 222, 0.4);
+  color: #1A1F2E;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-droplet-btn:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 248, 255, 0.8) 100%);
+  border-color: #ffffff;
+  box-shadow:
+    0 4px 12px -2px rgba(26, 31, 46, 0.12),
+    inset 0 1.5px 2px rgba(255, 255, 255, 1);
+}
+
+.dark .glass-droplet-btn {
+  background: #202530 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+}
+
+.dark .glass-droplet-btn:hover {
+  background: #2a303e !important;
+  border-color: transparent !important;
+}
+
+.glass-droplet-btn-active {
+  background: linear-gradient(180deg, #3E5ECA 0%, #304CAE 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow:
+    0 4px 14px rgba(62, 94, 202, 0.35),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+}
+
+.glass-droplet-btn-active:hover {
+  background: linear-gradient(180deg, #3552BC 0%, #29429E 100%) !important;
+}
+
+.dark .glass-droplet-btn-active {
+  background: #2B3553 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.dark .glass-droplet-btn-active:hover {
+  background: #344066 !important;
+}
+
+.glass-droplet-btn-danger {
+  background: linear-gradient(180deg, #EA3323 0%, #D82819 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow:
+    0 4px 14px rgba(234, 51, 35, 0.3),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.glass-droplet-btn-danger:hover {
+  background: linear-gradient(180deg, #DB2B1B 0%, #C42012 100%) !important;
+}
+
+.dark .glass-droplet-btn-danger {
+  background: #EA3323 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 4px 14px rgba(234, 51, 35, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.dark .glass-droplet-btn-danger:hover {
+  background: #dc2626 !important;
 }

@@ -1,30 +1,45 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Search01Icon,
   FilterVerticalIcon,
   Cancel01Icon,
-  CheckmarkSquare02Icon,
-  Copy01Icon,
-  Tick02Icon,
-  Calendar03Icon,
-  Clock01Icon,
 } from "@hugeicons/core-free-icons";
-import { CustomSelect, DatePicker, TimePicker } from "../../components/UI";
-import {
-  mockMeetingsList,
-  mockOrganizers,
-} from "../../data/mockData";
-import { Check } from "lucide-react";
+import { CustomSelect, DatePicker } from "../../components/UI";
+import { Check, Loader2 } from "lucide-react";
+import { getMeetings } from "../../services/meetingsApi";
+import { getUsers } from "../../services/usersApi";
 
 const MeetingsPage = () => {
   const navigate = useNavigate();
 
+  // Current user info to check is_staff
+  const reduxUser = useSelector((state) => state.references?.currentUser);
+  const storedUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("currentUser") || "{}");
+    } catch {
+      return {};
+    }
+  }, []);
+  const currentUser = reduxUser || storedUser;
+  const isStaff = Boolean(currentUser?.is_staff);
+
   // State
-  const [meetings, setMeetings] = useState(mockMeetingsList);
-  const [activeTab, setActiveTab] = useState("all"); // "all" | "active" | "planned" | "completed"
+  const [meetings, setMeetings] = useState([]);
+  const [usersList, setUsersList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("all"); // "all" | "ongoing" | "scheduled" | "completed"
   const [search, setSearch] = useState("");
+  const [tabCounts, setTabCounts] = useState({
+    all: 0,
+    ongoing: 0,
+    scheduled: 0,
+    completed: 0,
+  });
 
   // Modals
   const [filterModalOpen, setFilterModalOpen] = useState(false);
@@ -45,115 +60,169 @@ const MeetingsPage = () => {
     startTo: "",
   });
 
-  // Tab counts
+  // Fetch users if is_staff is true
+  useEffect(() => {
+    if (isStaff) {
+      getUsers({ page_size: 100 })
+        .then((res) => {
+          setUsersList(res.results || []);
+        })
+        .catch((err) => {
+          console.error("Foydalanuvchilarni yuklashda xatolik:", err);
+        });
+    }
+  }, [isStaff]);
+
+  // Organizer options (uses user id as value)
+  const organizerOptions = useMemo(() => {
+    if (!isStaff) return [];
+    return [
+      { value: "Barchasi", label: "Tashkilotchini tanlang" },
+      ...usersList.map((u) => {
+        const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
+        const display = fullName || u.email || u.phone_number || "Foydalanuvchi";
+        return {
+          value: u.id,
+          label: display,
+        };
+      }),
+    ];
+  }, [isStaff, usersList]);
+
+  const formatDateForApi = (dateStr, type = "start") => {
+    if (!dateStr) return undefined;
+    const parts = dateStr.split(".");
+    if (parts.length === 3) {
+      const d = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const y = parseInt(parts[2], 10);
+      const dt = new Date(y, m, d);
+      if (type === "end") {
+        dt.setHours(23, 59, 59, 999);
+      } else {
+        dt.setHours(0, 0, 0, 0);
+      }
+      return dt.toISOString();
+    }
+    return dateStr;
+  };
+
+  // Fetch meetings from API with 100% backend filtering
+  const fetchMeetingsData = useCallback(
+    async (tabStatus = activeTab, filters = appliedFilters, searchVal = search) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const params = {};
+        if (tabStatus && tabStatus !== "all") {
+          params.status = tabStatus;
+        }
+
+        if (searchVal && searchVal.trim()) {
+          params.search = searchVal.trim();
+        }
+
+        // If is_staff and organizer selected, send organizer ID
+        if (isStaff && filters.organizer && filters.organizer !== "Barchasi") {
+          params.organizer = filters.organizer;
+        }
+
+        if (filters.startFrom) {
+          params.start_date_from = formatDateForApi(filters.startFrom, "start");
+        }
+        if (filters.startTo) {
+          params.start_date_to = formatDateForApi(filters.startTo, "end");
+        }
+
+        if (filters.createdFrom) {
+          params.created_at_from = formatDateForApi(filters.createdFrom, "start");
+        }
+        if (filters.createdTo) {
+          params.created_at_to = formatDateForApi(filters.createdTo, "end");
+        }
+
+        const res = await getMeetings(params);
+        const results = res.results || [];
+        setMeetings(results);
+
+        // Update tab counts if fetching all
+        if (
+          (!tabStatus || tabStatus === "all") &&
+          !searchVal &&
+          (!filters.organizer || filters.organizer === "Barchasi") &&
+          !filters.startFrom &&
+          !filters.createdFrom
+        ) {
+          setTabCounts({
+            all: results.length,
+            ongoing: results.filter(
+              (m) => m.status === "ongoing" || m.status === "active"
+            ).length,
+            scheduled: results.filter(
+              (m) => m.status === "scheduled" || m.status === "planned"
+            ).length,
+            completed: results.filter((m) => m.status === "completed").length,
+          });
+        }
+      } catch (err) {
+        console.error("Yig'ilishlarni yuklashda xatolik:", err);
+        setError("Yig'ilishlarni yuklab bo'lmadi");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [activeTab, appliedFilters, search, isStaff]
+  );
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchMeetingsData(activeTab, appliedFilters, search);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [activeTab, appliedFilters, search, fetchMeetingsData]);
+
+  // Tab counts (fallback to tabCounts or computed)
   const counts = useMemo(() => {
-    return {
-      all: meetings.length,
-      active: meetings.filter((m) => m.status === "active").length,
-      planned: meetings.filter((m) => m.status === "planned").length,
-      completed: meetings.filter((m) => m.status === "completed").length,
-    };
-  }, [meetings]);
+    return tabCounts;
+  }, [tabCounts]);
 
   // Active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (appliedFilters.organizer && appliedFilters.organizer !== "Barchasi") count++;
+    if (isStaff && appliedFilters.organizer && appliedFilters.organizer !== "Barchasi") count++;
     if (appliedFilters.createdFrom || appliedFilters.createdTo) count++;
     if (appliedFilters.startFrom || appliedFilters.startTo) count++;
     return count;
-  }, [appliedFilters]);
+  }, [appliedFilters, isStaff]);
 
-  // Organizer options
-  const organizerOptions = useMemo(() => {
-    return mockOrganizers.map((org) => ({
-      value: org,
-      label: org === "Barchasi" ? "Tashkilotchini tanlang" : org,
-    }));
-  }, []);
-
-  // Helper date parse
-  const parseDateStr = (dateStr) => {
-    if (!dateStr) return null;
-    const clean = dateStr.trim();
-    const parts = clean.split(/[\s.]+/);
-    if (parts.length >= 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const year = parseInt(parts[2], 10);
-      return new Date(year, month, day);
+  // Helper date formatters
+  const formatDisplayDate = (isoStr) => {
+    if (!isoStr) return "—";
+    try {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return isoStr;
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      const hours = String(d.getHours()).padStart(2, "0");
+      const mins = String(d.getMinutes()).padStart(2, "0");
+      return `${day}.${month}.${year} ${hours}:${mins}`;
+    } catch {
+      return isoStr;
     }
-    return null;
   };
-
-  // Filtered and searched meetings
-  const filteredMeetings = useMemo(() => {
-    return meetings.filter((meeting) => {
-      // Tab filter
-      if (activeTab === "active" && meeting.status !== "active") return false;
-      if (activeTab === "planned" && meeting.status !== "planned") return false;
-      if (activeTab === "completed" && meeting.status !== "completed") return false;
-
-      // Search filter (name or organizer)
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        const matchesName = meeting.name.toLowerCase().includes(q);
-        const matchesOrg = meeting.organizer.toLowerCase().includes(q);
-        if (!matchesName && !matchesOrg) return false;
-      }
-
-      // Applied organizer filter
-      if (
-        appliedFilters.organizer &&
-        appliedFilters.organizer !== "Barchasi" &&
-        meeting.organizer !== appliedFilters.organizer
-      ) {
-        return false;
-      }
-
-      // Applied created date filter
-      if (appliedFilters.createdFrom || appliedFilters.createdTo) {
-        const meetingCreatedDate = parseDateStr(meeting.createdAt);
-        if (meetingCreatedDate) {
-          if (appliedFilters.createdFrom) {
-            const from = parseDateStr(appliedFilters.createdFrom);
-            if (from && meetingCreatedDate < from) return false;
-          }
-          if (appliedFilters.createdTo) {
-            const to = parseDateStr(appliedFilters.createdTo);
-            if (to && meetingCreatedDate > to) return false;
-          }
-        }
-      }
-
-      // Applied start date filter
-      if (appliedFilters.startFrom || appliedFilters.startTo) {
-        const meetingStartDate = parseDateStr(meeting.startTime);
-        if (meetingStartDate) {
-          if (appliedFilters.startFrom) {
-            const from = parseDateStr(appliedFilters.startFrom);
-            if (from && meetingStartDate < from) return false;
-          }
-          if (appliedFilters.startTo) {
-            const to = parseDateStr(appliedFilters.startTo);
-            if (to && meetingStartDate > to) return false;
-          }
-        }
-      }
-
-      return true;
-    });
-  }, [meetings, activeTab, search, appliedFilters]);
 
   // Apply filters
   const handleApplyFilters = () => {
-    setAppliedFilters({
-      organizer: filterOrganizer,
+    const nextFilters = {
+      organizer: isStaff ? filterOrganizer : "Barchasi",
       createdFrom: filterCreatedFrom,
       createdTo: filterCreatedTo,
       startFrom: filterStartFrom,
       startTo: filterStartTo,
-    });
+    };
+    setAppliedFilters(nextFilters);
     setFilterModalOpen(false);
   };
 
@@ -164,55 +233,63 @@ const MeetingsPage = () => {
     setFilterCreatedTo("");
     setFilterStartFrom("");
     setFilterStartTo("");
-    setAppliedFilters({
+    const resetFilters = {
       organizer: "Barchasi",
       createdFrom: "",
       createdTo: "",
       startFrom: "",
       startTo: "",
-    });
+    };
+    setAppliedFilters(resetFilters);
     setFilterModalOpen(false);
   };
 
   // Listen for newly created meeting from global CreateMeetingModal
   useEffect(() => {
-    const handleCreated = (e) => {
-      if (e.detail) {
-        setMeetings((prev) => [e.detail, ...prev]);
-      }
+    const handleCreated = () => {
+      fetchMeetingsData(activeTab, appliedFilters);
     };
     window.addEventListener("meeting-created", handleCreated);
     return () => window.removeEventListener("meeting-created", handleCreated);
-  }, []);
+  }, [fetchMeetingsData, activeTab, appliedFilters]);
 
   // Status badge styling
-  const renderStatusBadge = (status, label) => {
-    if (status === "completed") {
+  const renderStatusBadge = (status) => {
+    const st = (status || "").toLowerCase();
+    if (st === "completed" || st === "o'tkazilgan") {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#4AC99B]"></span>
-          <span>{label || "O'tkazilgan"}</span>
+          <span>O'tkazilgan</span>
         </span>
       );
     }
-    if (status === "active") {
+    if (st === "ongoing" || st === "active" || st === "joriy") {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#D97706]"></span>
-          <span>{label || "Joriy"}</span>
+          <span>Joriy</span>
+        </span>
+      );
+    }
+    if (st === "cancelled" || st === "bekor qilingan") {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#94A3B8]"></span>
+          <span>Bekor qilingan</span>
         </span>
       );
     }
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]">
         <span className="w-1.5 h-1.5 rounded-full bg-[#DD4C1E]"></span>
-        <span>{label || "Rejalashtirilgan"}</span>
+        <span>Rejalashtirilgan</span>
       </span>
     );
   };
 
   return (
-    <div className="p-5 py-4.5 space-y-4">
+    <div className="p-5 py-4.5 space-y-4 font-['Manrope',sans-serif]">
       {/* Top Filter and Actions Row */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Left Side: Tabs + Search + Filter Button */}
@@ -221,8 +298,8 @@ const MeetingsPage = () => {
           <div className="inline-flex items-center p-1 bg-[#F1F3F9] rounded-xl gap-1 select-none">
             {[
               { id: "all", label: "Barchasi", count: counts.all },
-              { id: "active", label: "Joriy", count: counts.active, isRed: true },
-              { id: "planned", label: "Rejalashtirilgan", count: counts.planned },
+              { id: "ongoing", label: "Joriy", count: counts.ongoing, isRed: true },
+              { id: "scheduled", label: "Rejalashtirilgan", count: counts.scheduled },
               { id: "completed", label: "O’tkazilgan", count: counts.completed },
             ].map((tab) => {
               const isActive = activeTab === tab.id;
@@ -231,21 +308,21 @@ const MeetingsPage = () => {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${
-                    isActive
-                      ? "bg-white text-[#1A1D2E] shadow-2xs"
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${isActive
+                      ? "bg-white text-[#1A1D2E] shadow-2xs font-semibold"
                       : "text-[#5B6078] hover:text-[#1A1D2E]"
-                  }`}
+                    }`}
                 >
                   <span className="leading-tight">{tab.label}</span>
                   <span
-                    className={`min-w-[20px] h-[18px] px-1.5 inline-flex items-center justify-center rounded-full text-[11px] font-medium leading-none transition-colors ${
-                      tab.isRed
-                        ? "bg-[#EF4444] text-white"
-                        : isActive
-                        ? "bg-[#F1F3F9] text-[#1A1D2E]"
-                        : "bg-white text-[#8B90A5]"
-                    }`}
+                    className={`min-w-[20px] h-[18px] px-1.5 inline-flex items-center justify-center rounded-full text-[11px] font-medium leading-none transition-colors ${tab.isRed && !isActive
+                      ? "bg-[#F8D7DA]! text-[#DC2626]"
+                        : tab.isRed
+                          ? "bg-[#EF4444] text-white font-bold"
+                          : isActive
+                            ? "bg-[#F1F3F9] text-[#1A1D2E]"
+                            : "bg-white text-[#8B90A5]"
+                      }`}
                   >
                     {tab.count}
                   </span>
@@ -273,8 +350,8 @@ const MeetingsPage = () => {
             type="button"
             onClick={() => setFilterModalOpen(true)}
             className={`flex items-center gap-2 px-3.5 h-9 rounded-xl border text-[13px] font-semibold transition-all cursor-pointer ${activeFilterCount > 0
-              ? "bg-[#EEF2FF] border-[#4763E4]/30 text-[#4763E4]"
-              : "bg-[#F1F3F9] border-[#E2E6F2] text-[#5B6078] hover:text-[#1A1D2E] hover:bg-[#E8ECF6]"
+                ? "bg-[#EEF2FF] border-[#4763E4]/30 text-[#4763E4]"
+                : "bg-[#F1F3F9] border-[#E2E6F2] text-[#5B6078] hover:text-[#1A1D2E] hover:bg-[#E8ECF6]"
               }`}
           >
             <HugeiconsIcon icon={FilterVerticalIcon} size={16} />
@@ -284,6 +361,19 @@ const MeetingsPage = () => {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={fetchMeetingsData}
+            className="text-xs font-bold underline cursor-pointer hover:text-red-900"
+          >
+            Qayta urinish
+          </button>
+        </div>
+      )}
 
       {/* Meetings Table */}
       <div className="overflow-auto h-[calc(100vh-160px)]">
@@ -305,51 +395,77 @@ const MeetingsPage = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E2E6F2]/60 text-[13.5px]">
-            {filteredMeetings.length > 0 ? (
-              filteredMeetings.map((meeting, index) => (
-                <tr
-                  key={meeting.id}
-                  onClick={() => navigate(`/meetings/${meeting.id}`)}
-                  className="hover:bg-[#F8F9FC] transition-colors group cursor-pointer"
-                >
-                  {/* Index */}
-                  <td className="py-3.5 px-4 text-center text-[#8B90A5] font-medium text-[13px]">
-                    {index + 1}
-                  </td>
+            {loading ? (
+              <tr>
+                <td colSpan={7} className="py-20 text-center text-[#8B90A5]">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="w-6 h-6 text-[#4763E4] animate-spin" />
+                    <span>Yig'ilishlar yuklanmoqda...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : meetings.length > 0 ? (
+              meetings.map((meeting, index) => {
+                const title = meeting.title || meeting.name || "Nomsiz yig'ilish";
+                const orgName = meeting.organizer_info
+                  ? `${meeting.organizer_info.first_name || ""} ${meeting.organizer_info.last_name || ""
+                    }`.trim()
+                  : meeting.organizer || "";
+                const createdAt = formatDisplayDate(
+                  meeting.created_at || meeting.createdAt
+                );
+                const startTime = formatDisplayDate(
+                  meeting.start_date || meeting.startTime
+                );
+                const duration = meeting.duration
+                  ? `${meeting.duration} daqiqa`
+                  : "";
 
-                  {/* Name */}
-                  <td className="py-3.5 px-4 truncate">
-                    <span className="font-semibold text-[#1A1D2E] group-hover:text-[#4763E4] transition-colors line-clamp-1">
-                      {meeting.name}
-                    </span>
-                  </td>
+                return (
+                  <tr
+                    key={meeting.id}
+                    onClick={() => navigate(`/meetings/${meeting.id}`)}
+                    className="hover:bg-[#F8F9FC] transition-colors group cursor-pointer"
+                  >
+                    {/* Index */}
+                    <td className="py-3.5 px-4 text-center text-[#8B90A5] font-medium text-[13px]">
+                      {index + 1}
+                    </td>
 
-                  {/* Organizer */}
-                  <td className="py-3.5 px-4 text-[#1A1D2E] truncate">
-                    {meeting.organizer}
-                  </td>
+                    {/* Name */}
+                    <td className="py-3.5 px-4 truncate">
+                      <span className="font-semibold text-[#1A1D2E] group-hover:text-[#4763E4] transition-colors line-clamp-1">
+                        {title}
+                      </span>
+                    </td>
 
-                  {/* Created Date */}
-                  <td className="py-3.5 px-4 text-[#1A1D2E] whitespace-nowrap">
-                    {meeting.createdAt}
-                  </td>
+                    {/* Organizer */}
+                    <td className="py-3.5 px-4 text-[#1A1D2E] truncate">
+                      {orgName}
+                    </td>
 
-                  {/* Start Time */}
-                  <td className="py-3.5 px-4 text-[#1A1D2E] whitespace-nowrap">
-                    {meeting.startTime}
-                  </td>
+                    {/* Created Date */}
+                    <td className="py-3.5 px-4 text-[#1A1D2E] whitespace-nowrap">
+                      {createdAt}
+                    </td>
 
-                  {/* Duration */}
-                  <td className="py-3.5 px-4 text-[#1A1D2E] whitespace-nowrap">
-                    {meeting.duration}
-                  </td>
+                    {/* Start Time */}
+                    <td className="py-3.5 px-4 text-[#1A1D2E] whitespace-nowrap">
+                      {startTime}
+                    </td>
 
-                  {/* Status Badge */}
-                  <td className="py-3.5 px-4 text-right pr-6 whitespace-nowrap">
-                    {renderStatusBadge(meeting.status, meeting.statusLabel)}
-                  </td>
-                </tr>
-              ))
+                    {/* Duration */}
+                    <td className="py-3.5 px-4 text-[#1A1D2E] whitespace-nowrap">
+                      {duration}
+                    </td>
+
+                    {/* Status Badge */}
+                    <td className="py-3.5 px-4 text-right pr-6 whitespace-nowrap">
+                      {renderStatusBadge(meeting.status)}
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td
@@ -384,22 +500,24 @@ const MeetingsPage = () => {
 
             {/* Filter Fields */}
             <div className="space-y-4">
-              {/* Organizer */}
-              <div className="relative z-30">
-                <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
-                  Tashkilotchi
-                </label>
-                <CustomSelect
-                  value={filterOrganizer}
-                  onChange={setFilterOrganizer}
-                  options={organizerOptions}
-                  placeholder="Tashkilotchini tanlang"
-                  searchPlaceholder="Tashkilotchi izlash..."
-                  className="h-11!"
-                  containerClassName="relative z-30"
-                  menuClassName="z-50 shadow-2xl"
-                />
-              </div>
+              {/* Organizer (Only visible if user is_staff) */}
+              {isStaff && (
+                <div className="relative z-30">
+                  <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+                    Tashkilotchi
+                  </label>
+                  <CustomSelect
+                    value={filterOrganizer}
+                    onChange={setFilterOrganizer}
+                    options={organizerOptions}
+                    placeholder="Tashkilotchini tanlang"
+                    searchPlaceholder="Tashkilotchi izlash..."
+                    className="h-11!"
+                    containerClassName="relative z-30"
+                    menuClassName="z-50 shadow-2xl"
+                  />
+                </div>
+              )}
 
               {/* Created Date Range */}
               <div>
@@ -407,19 +525,31 @@ const MeetingsPage = () => {
                   Yaratilgan sana
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                  <input
-                    type="text"
+                  <DatePicker
                     value={filterCreatedFrom}
-                    onChange={(e) => setFilterCreatedFrom(e.target.value)}
-                    placeholder="dan"
-                    className="w-full bg-white border border-[#E2E6F2] rounded-xl px-4 h-11 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
+                    onChange={(d) => {
+                      if (!d) setFilterCreatedFrom("");
+                      else {
+                        const day = String(d.getDate()).padStart(2, "0");
+                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                        const year = d.getFullYear();
+                        setFilterCreatedFrom(`${day}.${month}.${year}`);
+                      }
+                    }}
+                    placeholder="dan (01.01.2026)"
                   />
-                  <input
-                    type="text"
+                  <DatePicker
                     value={filterCreatedTo}
-                    onChange={(e) => setFilterCreatedTo(e.target.value)}
-                    placeholder="gacha"
-                    className="w-full bg-white border border-[#E2E6F2] rounded-xl px-4 h-11 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
+                    onChange={(d) => {
+                      if (!d) setFilterCreatedTo("");
+                      else {
+                        const day = String(d.getDate()).padStart(2, "0");
+                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                        const year = d.getFullYear();
+                        setFilterCreatedTo(`${day}.${month}.${year}`);
+                      }
+                    }}
+                    placeholder="gacha (01.01.2026)"
                   />
                 </div>
               </div>
@@ -430,19 +560,31 @@ const MeetingsPage = () => {
                   Boshlanish sanasi
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                  <input
-                    type="text"
+                  <DatePicker
                     value={filterStartFrom}
-                    onChange={(e) => setFilterStartFrom(e.target.value)}
-                    placeholder="dan"
-                    className="w-full bg-white border border-[#E2E6F2] rounded-xl px-4 h-11 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
+                    onChange={(d) => {
+                      if (!d) setFilterStartFrom("");
+                      else {
+                        const day = String(d.getDate()).padStart(2, "0");
+                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                        const year = d.getFullYear();
+                        setFilterStartFrom(`${day}.${month}.${year}`);
+                      }
+                    }}
+                    placeholder="dan (01.01.2026)"
                   />
-                  <input
-                    type="text"
+                  <DatePicker
                     value={filterStartTo}
-                    onChange={(e) => setFilterStartTo(e.target.value)}
-                    placeholder="gacha"
-                    className="w-full bg-white border border-[#E2E6F2] rounded-xl px-4 h-11 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
+                    onChange={(d) => {
+                      if (!d) setFilterStartTo("");
+                      else {
+                        const day = String(d.getDate()).padStart(2, "0");
+                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                        const year = d.getFullYear();
+                        setFilterStartTo(`${day}.${month}.${year}`);
+                      }
+                    }}
+                    placeholder="gacha (01.01.2026)"
                   />
                 </div>
               </div>
