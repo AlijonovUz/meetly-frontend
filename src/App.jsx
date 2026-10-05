@@ -20,6 +20,7 @@ import {
   MeetingsReportPage,
   ParticipantsReportPage,
   OrganizersReportPage,
+  SignaturesReportPage,
   Setting,
   Users,
   UserDetailPage,
@@ -82,6 +83,10 @@ const router = createBrowserRouter([
       {
         path: "reports/organizers",
         element: <OrganizersReportPage />,
+      },
+      {
+        path: "reports/signatures",
+        element: <SignaturesReportPage />,
       },
       {
         path: "profile",

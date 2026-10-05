@@ -65,6 +65,10 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
       to: "/reports/organizers",
       label: "Tashkilotchilar bo'yicha",
     },
+    {
+      to: "/reports/signatures",
+      label: "Imzolar bo'yicha",
+    },
   ];
 
   const bottomNavItems = [

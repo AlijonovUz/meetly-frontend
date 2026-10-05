@@ -69,7 +69,7 @@ export function NotificationProvider({ children }) {
       try {
         new Notification(title || "Raqamli Muloqot", {
           body: body || "Yangi xabarnoma mavjud",
-          icon: "/meet_icon.svg",
+          icon: "/logo2.svg",
         });
       } catch (e) {
         console.warn("Browser notification display error:", e);

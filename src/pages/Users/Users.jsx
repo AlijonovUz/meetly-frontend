@@ -241,7 +241,7 @@ const Users = () => {
       <div
         ref={tableContainerRef}
         onScroll={handleScroll}
-        className="bg-transparent overflow-auto h-[calc(100vh-150px)] rounded-xl relative"
+        className="bg-transparent overflow-auto h-[calc(100vh-150px)] relative"
       >
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 z-10 bg-[#F8F9FC]">

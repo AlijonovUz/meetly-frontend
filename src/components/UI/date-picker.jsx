@@ -262,7 +262,7 @@ export function DatePicker({
                          if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true) }
                     }}
                     className={cn(
-                         "h-11 w-full rounded-2xl border border-[#E2E6F2] bg-white pl-3.5 pr-10 text-[13.5px] font-medium text-[#1A1D2E] outline-none transition-all placeholder:text-[#8B90A5] focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10 disabled:cursor-not-allowed disabled:opacity-50",
+                         "h-11 w-full rounded-xl border border-[#E2E6F2] bg-white pl-3.5 pr-10 text-[13.5px] font-medium text-[#1A1D2E] outline-none transition-all placeholder:text-[#8B90A5] focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10 disabled:cursor-not-allowed disabled:opacity-50",
                          error && "border-destructive",
                          inputClassName
                     )}
@@ -282,7 +282,7 @@ export function DatePicker({
                               </button>
                          }
                     />
-                    <PopoverContent className="w-auto overflow-hidden p-2 bg-white rounded-2xl border border-[#E2E6F2] shadow-2xl z-50" align="start" sideOffset={6}>
+                    <PopoverContent className="w-auto overflow-hidden p-2 bg-white rounded-xl border border-[#E2E6F2] shadow-2xl z-50" align="start" sideOffset={6}>
                          {calendarNode}
                     </PopoverContent>
                </Popover>

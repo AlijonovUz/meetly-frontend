@@ -341,12 +341,12 @@ const Analytics = () => {
     );
   };
 
-  // Card ma'lumotlari
-  const cards = dashboardData?.cards;
-  const card1 = cards?.users || cards?.attended_meetings || cards?.my_attended_meetings;
-  const card2 = cards?.total_meetings || cards?.attendance_rate || cards?.avg_attendance_rate;
-  const card3 = cards?.current_meetings || cards?.pending_signatures || cards?.signatures;
-  const card4 = cards?.avg_attendance_rate || cards?.time_spent || cards?.duration;
+  // Card ma'lumotlari (Staff vs Non-Staff)
+  const cards = isStaff ? dashboardData?.cards : (dashboardData?.user_cards || dashboardData?.cards);
+  const card1 = isStaff ? cards?.users : (cards?.attended_meetings || cards?.users);
+  const card2 = isStaff ? cards?.total_meetings : (cards?.attendance_rate || cards?.total_meetings);
+  const card3 = isStaff ? cards?.current_meetings : (cards?.pending_signatures || cards?.current_meetings);
+  const card4 = isStaff ? cards?.avg_attendance_rate : (cards?.time_spent || cards?.avg_attendance_rate);
 
   // Header Subtitle sanasi
   const formattedSubtitle = useMemo(() => {
@@ -956,22 +956,39 @@ const Analytics = () => {
                   </p>
                 </div>
               ) : (
-                userSignatures.map((sig, idx) => {
-                  const isPending = sig.status === "pending" || sig.status === "kutilmoqda";
+                userSignatures.slice(0, 5).map((sig, idx) => {
+                  const title = sig.meeting?.title || sig.title || sig.name || "Nomsiz yig'ilish";
+                  const organizer =
+                    sig.meeting?.organizer?.full_name ||
+                    sig.meeting?.organizer?.name ||
+                    sig.organizer_name ||
+                    sig.meeting?.code ||
+                    "";
+                  const isSigned = sig.is_signed === true || sig.status === "signed" || sig.status === "imzolangan";
+
                   return (
                     <div
                       key={sig.id || idx}
-                      className="flex items-center justify-between text-[13px] py-0.5"
+                      className="flex items-center justify-between text-[13px] py-1 border-b border-[#F8FAFC] last:border-0"
                     >
-                      <span className="font-semibold text-[#1A1D2E] truncate pr-2">
-                        {sig.title || sig.name || "Hujjat"}
-                      </span>
+                      <div className="min-w-0 pr-2">
+                        <span className="font-semibold text-[#1A1D2E] truncate block leading-tight">
+                          {title}
+                        </span>
+                        {organizer && (
+                          <span className="text-[11.5px] text-[#8B90A5] truncate block mt-0.5">
+                            {organizer}
+                          </span>
+                        )}
+                      </div>
                       <span
-                        className={`font-bold text-[12.5px] shrink-0 ${
-                          isPending ? "text-[#E07A28]" : "text-[#10B981]"
+                        className={`font-bold text-[11.5px] px-2.5 py-0.5 rounded-full shrink-0 ${
+                          !isSigned
+                            ? "text-[#D97706] bg-[#FFFBEB]"
+                            : "text-[#10B981] bg-[#ECFDF5]"
                         }`}
                       >
-                        {sig.status_display || (isPending ? "Kutilmoqda" : "Imzolangan")}
+                        {isSigned ? "Imzolangan" : "Kutilmoqda"}
                       </span>
                     </div>
                   );

@@ -7,7 +7,7 @@ import {
   Download01Icon,
   Edit02Icon,
 } from "@hugeicons/core-free-icons";
-import { FaCheck } from "react-icons/fa6";
+import { FaCheck, FaFileExcel, FaFilePdf, FaFileCsv } from "react-icons/fa6";
 import { useNotifications } from "../../context/NotificationContext";
 import { mockUsersList, mockMeetingsList } from "../../data/mockData";
 
@@ -83,6 +83,7 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
       let sub = "Yig'ilishlar bo'yicha";
       if (pathname.includes("participants")) sub = "Ishtirokchilar bo'yicha";
       if (pathname.includes("organizers")) sub = "Tashkilotchilar bo'yicha";
+      if (pathname.includes("signatures")) sub = "Imzolar bo'yicha";
       return [
         { label: "Hisobotlar", to: "/reports" },
         { label: sub },
@@ -102,11 +103,17 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
 
   const breadcrumbs = getBreadcrumbs();
 
-  // Close notifications when clicking outside
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef(null);
+
+  // Close notifications & export menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
         setNotificationsOpen(false);
+      }
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setExportMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -172,16 +179,73 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           </button>
         )}
 
-        {/* Contextual Action Button for reports */}
+        {/* Contextual Action Button for reports with 3 format options */}
         {location.pathname.startsWith("/reports") && (
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("export-report"))}
-            className="hidden sm:inline-flex items-center gap-2 bg-white hover:bg-white/95 text-[#1A1D2E] text-[13px] font-semibold h-9 px-3.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
-          >
-            <HugeiconsIcon icon={Download01Icon} size={18} strokeWidth={2.5} />
-            <span>Yuklab olish</span>
-          </button>
+          <div className="relative" ref={exportMenuRef}>
+            <button
+              type="button"
+              onClick={() => setExportMenuOpen(!exportMenuOpen)}
+              className="hidden sm:inline-flex items-center gap-2 bg-white hover:bg-white/95 text-[#1A1D2E] text-[13px] font-semibold h-9 px-3.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+            >
+              <HugeiconsIcon icon={Download01Icon} size={18} strokeWidth={2.5} />
+              <span>Yuklab olish</span>
+            </button>
+
+            {exportMenuOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white text-[#1A1D2E] rounded-xl shadow-xl border border-[#E2E6F2] p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExportMenuOpen(false);
+                    window.dispatchEvent(new CustomEvent("export-report", { detail: { format: "excel" } }));
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-[#EEF2FB] hover:text-[#3858C7] transition-all text-left cursor-pointer group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-[#E6F8EF] text-[#16A34A] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                    <FaFileExcel size={17} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[#1A1D2E] text-[13px] leading-tight">Excel (.xlsx)</div>
+                    <div className="text-[11px] text-[#8B90A5] mt-0.5">Stilli jadval</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExportMenuOpen(false);
+                    window.dispatchEvent(new CustomEvent("export-report", { detail: { format: "pdf" } }));
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-[#EEF2FB] hover:text-[#3858C7] transition-all text-left cursor-pointer group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-[#FEE2E2] text-[#DC2626] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                    <FaFilePdf size={17} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[#1A1D2E] text-[13px] leading-tight">PDF (.pdf)</div>
+                    <div className="text-[11px] text-[#8B90A5] mt-0.5">Chop etish uchun</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExportMenuOpen(false);
+                    window.dispatchEvent(new CustomEvent("export-report", { detail: { format: "csv" } }));
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-[#EEF2FB] hover:text-[#3858C7] transition-all text-left cursor-pointer group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                    <FaFileCsv size={17} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[#1A1D2E] text-[13px] leading-tight">CSV (.csv)</div>
+                    <div className="text-[11px] text-[#8B90A5] mt-0.5">Matnli ma'lumot</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Notification Bell Dropdown (Screenshot 2) */}
@@ -255,47 +319,59 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                       extra.meeting_title ||
                       extra.title ||
                       extra.meeting_name ||
-                      "Mahalla raislari yig'ilishi";
+                      "";
 
                     return (
                       <div
                         key={n.id}
                         onClick={() => !n.is_read && markAsRead(n.id)}
-                        className={`p-3.5 transition-colors flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl cursor-pointer ${
-                          !n.is_read ? "bg-blue-50/30 dark:bg-blue-950/20" : ""
+                        className={`p-3 transition-colors flex items-start gap-3 rounded-2xl cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 ${
+                          !n.is_read ? "bg-blue-50/40 dark:bg-blue-950/20" : ""
                         }`}
                       >
-                        {/* Left Icon Avatar (Screenshot 2) */}
+                        {/* Left Icon Avatar */}
                         {isSignatureReq && !isSigned ? (
-                          <div className="w-10 h-10 rounded-full bg-[#E8EDFB] text-[#3B59BA] flex items-center justify-center shrink-0">
-                            <HugeiconsIcon icon={Edit02Icon} size={18} strokeWidth={2} />
+                          <div className="w-9 h-9 rounded-full bg-[#E8EDFB] text-[#3B59BA] flex items-center justify-center shrink-0">
+                            <HugeiconsIcon icon={Edit02Icon} size={16} strokeWidth={2} />
                           </div>
                         ) : isSigned ? (
-                          <div className="w-10 h-10 rounded-full bg-[#E6F8EF] text-[#10B981] flex items-center justify-center shrink-0">
-                            <FaCheck size={16} />
+                          <div className="w-9 h-9 rounded-full bg-[#E6F8EF] text-[#10B981] flex items-center justify-center shrink-0">
+                            <FaCheck size={14} />
                           </div>
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
-                            <HugeiconsIcon icon={Notification01Icon} size={18} strokeWidth={2} />
+                          <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
+                            <HugeiconsIcon icon={Notification01Icon} size={16} strokeWidth={2} />
                           </div>
                         )}
 
                         {/* Content Body */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <h5 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                            <h5
+                              className={`text-sm truncate ${
+                                !n.is_read
+                                  ? "font-semibold text-slate-900 dark:text-white"
+                                  : "font-normal text-slate-600 dark:text-slate-400"
+                              }`}
+                            >
                               {isSignatureReq && !isSigned
                                 ? "Imzo kutilmoqda"
                                 : isSigned
                                 ? "Imzo saqlandi"
                                 : n.title || "Xabarnoma"}
                             </h5>
-                            <span className="text-[11px] text-slate-400 shrink-0 font-normal">
-                              {formatRelativeTime(n.created_at)}
-                            </span>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[11px] text-slate-400 font-normal">
+                                {formatRelativeTime(n.created_at)}
+                              </span>
+                              {!n.is_read && (
+                                <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                              )}
+                            </div>
                           </div>
 
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                             {isSignatureReq && !isSigned
                               ? `«${meetingTitle}» yakunlandi. Qatnashganingizni imzo bilan tasdiqlang.`
                               : isSigned
@@ -312,9 +388,9 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                                 openSignatureModal(n);
                                 setNotificationsOpen(false);
                               }}
-                              className="mt-2.5 px-4 py-1.5 rounded-xl bg-[#3B59BA] hover:bg-[#324D9E] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
+                              className="mt-2.5 px-3.5 py-1.5 rounded-xl bg-[#3B59BA] hover:bg-[#324D9E] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
                             >
-                              <HugeiconsIcon icon={Edit02Icon} size={14} strokeWidth={2} />
+                              <HugeiconsIcon icon={Edit02Icon} size={13} strokeWidth={2} />
                               <span>Imzolash</span>
                             </button>
                           )}
