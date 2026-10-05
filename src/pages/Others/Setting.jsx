@@ -113,8 +113,13 @@ const Setting = () => {
     try {
       const res = await syncPassportProfile();
       if (res?.user) {
-        setProfileData(res.user);
-        dispatch(setCurrentUser(res.user));
+        const mergedUser = {
+          ...profileData,
+          ...res.user,
+          is_staff: res.user.is_staff !== undefined ? res.user.is_staff : (profileData?.is_staff ?? reduxUser?.is_staff),
+        };
+        setProfileData(mergedUser);
+        dispatch(setCurrentUser(mergedUser));
       }
       setToastMessage({
         type: "success",

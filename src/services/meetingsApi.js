@@ -150,4 +150,40 @@ export const submitAttendanceSignature = async (attendanceId, signaturePayload) 
   return response.data?.data || response.data;
 };
 
+/**
+ * Yig'ilish orqali to'g'ridan-to'g'ri imzo topshirish (Meeting Signature)
+ * Endpoint: POST /api/v1/meetings/{meeting_id}/signature/
+ * @param {string} meetingId
+ * @param {File|Blob|string|FormData} signaturePayload
+ */
+export const submitMeetingSignature = async (meetingId, signaturePayload) => {
+  let formData;
+
+  if (signaturePayload instanceof FormData) {
+    formData = signaturePayload;
+  } else {
+    formData = new FormData();
+
+    if (typeof signaturePayload === "string" && signaturePayload.startsWith("data:")) {
+      const arr = signaturePayload.split(",");
+      const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      const blob = new Blob([u8arr], { type: mime });
+      formData.append("signature", blob, "signature.png");
+    } else if (signaturePayload instanceof Blob || signaturePayload instanceof File) {
+      formData.append("signature", signaturePayload, "signature.png");
+    } else {
+      formData.append("signature", signaturePayload);
+    }
+  }
+
+  const response = await axiosAPI.post(`meetings/${meetingId}/signature/`, formData);
+  return response.data?.data || response.data;
+};
+
 

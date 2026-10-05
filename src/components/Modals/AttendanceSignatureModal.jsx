@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { FaXmark } from "react-icons/fa6";
 import { Edit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { submitAttendanceSignature } from "../../services/meetingsApi";
+import { submitAttendanceSignature, submitMeetingSignature } from "../../services/meetingsApi";
 import { toast } from "../../Toast/ToastProvider";
 
 export default function AttendanceSignatureModal({
@@ -23,6 +23,13 @@ export default function AttendanceSignatureModal({
     extraData.attendanceId ||
     extraData.attendance?.id ||
     notificationData?.attendance_id ||
+    (notificationData?.id && !String(notificationData?.id).startsWith("meet_") ? notificationData?.id : null);
+
+  const meetingId =
+    extraData.meeting_id ||
+    extraData.meetingId ||
+    notificationData?.meeting_id ||
+    notificationData?.meeting?.id ||
     notificationData?.id;
 
   const meetingTitle =
@@ -148,6 +155,8 @@ export default function AttendanceSignatureModal({
 
       if (attendanceId) {
         await submitAttendanceSignature(attendanceId, file);
+      } else if (meetingId) {
+        await submitMeetingSignature(meetingId, file);
       }
 
       toast.success(

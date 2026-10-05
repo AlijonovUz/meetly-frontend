@@ -102,7 +102,7 @@ export const updateOrganization = async (organization) => {
  * Endpoint: POST /api/v1/auth/passport/sync/
  */
 export const syncPassportProfile = async () => {
-  const passportToken = localStorage.getItem("passport_access_token")
+  const passportToken = localStorage.getItem("passport_access_token");
 
   const response = await axiosAPI.post(
     "auth/passport/sync/",
@@ -112,7 +112,14 @@ export const syncPassportProfile = async () => {
   );
   const syncedData = response.data?.data;
   if (syncedData?.user) {
-    localStorage.setItem("currentUser", JSON.stringify(syncedData.user));
+    const existingUser = getCurrentUser() || {};
+    const mergedUser = {
+      ...existingUser,
+      ...syncedData.user,
+      is_staff: syncedData.user.is_staff !== undefined ? syncedData.user.is_staff : existingUser.is_staff,
+    };
+    localStorage.setItem("currentUser", JSON.stringify(mergedUser));
+    syncedData.user = mergedUser;
   }
   return syncedData;
 };

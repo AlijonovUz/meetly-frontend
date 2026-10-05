@@ -6,9 +6,12 @@ import {
   Tick02Icon,
   Cancel01Icon,
   CheckmarkCircle02Icon,
+  Edit02Icon,
 } from "@hugeicons/core-free-icons";
 import { Check, Loader2, Ban } from "lucide-react";
 import { DatePicker, TimePicker, CustomSelect } from "../../components/UI";
+import AttendanceSignatureModal from "../../components/Modals/AttendanceSignatureModal";
+import { getCurrentUser } from "../../services/auth";
 import {
   getMeetingById,
   updateMeeting,
@@ -54,6 +57,13 @@ const MeetingDetailPage = () => {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
+
+  // Signature modal state
+  const [signatureModalOpen, setSignatureModalOpen] = useState(false);
+  const [userSignedLocally, setUserSignedLocally] = useState(false);
+
+  // Signature preview modal state
+  const [previewSignature, setPreviewSignature] = useState(null);
 
   // Toast notification
   const [toastMessage, setToastMessage] = useState(null);
@@ -235,6 +245,8 @@ const MeetingDetailPage = () => {
     }
   };
 
+  const currentUser = useMemo(() => getCurrentUser(), []);
+
   const organizerName = useMemo(() => {
     if (!meeting) return "";
     if (meeting.organizer_info) {
@@ -268,6 +280,67 @@ const MeetingDetailPage = () => {
     if (attendances && attendances.length > 0) return attendances;
     return meeting?.participants || [];
   }, [attendances, meeting]);
+
+  // Find current user's attendance record
+  const myAttendance = useMemo(() => {
+    if (!currentUser) return null;
+    const findMatch = (list) =>
+      list.find((att) => {
+        const u = att.user_info || att.user;
+        if (!u) return false;
+        if (typeof u === "object") {
+          if (u.id && currentUser.id && String(u.id) === String(currentUser.id)) return true;
+          if (u.phone_number && currentUser.phone_number && u.phone_number === currentUser.phone_number) return true;
+          if (u.email && currentUser.email && u.email === currentUser.email) return true;
+        } else {
+          if (String(u) === String(currentUser.id)) return true;
+        }
+        return false;
+      });
+
+    return findMatch(attendances) || findMatch(meeting?.participants || []);
+  }, [attendances, meeting, currentUser]);
+
+  // Check if current user has already signed this meeting
+  const isSigned = useMemo(() => {
+    if (userSignedLocally) return true;
+    if (myAttendance) {
+      return Boolean(myAttendance.signature || myAttendance.is_signed === true);
+    }
+    if (meeting?.is_signed === true || Boolean(meeting?.signature) || Boolean(meeting?.user_signature)) {
+      return true;
+    }
+    return false;
+  }, [userSignedLocally, myAttendance, meeting]);
+
+  // Notification / meeting data for signature modal
+  const signatureModalData = useMemo(() => {
+    if (!meeting) return null;
+    const { date, time } = extractDateAndTimeToFields(meeting.start_date);
+    return {
+      id: myAttendance?.id || meeting.id,
+      title: meeting.title || meeting.name,
+      extra_data: {
+        attendance_id: myAttendance?.id,
+        meeting_id: meeting.id,
+        meeting_title: meeting.title || meeting.name,
+        start_date: meeting.start_date,
+        date: date,
+        start_time: time,
+        duration_text: meeting.duration ? `${meeting.duration} daqiqa` : undefined,
+      },
+    };
+  }, [meeting, myAttendance]);
+
+  const handleSignatureSuccess = async () => {
+    setUserSignedLocally(true);
+    setToastMessage({
+      type: "success",
+      title: "Imzo saqlandi",
+      description: "Yig'ilishga imzo muvaffaqiyatli qo'yildi.",
+    });
+    await fetchMeeting();
+  };
 
   const getAttendeeName = (item) => {
     if (item?.user_info) {
@@ -315,37 +388,51 @@ const MeetingDetailPage = () => {
   return (
     <div className="p-6 py-5 space-y-4 font-['Manrope',sans-serif]">
       {/* Header Section */}
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl sm:text-[26px] font-bold text-[#1A1D2E] tracking-tight truncate">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-2xl sm:text-[26px] font-bold text-[#1A1D2E] tracking-tight truncate max-w-full">
           {meeting.title || meeting.name || "Yig'ilish"}
         </h1>
 
-        {/* Right Action: Cancel Button OR Status Pill */}
-        {isCancelled ? (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#5B6078] bg-[#EEF2F6]">
-            <span className="w-2 h-2 rounded-full bg-[#94A3B8]"></span>
-            <span>Bekor qilingan</span>
-          </div>
-        ) : isCompleted ? (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#10B981] bg-[#ECFDF5] border border-[#A7F3D0]">
-            <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
-            <span>Tugallangan</span>
-          </div>
-        ) : isScheduled ? (
-          <button
-            type="button"
-            onClick={() => setCancelModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-3 border bg-white border-[#EF4444] text-[#EF4444] hover:bg-[#FEF2F2] active:scale-[0.98] rounded-xl text-[13.5px] font-extrabold transition-all shadow-2xs cursor-pointer"
-          >
-            <Ban size={16} strokeWidth={2.2} />
-            <span>Yig'ilishni bekor qilish</span>
-          </button>
-        ) : (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#3B82F6] bg-[#EFF6FF] border border-[#BFDBFE]">
-            <span className="w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse"></span>
-            <span>Davom etmoqda</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Imzo qo'yish tugmasi (faqat imzo qo'yilmagan va bekor qilinmagan bo'lsa) */}
+          {!isSigned && !isCancelled && (
+            <button
+              type="button"
+              onClick={() => setSignatureModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-3 bg-[#3F57B3] hover:bg-[#344896] active:scale-[0.98] text-white rounded-xl text-[13.5px] font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <HugeiconsIcon icon={Edit02Icon} size={16} strokeWidth={2.2} />
+              <span>Imzo qo'yish</span>
+            </button>
+          )}
+
+          {/* Right Action: Cancel Button OR Status Pill */}
+          {isCancelled ? (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#5B6078] bg-[#EEF2F6]">
+              <span className="w-2 h-2 rounded-full bg-[#94A3B8]"></span>
+              <span>Bekor qilingan</span>
+            </div>
+          ) : isCompleted ? (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#10B981] bg-[#ECFDF5] border border-[#A7F3D0]">
+              <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
+              <span>Tugallangan</span>
+            </div>
+          ) : isScheduled ? (
+            <button
+              type="button"
+              onClick={() => setCancelModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-3 border bg-white border-[#EF4444] text-[#EF4444] hover:bg-[#FEF2F2] active:scale-[0.98] rounded-xl text-[13.5px] font-extrabold transition-all shadow-2xs cursor-pointer"
+            >
+              <Ban size={16} strokeWidth={2.2} />
+              <span>Yig'ilishni bekor qilish</span>
+            </button>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#3B82F6] bg-[#EFF6FF] border border-[#BFDBFE]">
+              <span className="w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse"></span>
+              <span>Davom etmoqda</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Cancelled Banner (Shown when status is cancelled) */}
@@ -595,13 +682,23 @@ const MeetingDetailPage = () => {
                       </td>
                       <td className="py-3.5 px-4 text-end flex items-center justify-end">
                         {p.signature ? (
-                          <div className="border border-[#E2E6F2] rounded-xl px-2.5 py-1 w-24 h-9 flex items-center justify-center bg-white shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPreviewSignature({
+                                url: p.signature,
+                                name: getAttendeeName(p),
+                              })
+                            }
+                            className="border border-[#E2E6F2] hover:border-[#3858C7] hover:bg-[#F8FAFC] rounded-xl px-2.5 py-1 w-24 h-9 flex items-center justify-center bg-white shadow-2xs cursor-pointer group transition-all"
+                            title="Imzoni kattalashtirib ko'rish"
+                          >
                             <img
                               src={p.signature}
                               alt="Imzo"
-                              className="max-h-full max-w-full object-contain"
+                              className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform"
                             />
-                          </div>
+                          </button>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold text-[#D97706] bg-[#FFFBEB]">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#D97706]"></span>
@@ -688,6 +785,64 @@ const MeetingDetailPage = () => {
                   <Ban size={17} strokeWidth={2.4} />
                 )}
                 <span>Yig'ilishni bekor qilish</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: IMZO QO'YISH ================= */}
+      <AttendanceSignatureModal
+        isOpen={signatureModalOpen}
+        onClose={() => setSignatureModalOpen(false)}
+        notificationData={signatureModalData}
+        onSuccess={handleSignatureSuccess}
+      />
+
+      {/* ================= MODAL: IMZONI KATTALASHTIRIB KO'RISH ================= */}
+      {previewSignature && (
+        <div
+          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setPreviewSignature(null)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-150 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#F1F3F9]">
+              <div>
+                <h3 className="text-base font-bold text-[#1A1D2E]">Imzo ko'rinishi</h3>
+                {previewSignature.name && (
+                  <p className="text-xs text-[#8B90A5] font-medium mt-0.5">{previewSignature.name}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewSignature(null)}
+                className="p-1.5 rounded-xl hover:bg-[#F1F3F9] text-[#8B90A5] hover:text-[#1A1D2E] transition-colors cursor-pointer"
+              >
+                <HugeiconsIcon icon={Cancel01Icon} size={18} />
+              </button>
+            </div>
+
+            {/* Enlarged Signature Display */}
+            <div className="bg-[#F8FAFC] border border-[#E2E6F2] rounded-2xl p-6 flex items-center justify-center min-h-[220px] max-h-[360px] overflow-hidden">
+              <img
+                src={previewSignature.url}
+                alt="Imzo"
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setPreviewSignature(null)}
+                className="px-5 py-2.5 bg-[#F1F3F9] hover:bg-[#E2E6F2] text-[#1A1D2E] text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer"
+              >
+                Yopish
               </button>
             </div>
           </div>
