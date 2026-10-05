@@ -244,29 +244,45 @@ const isParticipantInRoom = (req, remotes) => {
 }
 
 
-const isUserMatch = (u, identity, pNameLower) => {
+const getUserIdFromIdentity = (identity) => {
+  if (!identity) return null
+  const s = String(identity).trim()
+  const m = s.match(/^user_?(\d+)(?:_|-|$)/i) || s.match(/^(\d+)(?:_|-|$)/)
+  return m ? m[1] : null
+}
+
+const isUserMatch = (u, identity, pName) => {
   if (!u) return false
-  const sId = String(u.id || '').trim()
-  const sIdent = String(identity || '').trim().toLowerCase()
-  if (sId && (sIdent === sId || sIdent.startsWith(sId + '_') || sIdent.endsWith('_' + sId))) {
+  const targetUid = String(u.id || '').trim()
+  const targetUname = String(u.username || '').trim().toLowerCase()
+
+  // 1. Strict numeric user ID from identity
+  const identUid = getUserIdFromIdentity(identity)
+  if (targetUid && identUid && targetUid === identUid) {
     return true
   }
-  if (u.username) {
-    const uName = String(u.username).trim().toLowerCase()
-    if (sIdent === uName || pNameLower === uName) {
-      return true
+
+  // 2. Direct exact identity match
+  const sIdent = String(identity || '').trim().toLowerCase()
+  if (targetUid && sIdent === targetUid) return true
+  if (targetUname && sIdent === targetUname) return true
+
+  // 3. Name match ONLY if non-empty, not generic, and exact match
+  const pNameTrimmed = String(pName || '').trim().toLowerCase()
+  if (pNameTrimmed && pNameTrimmed !== 'ishtirokchi' && pNameTrimmed !== 'tashkilotchi') {
+    if (targetUname && pNameTrimmed === targetUname) return true
+
+    const fn = String(u.first_name || '').trim().toLowerCase()
+    const ln = String(u.last_name || '').trim().toLowerCase()
+    if (fn && ln) {
+      const fullName1 = `${fn} ${ln}`
+      const fullName2 = `${ln} ${fn}`
+      if (pNameTrimmed === fullName1 || pNameTrimmed === fullName2) {
+        return true
+      }
     }
   }
-  const fn = String(u.first_name || '').trim().toLowerCase()
-  const ln = String(u.last_name || '').trim().toLowerCase()
-  const name1 = `${fn} ${ln}`.trim()
-  const name2 = `${ln} ${fn}`.trim()
-  if (name1 && (pNameLower === name1 || sIdent === name1)) return true
-  if (name2 && (pNameLower === name2 || sIdent === name2)) return true
 
-  if (fn && ln && pNameLower.includes(fn) && pNameLower.includes(ln)) {
-    return true
-  }
   return false
 }
 
@@ -1013,7 +1029,20 @@ export default function MeetingRoom() {
           })
         } else {
           // Guest flow according to MEETINGS.md entry matrix
-          if (!msg.requires_approval && msg.allow_join_before_host) {
+          if (msg.requires_approval && !msg.is_approved) {
+            // Knock / Waiting room: requires approval
+            setWaitingState('waiting_approval')
+            sendWs({ action: 'ask_to_join' })
+            setIsJoining(false)
+          } else if (msg.requires_approval && msg.is_approved) {
+            // Approved: get token
+            setWaitingState('connecting')
+            sendWs({
+              action: 'get_token',
+              device_id: 'tab_web',
+              device_name: 'Web Browser'
+            })
+          } else if (!msg.requires_approval && msg.allow_join_before_host) {
             // Free join (Google meet style)
             setWaitingState('connecting')
             sendWs({
@@ -1032,20 +1061,6 @@ export default function MeetingRoom() {
               })
             } else {
               setWaitingState('waiting_organizer')
-              setIsJoining(false)
-            }
-          } else if (msg.requires_approval) {
-            // Knock / Waiting room
-            if (msg.is_approved) {
-              setWaitingState('connecting')
-              sendWs({
-                action: 'get_token',
-                device_id: 'tab_web',
-                device_name: 'Web Browser'
-              })
-            } else {
-              setWaitingState('waiting_approval')
-              sendWs({ action: 'ask_to_join' })
               setIsJoining(false)
             }
           }
@@ -1156,10 +1171,11 @@ export default function MeetingRoom() {
         }
         if (msg.status === 'joined' && msg.server_url && msg.token) {
           connectToLiveKit(msg.server_url, msg.token)
+        } else if (msg.status === 'waiting_approval' || (msg.status === 'waiting' && (meetingStateRef.current?.requires_approval || !meetingStateRef.current?.is_approved))) {
+          setWaitingState('waiting_approval')
+          sendWs({ action: 'ask_to_join' })
         } else if (msg.status === 'waiting') {
           setWaitingState('waiting_organizer')
-        } else if (msg.status === 'waiting_approval') {
-          setWaitingState('waiting_approval')
         } else if (msg.status === 'kicked') {
           setWaitingState('kicked')
         }
@@ -1210,34 +1226,24 @@ export default function MeetingRoom() {
         const isRaised = Boolean(msg.raised)
         const isMe = String(msg.user_id) === String(user?.id)
 
-        const newUpdates = {
-          [msg.user_id]: isRaised,
-          [String(msg.user_id)]: isRaised,
+        const newUpdates = {}
+        if (msg.user_id !== undefined && msg.user_id !== null) {
+          newUpdates[msg.user_id] = isRaised
+          newUpdates[String(msg.user_id)] = isRaised
         }
         if (msg.username) {
           newUpdates[msg.username] = isRaised
           newUpdates[String(msg.username).toLowerCase()] = isRaised
         }
-        if (msg.full_name) {
-          newUpdates[msg.full_name] = isRaised
-          newUpdates[String(msg.full_name).toLowerCase()] = isRaised
-        }
 
-        // LiveKit roomdagi mos keladigan barcha remote participantlarning identity larini ham xaritaga qo'shamiz
-        if (roomRef.current) {
-          const sUid = String(msg.user_id || '')
-          const uName = String(msg.username || '').toLowerCase()
-          const fName = String(msg.full_name || '').toLowerCase()
-
+        // LiveKit roomdagi mos keladigan remote participant ning identity sini ham xaritaga qo'shamiz
+        if (roomRef.current && msg.user_id !== undefined && msg.user_id !== null) {
+          const sUid = String(msg.user_id).trim()
           roomRef.current.remoteParticipants.forEach(rp => {
-            const rIdent = String(rp.identity || '').toLowerCase()
-            const rpName = String(rp.name || '').toLowerCase()
-            const isMatch = (
-              (sUid && (rIdent === sUid || rIdent.startsWith(sUid + '_') || rIdent.startsWith(sUid + '-') || rIdent.endsWith('_' + sUid) || rIdent.endsWith('-' + sUid) || rIdent === `user_${sUid}` || rIdent.includes(`_${sUid}_`))) ||
-              (uName && (rIdent === uName || rpName === uName || rIdent.startsWith(uName + '_') || rIdent.endsWith('_' + uName))) ||
-              (fName && (rpName === fName || rIdent === fName))
-            )
-            if (isMatch) {
+            const rpUid = getUserIdFromIdentity(rp.identity)
+            if (rpUid && rpUid === sUid) {
+              newUpdates[rp.identity] = isRaised
+            } else if (String(rp.identity).trim() === sUid) {
               newUpdates[rp.identity] = isRaised
             }
           })
@@ -1559,12 +1565,12 @@ export default function MeetingRoom() {
       } else if (state.is_host) {
         sendWs({ action: 'get_token' })
       } else {
-        if (!state.organizer_joined) {
-          setWaitingState('waiting_organizer')
-          setIsJoining(false)
-        } else if (state.requires_approval && !state.is_approved) {
+        if (state.requires_approval && !state.is_approved) {
           setWaitingState('waiting_approval')
           sendWs({ action: 'ask_to_join' })
+          setIsJoining(false)
+        } else if (!state.organizer_joined && !state.allow_join_before_host) {
+          setWaitingState('waiting_organizer')
           setIsJoining(false)
         } else {
           setWaitingState('connecting')
@@ -1830,13 +1836,7 @@ export default function MeetingRoom() {
   const isParticipantHandRaised = useCallback((p, pInfo) => {
     if (!p) return false
     if (p.isLocal) {
-      const localId = roomRef.current?.localParticipant?.identity
-      return Boolean(
-        isHandRaised ||
-        (localId && handRaisedMap[localId]) ||
-        (user?.id && (handRaisedMap[user.id] || handRaisedMap[String(user.id)])) ||
-        (user?.username && (handRaisedMap[user.username] || handRaisedMap[String(user.username).toLowerCase()]))
-      )
+      return Boolean(isHandRaised)
     }
 
     const identity = String(p.identity || '').trim()
@@ -1847,13 +1847,17 @@ export default function MeetingRoom() {
     if (handRaisedMap[identity]) return true
 
     // 2. Numeric / user_ ID in identity (e.g., "14", "14_abc", "user_14")
-    const idMatch = identity.match(/^user_?(\d+)/i) || identity.match(/^(\d+)(_|-|$)/)
-    if (idMatch && idMatch[1]) {
-      if (handRaisedMap[idMatch[1]] || handRaisedMap[String(idMatch[1])]) return true
+    const idMatch = getUserIdFromIdentity(identity)
+    if (idMatch && (handRaisedMap[idMatch] || handRaisedMap[String(idMatch)])) {
+      return true
     }
 
-    // 3. Name check
-    if (pName && (handRaisedMap[pName] || handRaisedMap[pNameLower])) return true
+    // 3. Peer profiles
+    const profile = peerProfiles[identity] || (identity ? peerProfiles[identity.toLowerCase()] : null)
+    if (profile) {
+      if (profile.userId && (handRaisedMap[profile.userId] || handRaisedMap[String(profile.userId)])) return true
+      if (profile.username && (handRaisedMap[profile.username] || handRaisedMap[String(profile.username).toLowerCase()])) return true
+    }
 
     // 4. LiveKit metadata
     if (p.metadata) {
@@ -1866,49 +1870,13 @@ export default function MeetingRoom() {
       } catch {}
     }
 
-    // 5. Peer profiles
-    const profile = peerProfiles[identity] || (identity ? peerProfiles[identity.toLowerCase()] : null) || (pNameLower ? peerProfiles[pNameLower] : null)
-    if (profile) {
-      if (profile.userId && (handRaisedMap[profile.userId] || handRaisedMap[String(profile.userId)])) return true
-      if (profile.username && (handRaisedMap[profile.username] || handRaisedMap[String(profile.username).toLowerCase()])) return true
-    }
-
-    // 6. Check against all active entries in handRaisedMap
-    for (const [key, raised] of Object.entries(handRaisedMap)) {
-      if (!raised) continue
-      const sKey = String(key).trim()
-      // If key is a user ID
-      if (/^\d+$/.test(sKey)) {
-        if (
-          identity === sKey ||
-          identity.startsWith(sKey + '_') ||
-          identity.startsWith(sKey + '-') ||
-          identity.endsWith('_' + sKey) ||
-          identity.endsWith('-' + sKey) ||
-          identity.startsWith(`user_${sKey}`)
-        ) {
-          return true
-        }
-        const u = directoryUsers?.find(item => String(item.id) === sKey) ||
-                  meetingDetails?.participants_info?.find(item => String(item.id) === sKey)
-        if (u && isUserMatch(u, identity, pNameLower)) {
-          return true
-        }
-      }
-      // If key is username or string
-      if (sKey) {
-        const sKeyLower = sKey.toLowerCase()
-        if (sKeyLower === pNameLower || sKeyLower === identity.toLowerCase()) {
-          return true
-        }
-        if (identity.toLowerCase().startsWith(sKeyLower + '_') || identity.toLowerCase().endsWith('_' + sKeyLower)) {
-          return true
-        }
-      }
+    // 5. Match by exact username if present in handRaisedMap
+    if (pNameLower && pNameLower !== 'ishtirokchi' && pNameLower !== 'tashkilotchi') {
+      if (handRaisedMap[pNameLower]) return true
     }
 
     return false
-  }, [handRaisedMap, isHandRaised, user, peerProfiles, directoryUsers, meetingDetails])
+  }, [handRaisedMap, isHandRaised, peerProfiles])
 
   // 3. LiveKit Connection
   const connectToLiveKit = async (serverUrl, token) => {
@@ -2508,9 +2476,9 @@ export default function MeetingRoom() {
           }
         } else if (decoded.type === 'raise_hand') {
           const isRaised = Boolean(decoded.isRaised ?? decoded.raised ?? true)
-          const pIdentity = participant ? participant.identity : (decoded.userId || decoded.identity)
+          const pIdentity = participant ? participant.identity : (decoded.identity || decoded.userId)
           const uid = decoded.userId || decoded.user_id
-          const uname = decoded.username || decoded.sender
+          const uname = decoded.username
 
           const newUpdates = {}
           if (pIdentity) newUpdates[pIdentity] = isRaised
@@ -2521,10 +2489,6 @@ export default function MeetingRoom() {
           if (uname) {
             newUpdates[uname] = isRaised
             newUpdates[String(uname).toLowerCase()] = isRaised
-          }
-          if (participant?.name) {
-            newUpdates[participant.name] = isRaised
-            newUpdates[String(participant.name).toLowerCase()] = isRaised
           }
 
           setHandRaisedMap(prev => ({
@@ -2967,7 +2931,8 @@ export default function MeetingRoom() {
         type: 'raise_hand',
         isRaised: next,
         sender: currentUserName,
-        userId: roomRef.current.localParticipant.identity
+        userId: user?.id,
+        identity: roomRef.current.localParticipant.identity
       }
       try {
         const payload = new TextEncoder().encode(JSON.stringify(data))
@@ -2977,8 +2942,7 @@ export default function MeetingRoom() {
       setHandRaisedMap(prev => ({
         ...prev,
         [roomRef.current.localParticipant.identity]: next,
-        [user?.id]: next,
-        [String(user?.id)]: next
+        ...(user?.id ? { [user.id]: next, [String(user.id)]: next } : {})
       }))
     }
   }

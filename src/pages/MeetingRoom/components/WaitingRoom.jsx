@@ -160,12 +160,12 @@ export default function WaitingRoom({
   if (isRejected || waitingState === 'rejected') {
     statusTitle = "Kirish rad etildi"
     statusDesc = rejectedMessage
-  } else if (waitingState === 'waiting_organizer' || (!meetingState?.organizer_joined && waitingState !== 'lobby')) {
-    statusTitle = "Tashkilotchi kutilmoqda"
-    statusDesc = "Tashkilotchi hali yig'ilishga kirmagan. U kirishi bilanoq tizim avtomatik ulaydi."
   } else if (waitingState === 'waiting_approval' || (meetingState?.requires_approval && !meetingState?.is_approved && waitingState !== 'lobby')) {
     statusTitle = "Ruxsat kutilmoqda"
     statusDesc = "So'rov tashkilotchiga yuborildi. U tasdiqlagach siz avtomatik qo'shilasiz."
+  } else if (waitingState === 'waiting_organizer') {
+    statusTitle = "Tashkilotchi kutilmoqda"
+    statusDesc = "Tashkilotchi hali yig'ilishga kirmagan. U kirishi bilanoq tizim avtomatik ulaydi."
   } else if (waitingState === 'connecting' || isJoining) {
     statusTitle = "Ulanmoqda..."
     statusDesc = "Yig'ilish xonasiga ulanish o'rnatilmoqda..."

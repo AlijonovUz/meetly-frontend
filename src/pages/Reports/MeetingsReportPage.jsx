@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { Search, Filter, FileSpreadsheet, Loader2, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { Search, Filter, FileSpreadsheet, Loader2, RefreshCw } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CheckmarkCircle02Icon, Cancel01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
 import { DatePicker, CustomSelect } from "../../components/UI";
@@ -26,10 +26,15 @@ const MeetingsReportPage = () => {
   const [organizersLoading, setOrganizersLoading] = useState(false);
   const [reportsData, setReportsData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  const tableContainerRef = useRef(null);
+  const isFetchingRef = useRef(false);
 
   // Load organizers dropdown only on mount
   useEffect(() => {
@@ -97,11 +102,18 @@ const MeetingsReportPage = () => {
     return `Davr: ${startStr} – ${endStr}, Tashkilotchi: ${orgStr}, Holati: ${stStr}`;
   }, [startDate, endDate, meetingOrganizer, meetingStatus, organizersList]);
 
-  // Fetch report data on demand (when user clicks Shakllantirish)
+  // Fetch report data on demand (when user clicks Shakllantirish or infinite scroll)
   const fetchReport = useCallback(
-    async (pageNumber = 1) => {
+    async (pageNumber = 1, isNextPage = false) => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
+
       try {
-        setLoading(true);
+        if (isNextPage) {
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+        }
         setError(null);
 
         const params = {
@@ -141,16 +153,37 @@ const MeetingsReportPage = () => {
         }
 
         const res = await getMeetingsReport(params);
-        setReportsData(res.results || []);
+        const newResults = res.results || [];
         setTotalCount(res.count || 0);
         setTotalPages(res.total_pages || 1);
-        setPage(res.page || pageNumber);
+        setPage(pageNumber);
+
+        if (isNextPage) {
+          setReportsData((prev) => {
+            const existingIds = new Set(prev.map((i) => i.id).filter(Boolean));
+            if (existingIds.size > 0) {
+              const uniqueNew = newResults.filter((i) => !i.id || !existingIds.has(i.id));
+              return [...prev, ...uniqueNew];
+            }
+            return [...prev, ...newResults];
+          });
+        } else {
+          setReportsData(newResults);
+        }
+
+        const hasNext = Boolean(
+          res.next || (res.total_pages ? pageNumber < res.total_pages : newResults.length >= 20)
+        );
+        setHasMore(hasNext);
         setIsGenerated(true);
       } catch (err) {
         console.error("Yig'ilishlar hisobotini olishda xatolik:", err);
         setError("Hisobot ma'lumotlarini yuklashda xatolik yuz berdi");
+        setHasMore(false);
       } finally {
         setLoading(false);
+        setLoadingMore(false);
+        isFetchingRef.current = false;
       }
     },
     [
@@ -165,7 +198,24 @@ const MeetingsReportPage = () => {
   );
 
   const handleGenerate = () => {
-    fetchReport(1);
+    setHasMore(true);
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTop = 0;
+    }
+    fetchReport(1, false);
+  };
+
+  // Scroll listener for table container
+  const handleScroll = () => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 80;
+
+    if (isNearBottom && hasMore && !loading && !loadingMore && !isFetchingRef.current) {
+      fetchReport(page + 1, true);
+    }
   };
 
   // Export event listener for Navbar button
@@ -471,22 +521,26 @@ const MeetingsReportPage = () => {
             <span>{periodLabelText}</span>
           </div>
 
-          <div className="overflow-auto max-h-[calc(100vh-230px)]">
+          <div
+            ref={tableContainerRef}
+            onScroll={handleScroll}
+            className="overflow-auto max-h-[calc(100vh-230px)]"
+          >
             <table className="w-full border-collapse text-left">
               <thead className="sticky top-0 bg-[#F8F9FC] z-10">
-                  <tr className="border-b border-[#F1F3F9] text-[#5B6078] text-[13px] font-medium">
+                <tr className="border-b border-[#F1F3F9] text-[#5B6078] text-[13px] font-medium">
                   <th className="py-3 px-3 w-12 font-medium">№</th>
                   <th className="py-3 px-3 font-medium">Yig'ilish</th>
                   <th className="py-3 px-3 font-medium">
                     <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 bg-[#4AC99B] rounded-full"></span>
+                      <span className="w-2 h-2 bg-[#4AC99B] rounded-full"></span>
                       <span>Tashkilotchi</span>
                     </div>
                   </th>
                   <th className="py-3 px-3 font-medium text-right">Sana</th>
                   <th className="py-3 px-3 font-medium text-right">Davomiyligi</th>
-                  <th className="py-3 px-3 font-medium text-right">Qatnashchilar</th>
-                  <th className="py-3 px-3 font-medium text-right">Qatnashish</th>
+                    <th className="py-3 px-3 font-medium text-right">Qatnashchilar</th>
+                    <th className="py-3 px-3 font-medium text-right">Imzolar</th>
                   <th className="py-3 px-3 font-medium text-right">Holati</th>
                 </tr>
               </thead>
@@ -507,92 +561,68 @@ const MeetingsReportPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  reportsData.map((row, idx) => {
-                    const rowIdx = (page - 1) * 20 + idx + 1;
-                    const title = row.title || row.name || "Nomsiz yig'ilish";
-                    const code = row.code || "";
-                    const organizerName =
-                      row.organizer?.full_name ||
-                      row.organizer?.name ||
-                      (typeof row.organizer === "string" ? row.organizer : "");
-                    const dateFormatted = row.start_date
-                      ? dayjs(row.start_date).format("DD.MM.YYYY")
-                      : row.date || "";
-                    const attendeesCount = row.attendees_count ?? row.participantsCount ?? 0;
-                    const signedCount = row.signed_count ?? row.signedCount ?? 0;
-                    const durationText = row.duration ? `${row.duration} daq` : "";
-                    const attendanceRate =
-                      attendeesCount > 0
-                        ? `${Math.round((signedCount / attendeesCount) * 100)}%`
-                        : "0%";
+                  <>
+                    {reportsData.map((row, idx) => {
+                      const rowIdx = idx + 1;
+                      const title = row.title || row.name || "Nomsiz yig'ilish";
+                      const code = row.code || "";
+                      const organizerName =
+                        row.organizer?.full_name ||
+                        row.organizer?.name ||
+                        (typeof row.organizer === "string" ? row.organizer : "");
+                      const dateFormatted = row.start_date
+                        ? dayjs(row.start_date).format("DD.MM.YYYY")
+                        : row.date || "";
+                      const attendeesCount = row.attendees_count ?? row.participantsCount ?? 0;
+                      const durationText = row.duration ? `${row.duration} daq` : "";
+                      const attendanceRate = row.signed_count;
 
-                    return (
-                      <tr
-                        key={row.id || idx}
-                        className="hover:bg-[#F8FAFC] transition-colors text-[13px] text-[#1A1D2E]"
-                      >
-                        <td className="py-3.5 px-3 text-[#8B90A5]">{rowIdx}</td>
-                        <td className="py-3.5 px-3">
-                          <div className="font-semibold text-[#1A1D2E] leading-tight">
-                            {title}
-                          </div>
-                          {code && (
-                            <div className="text-[11px] text-[#8B90A5] mt-0.5 font-mono">
-                              {code}
+                      return (
+                        <tr
+                          key={row.id || idx}
+                          className="hover:bg-[#F8FAFC] transition-colors text-[13px] text-[#1A1D2E]"
+                        >
+                          <td className="py-3.5 px-3 text-[#8B90A5]">{rowIdx}</td>
+                          <td className="py-3.5 px-3">
+                            <div className="font-semibold text-[#1A1D2E] leading-tight">
+                              {title}
                             </div>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-3 text-[#5E6480]">{organizerName}</td>
-                        <td className="py-3.5 px-3 text-[#5E6480] text-right whitespace-nowrap">{dateFormatted}</td>
-                        <td className="py-3.5 px-3 text-right text-[#5E6480]">{durationText}</td>
-                        <td className="py-3.5 px-3 text-right text-[#5E6480]">
-                          {attendeesCount}
-                        </td>
-                        <td className="py-3.5 px-3 text-right font-semibold text-[#1A1D2E]">
-                          {attendanceRate}
-                        </td>
-                        <td className="py-3.5 px-3 text-right">
-                          {renderStatusBadge(row.status)}
+                            {code && (
+                              <div className="text-[11px] text-[#8B90A5] mt-0.5 font-mono">
+                                {code}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-3 text-[#5E6480]">{organizerName}</td>
+                          <td className="py-3.5 px-3 text-[#5E6480] text-right whitespace-nowrap">{dateFormatted}</td>
+                          <td className="py-3.5 px-3 text-right text-[#5E6480]">{durationText}</td>
+                          <td className="py-3.5 px-3 text-right text-[#5E6480]">
+                            {attendeesCount}
+                          </td>
+                          <td className="py-3.5 px-3 text-right font-semibold text-[#1A1D2E]">
+                            {attendanceRate + " / " + attendeesCount}
+                          </td>
+                          <td className="py-3.5 px-3 text-right">
+                            {renderStatusBadge(row.status)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {loadingMore && (
+                      <tr>
+                        <td colSpan={8} className="py-4 text-center text-[#8B90A5]">
+                          <div className="flex items-center justify-center gap-2 text-xs font-medium">
+                            <Loader2 size={16} className="animate-spin text-[#3858C7]" />
+                            <span>Yana yuklanmoqda...</span>
+                          </div>
                         </td>
                       </tr>
-                    );
-                  })
+                    )}
+                  </>
                 )}
               </tbody>
             </table>
           </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 px-1">
-              <div className="text-[12.5px] text-[#8B90A5]">
-                Ko'rsatilmoqda: <span className="font-semibold text-[#1A1D2E]">{(page - 1) * 20 + 1}</span> -{" "}
-                <span className="font-semibold text-[#1A1D2E]">{Math.min(page * 20, totalCount)}</span> /{" "}
-                <span className="font-semibold text-[#1A1D2E]">{totalCount}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={page <= 1 || loading}
-                  onClick={() => fetchReport(page - 1)}
-                  className="p-1.5 rounded-lg border border-[#E2E6F2] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <span className="text-[12.5px] font-semibold text-[#1A1D2E] px-2">
-                  {page} / {totalPages}
-                </span>
-                <button
-                  type="button"
-                  disabled={page >= totalPages || loading}
-                  onClick={() => fetchReport(page + 1)}
-                  className="p-1.5 rounded-lg border border-[#E2E6F2] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
 

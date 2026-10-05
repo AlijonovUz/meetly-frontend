@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { Search, Filter, FileSpreadsheet, Loader2, ChevronLeft, ChevronRight, RefreshCw, Eye, X } from "lucide-react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { Search, Filter, FileSpreadsheet, Loader2, RefreshCw, Eye, X } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CheckmarkCircle02Icon, Cancel01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
 import { DatePicker, CustomSelect } from "../../components/UI";
@@ -30,6 +30,8 @@ const SignaturesReportPage = () => {
   const [organizersLoading, setOrganizersLoading] = useState(false);
   const [reportsData, setReportsData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -37,6 +39,9 @@ const SignaturesReportPage = () => {
 
   // Signature modal preview
   const [previewSignatureUrl, setPreviewSignatureUrl] = useState(null);
+
+  const tableContainerRef = useRef(null);
+  const isFetchingRef = useRef(false);
 
   // Load dropdown references only on mount
   useEffect(() => {
@@ -140,11 +145,18 @@ const SignaturesReportPage = () => {
     return `Davr: ${startStr} – ${endStr}, Ishtirokchi: ${partStr}, Imzo: ${stStr}`;
   }, [startDate, endDate, participantId, signatureStatus, participantsList]);
 
-  // Fetch report data on demand
+  // Fetch report data on demand (when user clicks Shakllantirish or infinite scroll)
   const fetchReport = useCallback(
-    async (pageNumber = 1) => {
+    async (pageNumber = 1, isNextPage = false) => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
+
       try {
-        setLoading(true);
+        if (isNextPage) {
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+        }
         setError(null);
 
         const params = {
@@ -184,16 +196,37 @@ const SignaturesReportPage = () => {
         }
 
         const res = await getSignaturesReport(params);
-        setReportsData(res.results || []);
+        const newResults = res.results || [];
         setTotalCount(res.count || 0);
         setTotalPages(res.total_pages || 1);
-        setPage(res.page || pageNumber);
+        setPage(pageNumber);
+
+        if (isNextPage) {
+          setReportsData((prev) => {
+            const existingIds = new Set(prev.map((i) => i.id).filter(Boolean));
+            if (existingIds.size > 0) {
+              const uniqueNew = newResults.filter((i) => !i.id || !existingIds.has(i.id));
+              return [...prev, ...uniqueNew];
+            }
+            return [...prev, ...newResults];
+          });
+        } else {
+          setReportsData(newResults);
+        }
+
+        const hasNext = Boolean(
+          res.next || (res.total_pages ? pageNumber < res.total_pages : newResults.length >= 20)
+        );
+        setHasMore(hasNext);
         setIsGenerated(true);
       } catch (err) {
         console.error("Imzolar hisobotini olishda xatolik:", err);
         setError("Hisobot ma'lumotlarini yuklashda xatolik yuz berdi");
+        setHasMore(false);
       } finally {
         setLoading(false);
+        setLoadingMore(false);
+        isFetchingRef.current = false;
       }
     },
     [
@@ -208,7 +241,24 @@ const SignaturesReportPage = () => {
   );
 
   const handleGenerate = () => {
-    fetchReport(1);
+    setHasMore(true);
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTop = 0;
+    }
+    fetchReport(1, false);
+  };
+
+  // Scroll listener for table container
+  const handleScroll = () => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 80;
+
+    if (isNearBottom && hasMore && !loading && !loadingMore && !isFetchingRef.current) {
+      fetchReport(page + 1, true);
+    }
   };
 
   // Export event listener for Navbar button
@@ -495,7 +545,11 @@ const SignaturesReportPage = () => {
             <span>{periodLabelText}</span>
           </div>
 
-          <div className="overflow-auto max-h-[calc(100vh-230px)]">
+          <div
+            ref={tableContainerRef}
+            onScroll={handleScroll}
+            className="overflow-auto max-h-[calc(100vh-230px)]"
+          >
             <table className="w-full border-collapse text-left">
               <thead className="sticky top-0 bg-[#F8F9FC] z-10">
                 <tr className="border-b border-[#F1F3F9] text-[#5B6078] text-[13px] font-medium">
@@ -525,127 +579,107 @@ const SignaturesReportPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  reportsData.map((row, idx) => {
-                    const rowIdx = (page - 1) * 20 + idx + 1;
-                    const participantName =
-                      row.participant?.full_name ||
-                      row.participant?.name ||
-                      (typeof row.participant === "string" ? row.participant : "");
-                    const meetingTitle = row.meeting?.title || "Nomsiz yig'ilish";
-                    const meetingCode = row.meeting?.code || "";
-                    const meetingDateFormatted = row.meeting_date
-                      ? dayjs(row.meeting_date).format("DD.MM.YYYY HH:mm")
-                      : "";
-                    const signedAtFormatted = row.signed_at
-                      ? dayjs(row.signed_at).format("DD.MM.YYYY HH:mm")
-                      : "";
-                    const isSigned = row.is_signed === true || Boolean(row.signature);
+                  <>
+                    {reportsData.map((row, idx) => {
+                      const rowIdx = idx + 1;
+                      const participantName =
+                        row.participant?.full_name ||
+                        row.participant?.name ||
+                        (typeof row.participant === "string" ? row.participant : "");
+                      const meetingTitle = row.meeting?.title || "Nomsiz yig'ilish";
+                      const meetingCode = row.meeting?.code || "";
+                      const meetingDateFormatted = row.meeting_date
+                        ? dayjs(row.meeting_date).format("DD.MM.YYYY HH:mm")
+                        : "";
+                      const signedAtFormatted = row.signed_at
+                        ? dayjs(row.signed_at).format("DD.MM.YYYY HH:mm")
+                        : "";
+                      const isSigned = row.is_signed === true || Boolean(row.signature);
 
-                    return (
-                      <tr
-                        key={row.id || idx}
-                        className="hover:bg-[#F8FAFC] transition-colors text-[13px] text-[#1A1D2E]"
-                      >
-                        <td className="py-3.5 px-3 text-[#8B90A5]">{rowIdx}</td>
-                        <td className="py-3.5 px-3 font-semibold text-[#1A1D2E]">
-                          <div className="flex items-center gap-2.5">
-                            {row.participant?.avatar ? (
-                              <img
-                                src={row.participant.avatar}
-                                alt={participantName}
-                                className="w-7 h-7 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-7 h-7 rounded-full bg-[#EEF2FB] text-[#3858C7] text-xs font-bold flex items-center justify-center">
-                                {participantName[0]?.toUpperCase() || "I"}
+                      return (
+                        <tr
+                          key={row.id || idx}
+                          className="hover:bg-[#F8FAFC] transition-colors text-[13px] text-[#1A1D2E]"
+                        >
+                          <td className="py-3.5 px-3 text-[#8B90A5]">{rowIdx}</td>
+                          <td className="py-3.5 px-3 font-semibold text-[#1A1D2E]">
+                            <div className="flex items-center gap-2.5">
+                              {row.participant?.avatar ? (
+                                <img
+                                  src={row.participant.avatar}
+                                  alt={participantName}
+                                  className="w-7 h-7 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-7 h-7 rounded-full bg-[#EEF2FB] text-[#3858C7] text-xs font-bold flex items-center justify-center">
+                                  {participantName[0]?.toUpperCase() || "I"}
+                                </div>
+                              )}
+                              <span>{participantName}</span>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-3">
+                            <div className="font-semibold text-[#1A1D2E] leading-tight">
+                              {meetingTitle}
+                            </div>
+                            {meetingCode && (
+                              <div className="text-[11px] text-[#8B90A5] mt-0.5 font-mono">
+                                {meetingCode}
                               </div>
                             )}
-                            <span>{participantName}</span>
+                          </td>
+                          <td className="py-3.5 px-3 text-[#5E6480] text-right whitespace-nowrap">
+                            {meetingDateFormatted}
+                          </td>
+                          <td className="py-3.5 px-3 text-[#5E6480] text-right whitespace-nowrap">
+                            {signedAtFormatted}
+                          </td>
+                          <td className="py-3.5 px-3 text-center">
+                            {row.signature ? (
+                              <button
+                                type="button"
+                                onClick={() => setPreviewSignatureUrl(row.signature)}
+                                className="inline-flex items-center justify-center p-1 rounded-md border border-[#E2E6F2] bg-white hover:bg-[#F8FAFC] hover:border-[#3858C7] transition-all cursor-pointer group shadow-2xs"
+                                title="Imzoni kattalashtirib ko'rish"
+                              >
+                                <img
+                                  src={row.signature}
+                                  alt="Imzo"
+                                  className="h-6 max-w-[72px] object-contain group-hover:scale-105 transition-transform"
+                                />
+                              </button>
+                            ) : (
+                              <span className="text-[#8B90A5] text-xs"></span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-3 text-right pr-4">
+                            <span className="inline-flex bg-[#F1F3F9] py-0.5 px-2 rounded-md items-center gap-1.5 text-xs font-medium text-[#5B6078]">
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  isSigned ? "bg-[#10B981]" : "bg-[#F59E0B]"
+                                }`}
+                              ></span>
+                              {isSigned ? "Imzolangan" : "Kutilmoqda"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {loadingMore && (
+                      <tr>
+                        <td colSpan={7} className="py-4 text-center text-[#8B90A5]">
+                          <div className="flex items-center justify-center gap-2 text-xs font-medium">
+                            <Loader2 size={16} className="animate-spin text-[#3858C7]" />
+                            <span>Yana yuklanmoqda...</span>
                           </div>
-                        </td>
-                        <td className="py-3.5 px-3">
-                          <div className="font-semibold text-[#1A1D2E] leading-tight">
-                            {meetingTitle}
-                          </div>
-                          {meetingCode && (
-                            <div className="text-[11px] text-[#8B90A5] mt-0.5 font-mono">
-                              {meetingCode}
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-3 text-[#5E6480] text-right whitespace-nowrap">
-                          {meetingDateFormatted}
-                        </td>
-                        <td className="py-3.5 px-3 text-[#5E6480] text-right whitespace-nowrap">
-                          {signedAtFormatted}
-                        </td>
-                        <td className="py-3.5 px-3 text-center">
-                          {row.signature ? (
-                            <button
-                              type="button"
-                              onClick={() => setPreviewSignatureUrl(row.signature)}
-                              className="inline-flex items-center justify-center p-1 rounded-md border border-[#E2E6F2] bg-white hover:bg-[#F8FAFC] hover:border-[#3858C7] transition-all cursor-pointer group shadow-2xs"
-                              title="Imzoni kattalashtirib ko'rish"
-                            >
-                              <img
-                                src={row.signature}
-                                alt="Imzo"
-                                className="h-6 max-w-[72px] object-contain group-hover:scale-105 transition-transform"
-                              />
-                            </button>
-                          ) : (
-                            <span className="text-[#8B90A5] text-xs"></span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-3 text-right pr-4">
-                          <span className="inline-flex bg-[#F1F3F9] py-0.5 px-2 rounded-md items-center gap-1.5 text-xs font-medium text-[#5B6078]">
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                isSigned ? "bg-[#10B981]" : "bg-[#F59E0B]"
-                              }`}
-                            ></span>
-                            {isSigned ? "Imzolangan" : "Kutilmoqda"}
-                          </span>
                         </td>
                       </tr>
-                    );
-                  })
+                    )}
+                  </>
                 )}
               </tbody>
             </table>
           </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 px-1">
-              <div className="text-[12.5px] text-[#8B90A5]">
-                Ko'rsatilmoqda: <span className="font-semibold text-[#1A1D2E]">{(page - 1) * 20 + 1}</span> -{" "}
-                <span className="font-semibold text-[#1A1D2E]">{Math.min(page * 20, totalCount)}</span> /{" "}
-                <span className="font-semibold text-[#1A1D2E]">{totalCount}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={page <= 1 || loading}
-                  onClick={() => fetchReport(page - 1)}
-                  className="p-1.5 rounded-lg border border-[#E2E6F2] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <span className="text-[12.5px] font-semibold text-[#1A1D2E] px-2">
-                  {page} / {totalPages}
-                </span>
-                <button
-                  type="button"
-                  disabled={page >= totalPages || loading}
-                  onClick={() => fetchReport(page + 1)}
-                  className="p-1.5 rounded-lg border border-[#E2E6F2] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
