@@ -5,6 +5,7 @@ import {
   Cancel01Icon,
   Copy01Icon,
   Tick02Icon,
+  Alert02Icon,
 } from "@hugeicons/core-free-icons";
 import { Check, Loader2 } from "lucide-react";
 import { CustomSelect, DatePicker, TimePicker } from "../UI";
@@ -28,6 +29,7 @@ const CreateMeetingModal = ({
   const [descTextareaHeight, setDescTextareaHeight] = useState(90);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [errors, setErrors] = useState({});
 
   // Drag handler for textarea resize
   const handleMouseDownResize = (e) => {
@@ -70,6 +72,7 @@ const CreateMeetingModal = ({
       setCreatedModalData(null);
       setCopiedLink(false);
       setFormError(null);
+      setErrors({});
       setIsSubmitting(false);
     }
   }, [isOpen]);
@@ -97,7 +100,15 @@ const CreateMeetingModal = ({
 
   const handleCreateMeeting = async (e) => {
     e.preventDefault();
-    if (!newMeetingName.trim()) return;
+    const newErrors = {};
+    if (!newMeetingName.trim()) {
+      newErrors.title = "Yig'ilish nomini kiritish majburiy";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -197,21 +208,35 @@ const CreateMeetingModal = ({
             )}
 
             {/* Modal Body / Form */}
-            <form onSubmit={handleCreateMeeting} className="space-y-3">
+            <form noValidate onSubmit={handleCreateMeeting} className="space-y-3">
               {/* Meeting Name */}
               <div>
                 <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
-                  Yig'ilish nomi
+                  Yig'ilish nomi <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  required
                   maxLength={120}
                   value={newMeetingName}
-                  onChange={(e) => setNewMeetingName(e.target.value)}
+                  onChange={(e) => {
+                    setNewMeetingName(e.target.value);
+                    if (errors.title) {
+                      setErrors((prev) => ({ ...prev, title: null }));
+                    }
+                  }}
                   placeholder="Yig'ilish nomini kiriting"
-                  className="w-full bg-white dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl px-4 h-12 text-[14px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10 transition-all shadow-2xs"
+                  className={`w-full bg-white dark:bg-[#121624] border rounded-2xl px-4 h-12 text-[14px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none transition-all shadow-2xs ${
+                    errors.title
+                      ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                      : "border-[#E2E6F2] dark:border-[#2B3553] focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10"
+                  }`}
                 />
+                {errors.title && (
+                  <p className="mt-1.5 text-[12px] font-semibold text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in duration-150">
+                    <HugeiconsIcon icon={Alert02Icon} size={15} />
+                    <span>{errors.title}</span>
+                  </p>
+                )}
               </div>
 
               {/* Approval Requirement Card */}
@@ -230,9 +255,12 @@ const CreateMeetingModal = ({
                     checked={newRequireApproval}
                     onChange={(e) => {
                       const checked = e.target.checked;
-                      setNewRequireApproval(checked);
                       if (checked) {
+                        setNewRequireApproval(true);
                         setNewAllowJoinBeforeHost(false);
+                      } else {
+                        setNewRequireApproval(false);
+                        setNewAllowJoinBeforeHost(true);
                       }
                     }}
                     className="sr-only peer"
@@ -257,9 +285,12 @@ const CreateMeetingModal = ({
                     checked={newAllowJoinBeforeHost}
                     onChange={(e) => {
                       const checked = e.target.checked;
-                      setNewAllowJoinBeforeHost(checked);
                       if (checked) {
+                        setNewAllowJoinBeforeHost(true);
                         setNewRequireApproval(false);
+                      } else {
+                        setNewAllowJoinBeforeHost(false);
+                        setNewRequireApproval(true);
                       }
                     }}
                     className="sr-only peer"
