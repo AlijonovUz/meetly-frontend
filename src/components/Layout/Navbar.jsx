@@ -9,7 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { FaCheck, FaFileExcel, FaFilePdf, FaFileCsv } from "react-icons/fa6";
 import { useNotifications } from "../../context/NotificationContext";
-import { mockUsersList, mockMeetingsList } from "../../data/mockData";
+import { useTheme } from "../../context/ThemeContext";
 
 const formatRelativeTime = (dateString) => {
   if (!dateString) return "Hozirgina";
@@ -36,6 +36,8 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   const navigate = useNavigate();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notifRef = useRef(null);
+  const { isDark } = useTheme();
+  const [dynamicTitles, setDynamicTitles] = useState({});
 
   const {
     notifications,
@@ -44,6 +46,21 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
     markAllAsRead,
     openSignatureModal,
   } = useNotifications();
+
+  // Listen to external page title notifications
+  useEffect(() => {
+    const handleSetTitle = (e) => {
+      if (e.detail?.id && e.detail?.title) {
+        setDynamicTitles((prev) => ({
+          ...prev,
+          [e.detail.id]: e.detail.title,
+        }));
+      }
+    };
+    window.addEventListener("set-navbar-title", handleSetTitle);
+    return () => window.removeEventListener("set-navbar-title", handleSetTitle);
+  }, []);
+
 
   // Dynamic breadcrumbs based on route
   const getBreadcrumbs = () => {
@@ -56,11 +73,11 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
       return [{ label: "Foydalanuvchilar" }];
     }
     if (pathname.startsWith("/users/")) {
-      const id = pathname.replace("/users/", "");
-      const user = mockUsersList.find((u) => u.id === id) || mockUsersList[0];
+      const id = pathname.replace("/users/", "").split("/")[0];
+      const userName = dynamicTitles[id] || location.state?.fullName || location.state?.name || "Foydalanuvchi";
       return [
         { label: "Foydalanuvchilar", to: "/users" },
-        { label: user.fullName },
+        { label: userName },
       ];
     }
     if (pathname === "/meetings") {
@@ -69,14 +86,11 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
       ];
     }
     if (pathname.startsWith("/meetings/")) {
-      const id = pathname.replace("/meetings/", "");
-      const meeting =
-        mockMeetingsList.find((m) => m.id === id) ||
-        mockMeetingsList.find((m) => m.id === "13") ||
-        mockMeetingsList[0];
+      const id = pathname.replace("/meetings/", "").split("/")[0];
+      const meetingTitle = dynamicTitles[id] || location.state?.title || location.state?.name || "Yig'ilish tafsiloti";
       return [
         { label: "Yig'ilishlar", to: "/meetings" },
-        { label: meeting.name },
+        { label: meetingTitle },
       ];
     }
     if (pathname.startsWith("/reports")) {
@@ -121,14 +135,14 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   }, []);
 
   return (
-    <header className={`h-[60px] ${location.pathname === "/" ? "bg-transparent border-b border-b-[#EEF1F7]" : "bg-[#3858C7]"} border-b border-white/10 border-l border-white/10 px-6 flex items-center justify-between sticky top-0 z-30 select-none font-['Manrope',sans-serif] text-white`}>
+    <header className={`h-[60px] bg-[#3858C7] dark:bg-[#2B3553] border-b border-white/10 dark:border-b-[#21262D] border-l border-white/10 dark:border-l-[#1E263C] px-6 flex items-center justify-between sticky top-0 z-30 select-none font-['Manrope',sans-serif] text-white`}>
       {/* Left side: Breadcrumb & Title */}
       <div className="flex items-center gap-3">
         {/* Mobile toggle button */}
         <button
           type="button"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="md:hidden p-2 rounded-xl text-white/80 hover:bg-white/10 transition-colors cursor-pointer"
+          className="md:hidden p-2 rounded-xl text-white/80 hover:bg-white/10 dark:hover:bg-white/5 transition-colors cursor-pointer"
         >
           <HugeiconsIcon icon={Menu01Icon} size={20} />
         </button>
@@ -151,7 +165,7 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                   <span
                     className={
                       isLast
-                        ? location.pathname === "/" ? "text-[#5B6078]" : "text-white font-semibold"
+                        ? "text-white font-semibold"
                         : "text-white/70 font-medium"
                     }
                   >
@@ -172,9 +186,9 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("open-create-meeting-modal"))}
-            className="hidden sm:inline-flex items-center gap-2 bg-white hover:bg-white/95 text-[#1A1D2E] text-[13px] font-semibold px-3.5 py-2 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-2 bg-white dark:bg-[#1C2438] hover:bg-white/95 dark:hover:bg-[#232E47] text-[#1A1D2E] dark:text-white text-[13px] font-semibold px-3.5 py-2 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
           >
-            <img src="/meet_icon.svg" alt="" className="pointer-events-none w-4.5 h-4.5" />
+            <img src={isDark ? "/meeting_icon_dark.svg" : "/meet_icon.svg"} alt="" className="pointer-events-none w-4.5 h-4.5" />
             <span>Yig'ilish qo'shish</span>
           </button>
         )}
@@ -185,28 +199,28 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
             <button
               type="button"
               onClick={() => setExportMenuOpen(!exportMenuOpen)}
-              className="hidden sm:inline-flex items-center gap-2 bg-white hover:bg-white/95 text-[#1A1D2E] text-[13px] font-semibold h-9 px-3.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-2 bg-white dark:bg-[#1C2438] hover:bg-white/95 dark:hover:bg-[#232E47] text-[#1A1D2E] dark:text-white text-[13px] font-semibold h-9 px-3.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
             >
               <HugeiconsIcon icon={Download01Icon} size={18} strokeWidth={2.5} />
               <span>Yuklab olish</span>
             </button>
 
             {exportMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white text-[#1A1D2E] rounded-xl shadow-xl border border-[#E2E6F2] p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#161C2E] text-[#1A1D2E] dark:text-white rounded-xl shadow-xl border border-[#E2E6F2] dark:border-[#2B3553] p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
                 <button
                   type="button"
                   onClick={() => {
                     setExportMenuOpen(false);
                     window.dispatchEvent(new CustomEvent("export-report", { detail: { format: "excel" } }));
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-[#EEF2FB] hover:text-[#3858C7] transition-all text-left cursor-pointer group"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-[#EEF2FB] dark:hover:bg-[#1C2438] hover:text-[#3858C7] dark:hover:text-[#7F95E6] transition-all text-left cursor-pointer group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[#E6F8EF] text-[#16A34A] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                  <div className="w-8 h-8 rounded-lg bg-[#E6F8EF] dark:bg-[#10B981]/15 text-[#16A34A] dark:text-[#34D399] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
                     <FaFileExcel size={17} />
                   </div>
                   <div>
-                    <div className="font-semibold text-[#1A1D2E] text-[13px] leading-tight">Excel (.xlsx)</div>
-                    <div className="text-[11px] text-[#8B90A5] mt-0.5">Stilli jadval</div>
+                    <div className="font-semibold text-[#1A1D2E] dark:text-white text-[13px] leading-tight">Excel (.xlsx)</div>
+                    <div className="text-[11px] text-[#8B90A5] dark:text-[#94A3B8] mt-0.5">Stilli jadval</div>
                   </div>
                 </button>
 
@@ -216,14 +230,14 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                     setExportMenuOpen(false);
                     window.dispatchEvent(new CustomEvent("export-report", { detail: { format: "pdf" } }));
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-[#EEF2FB] hover:text-[#3858C7] transition-all text-left cursor-pointer group"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-[#EEF2FB] dark:hover:bg-[#1C2438] hover:text-[#3858C7] dark:hover:text-[#7F95E6] transition-all text-left cursor-pointer group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[#FEE2E2] text-[#DC2626] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                  <div className="w-8 h-8 rounded-lg bg-[#FEE2E2] dark:bg-[#EF4444]/15 text-[#DC2626] dark:text-[#F87171] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
                     <FaFilePdf size={17} />
                   </div>
                   <div>
-                    <div className="font-semibold text-[#1A1D2E] text-[13px] leading-tight">PDF (.pdf)</div>
-                    <div className="text-[11px] text-[#8B90A5] mt-0.5">Chop etish uchun</div>
+                    <div className="font-semibold text-[#1A1D2E] dark:text-white text-[13px] leading-tight">PDF (.pdf)</div>
+                    <div className="text-[11px] text-[#8B90A5] dark:text-[#94A3B8] mt-0.5">Chop etish uchun</div>
                   </div>
                 </button>
 
@@ -233,14 +247,14 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                     setExportMenuOpen(false);
                     window.dispatchEvent(new CustomEvent("export-report", { detail: { format: "csv" } }));
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-[#EEF2FB] hover:text-[#3858C7] transition-all text-left cursor-pointer group"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-[#EEF2FB] dark:hover:bg-[#1C2438] hover:text-[#3858C7] dark:hover:text-[#7F95E6] transition-all text-left cursor-pointer group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                  <div className="w-8 h-8 rounded-lg bg-[#E0F2FE] dark:bg-[#3858C7]/20 text-[#0284C7] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
                     <FaFileCsv size={17} />
                   </div>
                   <div>
-                    <div className="font-semibold text-[#1A1D2E] text-[13px] leading-tight">CSV (.csv)</div>
-                    <div className="text-[11px] text-[#8B90A5] mt-0.5">Matnli ma'lumot</div>
+                    <div className="font-semibold text-[#1A1D2E] dark:text-white text-[13px] leading-tight">CSV (.csv)</div>
+                    <div className="text-[11px] text-[#8B90A5] dark:text-[#94A3B8] mt-0.5">Matnli ma'lumot</div>
                   </div>
                 </button>
               </div>
@@ -253,22 +267,21 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           <button
             type="button"
             onClick={() => setNotificationsOpen(!notificationsOpen)}
-            className={`relative flex items-center justify-center w-9.5 h-9.5 rounded-xl transition-all cursor-pointer ${
-              notificationsOpen
-                ? "bg-white text-[#1A1D2E] shadow-sm"
-                : "bg-[#E9ECF5] text-[#1A1D2E] hover:bg-white"
-            }`}
+            className={`relative flex items-center justify-center w-9.5 h-9.5 rounded-xl transition-all cursor-pointer ${notificationsOpen
+                ? "bg-white dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white shadow-sm"
+                : "bg-[#E9ECF5] dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white hover:bg-white dark:hover:bg-[#232E47]"
+              }`}
             title="Bildirishnomalar"
           >
             <HugeiconsIcon icon={Notification01Icon} size={20} />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#EF4444] border-2 border-white rounded-full"></span>
+              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#EF4444] border-2 border-white dark:border-[#111625] rounded-full"></span>
             )}
           </button>
 
           {/* Notifications Dropdown Panel (Screenshot 2) */}
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2.5 w-84 sm:w-92 bg-white dark:bg-[#12161F] text-[#1A1D2E] dark:text-white rounded-3xl shadow-[0_15px_45px_rgba(0,0,0,0.18)] border border-slate-200/90 dark:border-white/10 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute right-0 mt-2.5 w-84 sm:w-92 bg-white dark:bg-[#161C2E] text-[#1A1D2E] dark:text-white rounded-3xl shadow-[0_15px_45px_rgba(0,0,0,0.35)] p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
               {/* Header */}
               <div className="px-3.5 py-3 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -325,9 +338,8 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                       <div
                         key={n.id}
                         onClick={() => !n.is_read && markAsRead(n.id)}
-                        className={`p-3 transition-colors flex items-start gap-3 rounded-2xl cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 ${
-                          !n.is_read ? "bg-blue-50/40 dark:bg-blue-950/20" : ""
-                        }`}
+                        className={`p-3 transition-colors flex items-start gap-3 rounded-2xl cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 ${!n.is_read ? "bg-blue-50/40 dark:bg-blue-950/20" : ""
+                          }`}
                       >
                         {/* Left Icon Avatar */}
                         {isSignatureReq && !isSigned ? (
@@ -348,17 +360,16 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
                             <h5
-                              className={`text-sm truncate ${
-                                !n.is_read
+                              className={`text-sm truncate ${!n.is_read
                                   ? "font-semibold text-slate-900 dark:text-white"
                                   : "font-normal text-slate-600 dark:text-slate-400"
-                              }`}
+                                }`}
                             >
                               {isSignatureReq && !isSigned
                                 ? "Imzo kutilmoqda"
                                 : isSigned
-                                ? "Imzo saqlandi"
-                                : n.title || "Xabarnoma"}
+                                  ? "Imzo saqlandi"
+                                  : n.title || "Xabarnoma"}
                             </h5>
 
                             <div className="flex items-center gap-1.5 shrink-0">
@@ -375,8 +386,8 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                             {isSignatureReq && !isSigned
                               ? `«${meetingTitle}» yakunlandi. Qatnashganingizni imzo bilan tasdiqlang.`
                               : isSigned
-                              ? `«${meetingTitle}» yig'ilishidagi qatnashishingiz tasdiqlandi.`
-                              : n.message}
+                                ? `«${meetingTitle}» yig'ilishidagi qatnashishingiz tasdiqlandi.`
+                                : n.message}
                           </p>
 
                           {/* "Imzolash" Button (Screenshot 2) */}

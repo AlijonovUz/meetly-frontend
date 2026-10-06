@@ -115,8 +115,22 @@ const AuthCallbackPage = () => {
         localStorage.removeItem("last_blocked_details");
         if (isMounted) {
           setStatus("success");
+
+          const targetRedirect =
+            sessionStorage.getItem("redirect_after_login") ||
+            localStorage.getItem("redirect_after_login");
+
+          sessionStorage.removeItem("redirect_after_login");
+          localStorage.removeItem("redirect_after_login");
+
+          const isValidRedirect =
+            targetRedirect &&
+            targetRedirect !== "/leanding" &&
+            targetRedirect !== "/auth/callback" &&
+            targetRedirect !== "/";
+
           setTimeout(() => {
-            navigate("/", { replace: true });
+            navigate(isValidRedirect ? targetRedirect : "/", { replace: true });
           }, 1000);
         }
       } catch (err) {
@@ -510,7 +524,7 @@ const AuthCallbackPage = () => {
                   className="w-full h-[48px] rounded-xl bg-[#3858C7] hover:bg-[#2B46AC] active:scale-[0.98] text-white text-[14px] font-semibold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                 >
                   <HugeiconsIcon icon={Login03Icon} strokeWidth={2.5} size={17} />
-                  <span>Passport orqali kirish</span>
+                  <span>Kirish</span>
                 </button>
               ) : (
                 <button

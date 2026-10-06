@@ -52,7 +52,9 @@ const Setting = () => {
       });
   }, [dispatch]);
 
-  const isChanged = organization.trim() !== (savedOrg === "Tashkilot kiritilmagan" ? "" : savedOrg.trim());
+  const isChanged =
+    Boolean(organization.trim()) &&
+    organization.trim() !== (savedOrg === "Tashkilot kiritilmagan" ? "" : savedOrg.trim());
 
   const fullName =
     [profileData.first_name, profileData.last_name, profileData.patronymic]
@@ -158,9 +160,9 @@ const Setting = () => {
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
           <div
-            className={`bg-white border rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${
+            className={`bg-white dark:bg-[#161C2E] border dark:border-[#2B3553] rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${
               toastMessage.type === "error"
-                ? "border-[#FECDCA]"
+                ? "border-[#FECDCA] dark:border-red-900/50"
                 : "border-[#10B981]/40"
             }`}
           >
@@ -170,7 +172,7 @@ const Setting = () => {
               }`}
             >
               {toastMessage.type === "error" ? (
-                <div className="w-5.5 h-5.5 rounded-full bg-[#FEF3F2] flex items-center justify-center text-[#D92D20]">
+                <div className="w-5.5 h-5.5 rounded-full bg-[#FEF3F2] dark:bg-red-950/40 flex items-center justify-center text-[#D92D20] dark:text-red-400">
                   <HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={2.5} />
                 </div>
               ) : (
@@ -180,19 +182,19 @@ const Setting = () => {
             <div className="flex-1 pr-2">
               <h4
                 className={`text-[14px] font-bold leading-tight ${
-                  toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#1A1D2E]"
+                  toastMessage.type === "error" ? "text-[#D92D20] dark:text-red-400" : "text-[#1A1D2E] dark:text-white"
                 }`}
               >
                 {toastMessage.title}
               </h4>
-              <p className="text-[12.5px] text-[#5E6480] mt-1 leading-snug">
+              <p className="text-[12.5px] text-[#5E6480] dark:text-[#94A3B8] mt-1 leading-snug">
                 {toastMessage.description}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setToastMessage(null)}
-              className="text-[#8B90A5] hover:text-[#1A1D2E] p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+              className="text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white p-1 rounded-lg hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={16} />
             </button>
@@ -208,19 +210,19 @@ const Setting = () => {
               <img
                 src={user.avatar}
                 alt={user.name}
-                className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] object-cover shadow-xs border border-[#E2E6F2]"
+                className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] object-cover shadow-xs border border-[#E2E6F2] dark:border-[#2B3553]"
               />
             ) : (
-              <div className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] bg-[#EEF2FF] text-[#3858C7] font-bold text-xl md:text-2xl flex items-center justify-center shadow-xs border border-[#D0DCFF]">
+              <div className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] bg-[#EEF2FF] dark:bg-[#1C2438] text-[#3858C7] dark:text-[#7C9BFF] font-bold text-xl md:text-2xl flex items-center justify-center shadow-xs border border-[#D0DCFF] dark:border-[#2B3553]">
                 {user.initials}
               </div>
             )}
           </div>
           <div>
-            <h2 className="text-[19px] md:text-[20px] font-bold text-[#1A1D2E]">
+            <h2 className="text-[19px] md:text-[20px] font-bold text-[#1A1D2E] dark:text-white">
               {user.name}
             </h2>
-            <p className="text-[13px] font-medium text-[#5E6480] mt-0.5">
+            <p className="text-[13px] font-medium text-[#5E6480] dark:text-[#94A3B8] mt-0.5">
               {savedOrg}
             </p>
           </div>
@@ -230,7 +232,7 @@ const Setting = () => {
           type="button"
           onClick={handleSync}
           disabled={syncing}
-          className="hidden sm:inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#E2E6F2] bg-white hover:bg-[#F8FAFC] text-[13px] font-bold text-[#3858C7] transition-all cursor-pointer shadow-xs"
+          className="hidden sm:inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-white dark:bg-[#161C2E] hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438] text-[13px] font-bold text-[#3858C7] dark:text-[#7C9BFF] transition-all cursor-pointer shadow-xs"
         >
           <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />
           <span>Passport bilan sinxronlash</span>
@@ -238,16 +240,16 @@ const Setting = () => {
       </div>
 
       {/* Passport Information Banner */}
-      <div className="bg-[#EDEFF8] border border-[#3F57B340] rounded-2xl p-5 md:p-6 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-2xs">
+      <div className="bg-[#EDEFF8] dark:bg-[#161C2E] border border-[#3F57B340] dark:border-[#2B3553] rounded-2xl p-5 md:p-6 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-2xs">
         <div className="flex items-center gap-3.5 max-w-2xl">
-          <div className="text-[#3F57B3] flex-shrink-0 mt-0.5">
+          <div className="text-[#3F57B3] dark:text-[#7C9BFF] flex-shrink-0 mt-0.5">
             <HugeiconsIcon icon={InformationCircleIcon} size={22} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-[14px] font-bold text-[#1A1D2E] mb-1">
+            <h3 className="text-[14px] font-bold text-[#1A1D2E] dark:text-white mb-1">
               Shaxsiy ma'lumotlar Passport tizimida saqlanadi
             </h3>
-            <p className="text-[13px] text-[#5E6480] leading-relaxed">
+            <p className="text-[13px] text-[#5E6480] dark:text-[#94A3B8] leading-relaxed">
               Ism, viloyat, tuman va tug'ilgan sana yagona kirish tizimi Passport'da o'zgartiriladi. O'zgarishlar bu yerda avtomatik yangilanadi.
             </p>
           </div>
@@ -269,51 +271,61 @@ const Setting = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 mb-8">
           {/* Viloyat (Disabled / Locked) */}
           <div>
-            <label className="block text-[12px] font-medium text-[#5E6480] mb-1.5">
+            <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
               Viloyat
             </label>
-            <div className="h-[48px] px-4 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center justify-between text-[13.5px] text-[#1A1D2E] font-medium select-none">
+            <div className="h-[48px] px-4 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] flex items-center justify-between text-[13.5px] text-[#1A1D2E] dark:text-white font-medium select-none">
               <span>{user.region}</span>
-              <Lock size={16} className="text-[#8B90A5]" />
+              <Lock size={16} className="text-[#8B90A5] dark:text-[#64748B]" />
             </div>
           </div>
 
           {/* Tuman (Disabled / Locked) */}
           <div>
-            <label className="block text-[12px] font-medium text-[#5E6480] mb-1.5">
+            <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
               Tuman
             </label>
-            <div className="h-[48px] px-4 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center justify-between text-[13.5px] text-[#1A1D2E] font-medium select-none">
+            <div className="h-[48px] px-4 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] flex items-center justify-between text-[13.5px] text-[#1A1D2E] dark:text-white font-medium select-none">
               <span>{user.district}</span>
-              <Lock size={16} className="text-[#8B90A5]" />
+              <Lock size={16} className="text-[#8B90A5] dark:text-[#64748B]" />
             </div>
           </div>
 
           {/* Tug'ilgan sanasi (Disabled / Locked) */}
           <div>
-            <label className="block text-[12px] font-medium text-[#5E6480] mb-1.5">
+            <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
               Tug'ilgan sanasi
             </label>
-            <div className="h-[48px] px-4 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center justify-between text-[13.5px] text-[#1A1D2E] font-medium select-none">
+            <div className="h-[48px] px-4 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] flex items-center justify-between text-[13.5px] text-[#1A1D2E] dark:text-white font-medium select-none">
               <span>{user.birthDate}</span>
-              <Lock size={16} className="text-[#8B90A5]" />
+              <Lock size={16} className="text-[#8B90A5] dark:text-[#64748B]" />
             </div>
           </div>
 
-          {/* Tashkilot (Editable) */}
+          {/* Tashkilot (Editable & Required) */}
           <div>
-            <label className="block text-[12px] font-medium text-[#5E6480] mb-1.5">
-              Tashkilot
+            <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
+              Tashkilot <span className="text-red-500 font-bold">*</span>
             </label>
             <div className="relative">
               <input
                 type="text"
+                required
                 value={organization}
                 onChange={(e) => setOrganization(e.target.value)}
                 placeholder="Tashkilot nomini kiriting"
-                className="w-full h-[48px] px-4 rounded-xl border border-[#E2E6F2] bg-white text-[13.5px] text-[#1A1D2E] font-medium outline-none focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/20 transition-all"
+                className={`w-full h-[48px] px-4 rounded-xl border bg-white dark:bg-[#121624] text-[13.5px] text-[#1A1D2E] dark:text-white font-medium outline-none transition-all placeholder:text-[#8B90A5] dark:placeholder:text-[#64748B] ${
+                  organization.trim() === ""
+                    ? "border-red-400/80 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                    : "border-[#E2E6F2] dark:border-[#2B3553] focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/20"
+                }`}
               />
             </div>
+            {organization.trim() === "" && (
+              <p className="text-[11.5px] text-red-500 mt-1.5 font-medium">
+                Tashkilot nomini kiritish majburiy
+              </p>
+            )}
           </div>
         </div>
 
@@ -321,9 +333,9 @@ const Setting = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={!isChanged || saving}
+            disabled={!isChanged || !organization.trim() || saving}
             className={`inline-flex items-center justify-center gap-2 font-bold text-[14.5px] px-5 py-3 rounded-xl transition-all shadow-sm ${
-              isChanged && !saving
+              isChanged && organization.trim() && !saving
                 ? "bg-[#3858C7] hover:bg-[#2C48B0] active:scale-[0.98] text-white cursor-pointer"
                 : "bg-[#3858C7]/50 text-white/80 cursor-not-allowed"
             }`}

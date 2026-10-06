@@ -130,6 +130,12 @@ const UserDetailPage = () => {
         if (!isMounted) return;
         if (data) {
           setUser(data);
+          const fullName = `${data.first_name || ""} ${data.last_name || ""}`.trim() || data.username || data.phone || "Foydalanuvchi";
+          window.dispatchEvent(
+            new CustomEvent("set-navbar-title", {
+              detail: { id, title: fullName },
+            })
+          );
           const blocked = Boolean(data.is_blocked);
           setIsBlocked(blocked);
           setBlockReason(data.blocked_reason || "");
@@ -383,7 +389,7 @@ const UserDetailPage = () => {
       {/* Top Profile Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-[#E2E6F2] shadow-xs flex-shrink-0 border-2 border-white flex items-center justify-center font-bold text-lg text-[#3858C7]">
+          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-[#E2E6F2] dark:bg-[#1C2438] shadow-xs flex-shrink-0 border-2 border-white dark:border-[#2B3553] flex items-center justify-center font-bold text-lg text-[#3858C7] dark:text-[#7C9BFF]">
             {avatar ? (
               <img src={avatar} alt={fullName} className="w-full h-full object-cover" />
             ) : (
@@ -391,10 +397,10 @@ const UserDetailPage = () => {
             )}
           </div>
           <div className="space-y-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#1A1D2E] tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1A1D2E] dark:text-white tracking-tight">
               {fullName}
             </h1>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#F1F3F9] text-xs font-semibold text-[#5B6078]">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#F1F3F9] dark:bg-[#1C2438] text-xs font-semibold text-[#5B6078] dark:text-[#94A3B8]">
               <span
                 className={`w-2 h-2 rounded-full ${
                   isBlocked ? "bg-[#DD4C1E]" : "bg-[#4AC99B]"
@@ -432,11 +438,11 @@ const UserDetailPage = () => {
 
       {/* Blocked Alert Banner if isBlocked is true */}
       {isBlocked && (
-        <div className="bg-[#FEF3F2] border border-[#FECDCA] rounded-2xl p-4 space-y-1 animate-in fade-in duration-200">
-          <h4 className="text-[13.5px] font-bold text-[#D92D20]">
+        <div className="bg-[#FEF3F2] dark:bg-red-950/40 border border-[#FECDCA] dark:border-red-900/50 rounded-2xl p-4 space-y-1 animate-in fade-in duration-200">
+          <h4 className="text-[13.5px] font-bold text-[#D92D20] dark:text-red-400">
             Foydalanuvchi bloklangan
           </h4>
-          <p className="text-[13px] text-[#5B6078]">
+          <p className="text-[13px] text-[#5B6078] dark:text-[#94A3B8]">
             {blockDate}, {blockedBy} tomonidan. Sabab: {blockReason}
           </p>
         </div>
@@ -444,17 +450,17 @@ const UserDetailPage = () => {
 
       {/* 02.9 Foydalanuvchi, e'tiroz kelgan Card */}
       {isBlocked && appealData && (
-        <div className="bg-[#F6F8FD] border border-[#D0DCFF] rounded-2xl p-4 sm:p-5 space-y-3.5 animate-in fade-in duration-200">
+        <div className="bg-[#F6F8FD] dark:bg-[#161C2E] border border-[#D0DCFF] dark:border-[#2B3553] rounded-2xl p-4 sm:p-5 space-y-3.5 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
-            <h4 className="text-[14px] font-bold text-[#3858C7]">
+            <h4 className="text-[14px] font-bold text-[#3858C7] dark:text-[#7C9BFF]">
               Foydalanuvchi e'tiroz yubordi
             </h4>
-            <span className="text-[12.5px] text-[#8B90A5]">
+            <span className="text-[12.5px] text-[#8B90A5] dark:text-[#64748B]">
               {appealData.date || "02.10.2026 10:15"}
             </span>
           </div>
 
-          <p className="text-[13.5px] text-[#1A1D2E] leading-relaxed">
+          <p className="text-[13.5px] text-[#1A1D2E] dark:text-white leading-relaxed">
             «{appealData.text || appealData}»
           </p>
 
@@ -466,7 +472,7 @@ const UserDetailPage = () => {
                 setRejectModalOpen(true);
               }}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#FECDCA] text-[#D92D20] bg-white hover:bg-[#FEF3F2] text-[13px] font-semibold transition-all cursor-pointer active:scale-95 shadow-2xs"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#FECDCA] dark:border-red-900/50 text-[#D92D20] dark:text-red-400 bg-white dark:bg-[#121624] hover:bg-[#FEF3F2] dark:hover:bg-red-950/30 text-[13px] font-semibold transition-all cursor-pointer active:scale-95 shadow-2xs"
             >
               <X size={15} />
               <span>Rad etish</span>
@@ -490,63 +496,63 @@ const UserDetailPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
           {/* Viloyat */}
           <div>
-            <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+            <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
               Viloyat
             </label>
-            <div className="w-full bg-[#FAFAFC] border border-[#E2E6F2] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] select-none shadow-2xs">
+            <div className="w-full bg-[#FAFAFC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] dark:text-white select-none shadow-2xs">
               <span>{regionName}</span>
-              <Lock size={18} className="text-[#8B90A5]" />
+              <Lock size={18} className="text-[#8B90A5] dark:text-[#64748B]" />
             </div>
           </div>
 
           {/* Tuman */}
           <div>
-            <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+            <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
               Tuman
             </label>
-            <div className="w-full bg-[#FAFAFC] border border-[#E2E6F2] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] select-none shadow-2xs">
+            <div className="w-full bg-[#FAFAFC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] dark:text-white select-none shadow-2xs">
               <span>{districtName}</span>
-              <Lock size={18} className="text-[#8B90A5]" />
+              <Lock size={18} className="text-[#8B90A5] dark:text-[#64748B]" />
             </div>
           </div>
 
           {/* Tug'ulgan sanasi */}
           <div>
-            <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+            <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
               Tug'ulgan sanasi
             </label>
-            <div className="w-full bg-[#FAFAFC] border border-[#E2E6F2] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] select-none shadow-2xs">
-              <span>{dayjs(birthDateStr).format("DD.MM.YYYY")}</span>
-              <Lock size={18} className="text-[#8B90A5]" />
+            <div className="w-full bg-[#FAFAFC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] dark:text-white select-none shadow-2xs">
+              <span>{dayjs(birthDateStr).isValid() ? dayjs(birthDateStr).format("DD.MM.YYYY") : "—"}</span>
+              <Lock size={18} className="text-[#8B90A5] dark:text-[#64748B]" />
             </div>
           </div>
 
           {/* Tashkilot */}
           <div>
-            <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+            <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
               Tashkilot
             </label>
-            <div className="w-full bg-[#FAFAFC] border border-[#E2E6F2] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] select-none shadow-2xs">
+            <div className="w-full bg-[#FAFAFC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl px-4 h-12 flex items-center justify-between text-[13.5px] font-medium text-[#1A1D2E] dark:text-white select-none shadow-2xs">
               <span>{organizationName}</span>
-              <Lock size={18} className="text-[#8B90A5]" />
+              <Lock size={18} className="text-[#8B90A5] dark:text-[#64748B]" />
             </div>
           </div>
         </div>
 
         {/* Footer Explanation Note */}
-        <p className="text-[12.5px] text-[#8B90A5]">
+        <p className="text-[12.5px] text-[#8B90A5] dark:text-[#64748B]">
           Foydalanuvchi ma'lumotlari Passport orqali boshqariladi. Administrator ularni o'zgartira olmaydi, faqat bloklashi mumkin.
         </p>
       </div>
 
       {/* Meeting History Section */}
       <div className="space-y-4 pt-2">
-        <h2 className="text-base font-bold text-[#1A1D2E]">
+        <h2 className="text-base font-bold text-[#1A1D2E] dark:text-white">
           Yig'ilishlar tarixi
         </h2>
 
         {/* Filter Pills */}
-        <div className="inline-flex p-1 bg-[#EEF1F8] rounded-2xl gap-1">
+        <div className="inline-flex p-1 bg-[#EEF1F8] dark:bg-[#111625] rounded-2xl gap-1">
           {MEETING_TABS.map((tab) => {
             const isActive = meetingFilter === tab.id;
             const count = meetingCounts[tab.countKey] || 0;
@@ -557,20 +563,20 @@ const UserDetailPage = () => {
                 onClick={() => setMeetingFilter(tab.id)}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
                   isActive
-                    ? "bg-white text-[#1A1D2E] shadow-xs"
-                    : "text-[#5B6078] hover:text-[#1A1D2E]"
+                    ? "bg-white dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white shadow-xs"
+                    : "text-[#5B6078] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white"
                 }`}
               >
                 <span>{tab.label}</span>
                 <span
                   className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold transition-colors ${
                     tab.isRed && !isActive
-                      ? "bg-[#F8D7DA] text-[#DC2626]"
+                      ? "bg-[#F8D7DA] dark:bg-red-950/60 text-[#DC2626] dark:text-red-400"
                       : tab.isRed
                       ? "bg-[#EF4444] text-white font-bold"
                       : isActive
-                      ? "bg-[#F1F3F9] text-[#1A1D2E]"
-                      : "bg-white text-[#8B90A5]"
+                      ? "bg-[#F1F3F9] dark:bg-[#121624] text-[#1A1D2E] dark:text-white"
+                      : "bg-white dark:bg-[#161C2E] text-[#8B90A5] dark:text-[#94A3B8]"
                   }`}
                 >
                   {count}
@@ -583,18 +589,18 @@ const UserDetailPage = () => {
         {/* Meetings Table */}
         <div className="bg-transparent overflow-auto h-[calc(100vh-510px)]">
           <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 bg-[#F8F9FC] z-10">
-              <tr className="border-b border-[#E2E6F2] text-[#8B90A5] text-[13px] font-medium">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-[#E2E6F2] dark:border-[#1E263C] text-[#8B90A5] dark:text-[#94A3B8] text-[13px] font-medium">
                 <th className="py-3 px-4 font-normal w-12 text-center">#</th>
                 <th className="py-3 px-4 font-normal">Nomi</th>
                 <th className="py-3 px-4 font-normal text-right">Yaratilgan sana</th>
                 <th className="py-3 px-4 font-normal text-right">Holati</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E2E6F2]/50 text-[13.5px]">
+            <tbody className="divide-y divide-[#E2E6F2]/50 dark:divide-[#1E263C] text-[13.5px]">
               {meetingsLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-[#8B90A5] text-sm">
+                  <td colSpan={6} className="py-12 text-center text-[#8B90A5] dark:text-[#64748B] text-sm">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="w-5 h-5 text-[#4763E4] animate-spin" />
                       <span>Yuklanmoqda...</span>
@@ -608,40 +614,40 @@ const UserDetailPage = () => {
                     <tr
                       key={meeting.id || index}
                       onClick={() => navigate(`/meetings/${meeting.id}`)}
-                      className="hover:bg-white/60 transition-colors group cursor-pointer"
+                      className="hover:bg-white/60 dark:hover:bg-[#1C2438]/50 transition-colors group cursor-pointer"
                     >
-                      <td className="py-3.5 px-4 text-center text-[#5B6078] font-medium">
+                      <td className="py-3.5 px-4 text-center text-[#5B6078] dark:text-[#94A3B8] font-medium">
                         {index + 1}
                       </td>
-                      <td className="py-3.5 px-4 font-medium text-[#1A1D2E] group-hover:text-[#3858C7] transition-colors truncate max-w-[250px]">
+                      <td className="py-3.5 px-4 font-medium text-[#1A1D2E] dark:text-white group-hover:text-[#3858C7] dark:group-hover:text-[#7C9BFF] transition-colors truncate max-w-[250px]">
                         {meeting.title || meeting.name || "Nomsiz yig'ilish"}
                       </td>
-                      <td className="py-3.5 text-right px-4 text-[#1A1D2E]">
+                      <td className="py-3.5 text-right px-4 text-[#1A1D2E] dark:text-[#94A3B8]">
                         {meeting.created_at
                           ? dayjs(meeting.created_at).format("DD.MM.YYYY HH:mm")
                           : ""}
                       </td>
-                      <td className="py-3.5 px- text-end">
+                      <td className="py-3.5 px-4 text-end">
                         {(status === "ongoing" || status === "active") && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFF4ED] text-[#E07A28] text-xs font-semibold">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFF4ED] dark:bg-orange-950/40 text-[#E07A28] dark:text-orange-400 text-xs font-semibold">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#E07A28]" />
                             Joriy
                           </span>
                         )}
                         {(status === "scheduled" || status === "planned") && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EEF4FF] text-[#3858C7] text-xs font-semibold">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EEF4FF] dark:bg-[#1C2438] text-[#3858C7] dark:text-[#7C9BFF] text-xs font-semibold">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#3858C7]" />
                             Rejalashtirilgan
                           </span>
                         )}
                         {status === "completed" && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EDFBF5] text-[#22C55E] text-xs font-semibold">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EDFBF5] dark:bg-emerald-950/40 text-[#22C55E] dark:text-emerald-400 text-xs font-semibold">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
                             O'tkazilgan
                           </span>
                         )}
                         {status === "cancelled" && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FEF2F2] text-[#DC2626] text-xs font-semibold">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FEF2F2] dark:bg-red-950/40 text-[#DC2626] dark:text-red-400 text-xs font-semibold">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
                             Bekor qilingan
                           </span>
@@ -652,7 +658,7 @@ const UserDetailPage = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-[#8B90A5] text-sm">
+                  <td colSpan={6} className="py-12 text-center text-[#8B90A5] dark:text-[#64748B] text-sm">
                     Yig'ilishlar topilmadi
                   </td>
                 </tr>
@@ -664,30 +670,30 @@ const UserDetailPage = () => {
 
       {/* Block Confirmation Modal */}
       {blockModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-in fade-in duration-150">
-          <div className="bg-white w-full max-w-[560px] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#161C2E] w-full max-w-[560px] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2] dark:border-[#2B3553]">
             {/* Modal Header: Title & Close Button */}
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[19px] sm:text-[20px] text-[#1A1D2E] tracking-tight">
+              <h3 className="font-bold text-[19px] sm:text-[20px] text-[#1A1D2E] dark:text-white tracking-tight">
                 Foydalanuvchini bloklash
               </h3>
               <button
                 type="button"
                 onClick={() => setBlockModalOpen(false)}
-                className="text-[#1A1D2E] hover:text-black p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="text-[#1A1D2E] dark:text-white hover:text-black dark:hover:text-white p-1 rounded-lg hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
               >
                 <X size={18} strokeWidth={2.5} />
               </button>
             </div>
 
             {/* Description Text */}
-            <p className="text-[14px] text-[#5B6078] leading-relaxed">
+            <p className="text-[14px] text-[#5B6078] dark:text-[#94A3B8] leading-relaxed">
               {fullName} tizimga kira olmaydi va yig'ilishlarga qo'shila olmaydi. Keyinroq blokdan chiqarish mumkin.
             </p>
 
             <form onSubmit={handleConfirmBlock} className="space-y-4">
               <div>
-                <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+                <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
                   Sabab <span className="text-[#D92D20]">*</span>
                 </label>
                 <textarea
@@ -695,7 +701,7 @@ const UserDetailPage = () => {
                   value={reasonInput}
                   onChange={(e) => setReasonInput(e.target.value)}
                   placeholder="Bloklash sababini kiriting"
-                  className="w-full bg-white border border-[#D0DCFF] focus:border-[#D92D20] rounded-2xl p-3.5 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:ring-2 focus:ring-[#D92D20]/10 transition-all resize-none leading-relaxed"
+                  className="w-full bg-white dark:bg-[#121624] border border-[#D0DCFF] dark:border-[#2B3553] focus:border-[#D92D20] rounded-2xl p-3.5 text-[13.5px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#D92D20]/10 transition-all resize-none leading-relaxed"
                   required
                 />
               </div>
@@ -705,7 +711,7 @@ const UserDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setBlockModalOpen(false)}
-                  className="inline-flex items-center gap-2 text-[#1A1D2E] hover:text-black text-[14px] font-bold py-2.5 px-2 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-2 text-[#1A1D2E] dark:text-white hover:text-black dark:hover:text-white/80 text-[14px] font-bold py-2.5 px-2 transition-colors cursor-pointer"
                 >
                   <X size={16} strokeWidth={2.5} />
                   <span>Bekor qilish</span>
@@ -736,23 +742,23 @@ const UserDetailPage = () => {
       {/* Unblock Confirmation Modal */}
       {unblockModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
-          <div className="bg-white w-full max-w-[480px] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2]">
+          <div className="bg-white dark:bg-[#161C2E] w-full max-w-[480px] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2] dark:border-[#2B3553]">
             {/* Modal Header: Title & Close Button */}
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[19px] sm:text-[20px] text-[#1A1D2E] tracking-tight">
+              <h3 className="font-bold text-[19px] sm:text-[20px] text-[#1A1D2E] dark:text-white tracking-tight">
                 Blokdan chiqarish
               </h3>
               <button
                 type="button"
                 onClick={() => setUnblockModalOpen(false)}
-                className="text-[#1A1D2E] hover:text-black p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="text-[#1A1D2E] dark:text-white hover:text-black dark:hover:text-white p-1 rounded-lg hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
               >
                 <X size={18} strokeWidth={2.5} />
               </button>
             </div>
 
             {/* Description Text */}
-            <p className="text-[14px] text-[#5B6078] leading-relaxed">
+            <p className="text-[14px] text-[#5B6078] dark:text-[#94A3B8] leading-relaxed">
               {fullName} yana tizimga kira oladi va yig'ilishlarga qo'shila oladi.
             </p>
 
@@ -761,7 +767,7 @@ const UserDetailPage = () => {
               <button
                 type="button"
                 onClick={() => setUnblockModalOpen(false)}
-                className="inline-flex items-center gap-2 text-[#1A1D2E] hover:text-black text-[14px] font-bold py-2.5 px-2 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 text-[#1A1D2E] dark:text-white hover:text-black dark:hover:text-white/80 text-[14px] font-bold py-2.5 px-2 transition-colors cursor-pointer"
               >
                 <X size={16} strokeWidth={2.5} />
                 <span>Bekor qilish</span>
@@ -787,30 +793,30 @@ const UserDetailPage = () => {
 
       {/* Reject Appeal Confirmation Modal */}
       {rejectModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-in fade-in duration-150">
-          <div className="bg-white w-full max-w-[560px] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#161C2E] w-full max-w-[560px] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2] dark:border-[#2B3553]">
             {/* Modal Header: Title & Close Button */}
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[19px] sm:text-[20px] text-[#1A1D2E] tracking-tight">
+              <h3 className="font-bold text-[19px] sm:text-[20px] text-[#1A1D2E] dark:text-white tracking-tight">
                 E'tirozni rad etish
               </h3>
               <button
                 type="button"
                 onClick={() => setRejectModalOpen(false)}
-                className="text-[#1A1D2E] hover:text-black p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="text-[#1A1D2E] dark:text-white hover:text-black dark:hover:text-white p-1 rounded-lg hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
               >
                 <X size={18} strokeWidth={2.5} />
               </button>
             </div>
 
             {/* Description Text */}
-            <p className="text-[14px] text-[#5B6078] leading-relaxed">
+            <p className="text-[14px] text-[#5B6078] dark:text-[#94A3B8] leading-relaxed">
               Foydalanuvchi yuborgan e'tirozni rad etish sababini kiriting. Ushbu sabab foydalanuvchiga ko'rsatiladi.
             </p>
 
             <form onSubmit={handleConfirmRejectAppeal} className="space-y-4">
               <div>
-                <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+                <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
                   Rad etish sababi <span className="text-[#D92D20]">*</span>
                 </label>
                 <textarea
@@ -818,7 +824,7 @@ const UserDetailPage = () => {
                   value={rejectReasonInput}
                   onChange={(e) => setRejectReasonInput(e.target.value)}
                   placeholder="E'tirozni rad etish sababini kiriting..."
-                  className="w-full bg-white border border-[#D0DCFF] focus:border-[#D92D20] rounded-2xl p-3.5 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:ring-2 focus:ring-[#D92D20]/10 transition-all resize-none leading-relaxed"
+                  className="w-full bg-white dark:bg-[#121624] border border-[#D0DCFF] dark:border-[#2B3553] focus:border-[#D92D20] rounded-2xl p-3.5 text-[13.5px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#D92D20]/10 transition-all resize-none leading-relaxed"
                   required
                 />
               </div>
@@ -828,7 +834,7 @@ const UserDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setRejectModalOpen(false)}
-                  className="inline-flex items-center gap-2 text-[#1A1D2E] hover:text-black text-[14px] font-bold py-2.5 px-2 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-2 text-[#1A1D2E] dark:text-white hover:text-black dark:hover:text-white/80 text-[14px] font-bold py-2.5 px-2 transition-colors cursor-pointer"
                 >
                   <X size={16} strokeWidth={2.5} />
                   <span>Bekor qilish</span>
@@ -860,9 +866,9 @@ const UserDetailPage = () => {
       {toastMessage && (
         <div className="fixed top-20 right-6 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300">
           <div
-            className={`bg-white border rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${
+            className={`bg-white dark:bg-[#161C2E] border dark:border-[#2B3553] rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${
               toastMessage.type === "error"
-                ? "border-[#FECDCA]"
+                ? "border-[#FECDCA] dark:border-red-900/50"
                 : "border-[#10B981]/40"
             }`}
           >
@@ -872,7 +878,7 @@ const UserDetailPage = () => {
               }`}
             >
               {toastMessage.type === "error" ? (
-                <div className="w-6 h-6 rounded-full bg-[#FEF3F2] flex items-center justify-center text-[#D92D20]">
+                <div className="w-6 h-6 rounded-full bg-[#FEF3F2] dark:bg-red-950/40 flex items-center justify-center text-[#D92D20] dark:text-red-400">
                   <HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={2.5} />
                 </div>
               ) : (
@@ -882,19 +888,19 @@ const UserDetailPage = () => {
             <div className="flex-1 pr-2">
               <h4
                 className={`text-[14px] font-bold leading-tight ${
-                  toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#1A1D2E]"
+                  toastMessage.type === "error" ? "text-[#D92D20] dark:text-red-400" : "text-[#1A1D2E] dark:text-white"
                 }`}
               >
                 {toastMessage.title}
               </h4>
-              <p className="text-[12.5px] text-[#5E6480] mt-1 leading-snug">
+              <p className="text-[12.5px] text-[#5E6480] dark:text-[#94A3B8] mt-1 leading-snug">
                 {toastMessage.description}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setToastMessage(null)}
-              className="text-[#8B90A5] hover:text-[#1A1D2E] p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+              className="text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white p-1 rounded-lg hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={16} />
             </button>

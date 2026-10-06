@@ -66,50 +66,50 @@
   --black: #FFFFFF;
 
   /* Background */
-  --bg-base:             #0D1117;
-  --bg-elevation-1:      #161B22;
-  --bg-elevation-1-alt:  #1C2128;
-  --bg-elevation-2:      #21262D;
-  --bg-elevation-2-alt:  #262C36;
-  --bg-elevation-3:      #2D333B;
-  --bg-elevation-3-alt:  #343B43;
+  --bg-base:             #0B0F19;
+  --bg-elevation-1:      #111625;
+  --bg-elevation-1-alt:  #161C2E;
+  --bg-elevation-2:      #1C2438;
+  --bg-elevation-2-alt:  #232E47;
+  --bg-elevation-3:      #2B3553;
+  --bg-elevation-3-alt:  #344066;
 
-  /* Accent — o'zgarmaydi */
-  --accent-strong:   #2B3553;
-  --accent-sub:      #2e3f83;
+  /* Accent */
+  --accent-strong:   #3858C7;
+  --accent-sub:      #4D6FE8;
   --accent-soft:     #7F95E6;
-  --accent-disabled: #E9EEFF;
+  --accent-disabled: #1E263C;
   --accent-white:    #FFFFFF;
 
   /* Text */
-  --text-strong:   #E6EDF3;
-  --text-sub:      #8B949E;
-  --text-soft:     #6E7681;
-  --text-disabled: #484F58;
+  --text-strong:   #FFFFFF;
+  --text-sub:      #94A3B8;
+  --text-soft:     #64748B;
+  --text-disabled: #475569;
   --text-white:    #FFFFFF;
   --text-accent:   #7F95E6;
-  --text-in-dark:  #0D1117;
+  --text-in-dark:  #0B0F19;
 
   /* Stroke */
-  --stroke-strong: #30363D;
-  --stroke-sub:    #262C36;
-  --stroke-soft:   #21262D;
-  --stroke-accent: #7F95E6;
+  --stroke-strong: #2B3553;
+  --stroke-sub:    #1E263C;
+  --stroke-soft:   #161C2E;
+  --stroke-accent: #3858C7;
   --stroke-white:  #FFFFFF;
 
   /* Icon */
   --icon-strong:   #FFFFFF;
-  --icon-sub:      #C2C8E0;
-  --icon-soft:     #8E95B5;
-  --icon-disable:  #5C627D;
+  --icon-sub:      #94A3B8;
+  --icon-soft:     #64748B;
+  --icon-disable:  #475569;
   --icon-white:    #FFFFFF;
   --icon-accent:   #7F95E6;
   --icon-in-white: #FFFFFF;
   --icon-in-black: #000000;
 
-  /* Error — o'zgarmaydi */
-  --error-strong:   #E02D2D;
-  --error-sub:      #FA5252;
-  --error-soft:     #FFF2F2;
-  --error-disabled: #F8D7DA;
+  /* Error */
+  --error-strong:   #EF4444;
+  --error-sub:      #F87171;
+  --error-soft:     #2B1B1F;
+  --error-disabled: #4B1E22;
 }

@@ -16,18 +16,18 @@ import dayjs from "dayjs";
 const getActionMeta = (action) => {
   const a = String(action).toLowerCase();
   if (a === "0" || a === "create") {
-    return { label: "Create", color: "text-[#10B981]", bg: "bg-[#ECFDF5]" };
+    return { label: "Create", color: "text-[#10B981] dark:text-emerald-400", bg: "bg-[#ECFDF5] dark:bg-emerald-950/40" };
   }
   if (a === "1" || a === "update") {
-    return { label: "Update", color: "text-[#E07A28]", bg: "bg-[#FFF4ED]" };
+    return { label: "Update", color: "text-[#E07A28] dark:text-orange-400", bg: "bg-[#FFF4ED] dark:bg-orange-950/40" };
   }
   if (a === "2" || a === "delete") {
-    return { label: "Delete", color: "text-[#EF4444]", bg: "bg-[#FEF2F2]" };
+    return { label: "Delete", color: "text-[#EF4444] dark:text-red-400", bg: "bg-[#FEF2F2] dark:bg-red-950/40" };
   }
   if (a === "3" || a === "access") {
-    return { label: "Access", color: "text-[#3858C7]", bg: "bg-[#EEF2FF]" };
+    return { label: "Access", color: "text-[#3858C7] dark:text-[#7C9BFF]", bg: "bg-[#EEF2FF] dark:bg-[#1C2438]" };
   }
-  return { label: String(action || ""), color: "text-[#1A1D2E]", bg: "bg-[#F1F3F9]" };
+  return { label: String(action || ""), color: "text-[#1A1D2E] dark:text-white", bg: "bg-[#F1F3F9] dark:bg-[#1C2438]" };
 };
 
 const formatTimestamp = (ts) => {
@@ -228,39 +228,39 @@ const Logs = () => {
 
   return (
     <div className="p-6 py-5 font-['Manrope',sans-serif]">
-      {/* Top Controls: Search and Filter */}
-      <div className="flex items-center gap-3 mb-6">
-        {/* Search Input */}
-        <div className="relative w-64 md:w-72">
-          <Search
-            size={18}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B90A5] pointer-events-none"
-          />
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Izlash (foydalanuvchi, IP, jadval)"
-            className="w-full h-10 pl-10 pr-4 rounded-xl border border-[#E2E6F2] bg-[#F4F6FB] text-[13.5px] text-[#1A1D2E] placeholder:text-[#8B90A5] outline-none focus:border-[#3858C7] focus:bg-white focus:ring-2 focus:ring-[#3858C7]/20 transition-all"
-          />
-        </div>
-
+      {/* Top Controls: Filter (First) and Search (Second) - Right Aligned */}
+      <div className="flex items-center justify-end gap-3 mb-6">
         {/* Filter Button */}
         <button
           type="button"
           onClick={() => setIsFilterOpen(true)}
           className={`inline-flex items-center gap-2 h-10 px-4 rounded-xl border text-[13.5px] font-semibold transition-all cursor-pointer ${
             hasActiveFilters
-              ? "border-[#3858C7] bg-[#EEF2FB] text-[#3858C7]"
-              : "border-[#E2E6F2] bg-[#F8FAFC] text-[#1A1D2E] hover:bg-[#F1F3F9]"
+              ? "border-[#3858C7] bg-[#EEF2FB] dark:bg-[#1C2438] text-[#3858C7] dark:text-[#7C9BFF]"
+              : "border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#161C2E] text-[#1A1D2E] dark:text-white hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438]"
           }`}
         >
-          <Filter size={16} className={hasActiveFilters ? "text-[#3858C7]" : "text-[#5E6480]"} />
+          <Filter size={16} className={hasActiveFilters ? "text-[#3858C7] dark:text-[#7C9BFF]" : "text-[#5E6480] dark:text-[#94A3B8]"} />
           <span>Filtrlash</span>
           {hasActiveFilters && (
             <span className="w-2 h-2 rounded-full bg-[#3858C7]"></span>
           )}
         </button>
+
+        {/* Search Input */}
+        <div className="relative w-64 md:w-72">
+          <Search
+            size={18}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B90A5] dark:text-[#64748B] pointer-events-none"
+          />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Izlash (foydalanuvchi, IP, jadval)"
+            className="w-full h-10 pl-10 pr-4 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F4F6FB] dark:bg-[#121624] text-[13.5px] text-[#1A1D2E] dark:text-white placeholder:text-[#8B90A5] dark:placeholder:text-[#64748B] outline-none focus:border-[#3858C7] focus:bg-white dark:focus:bg-[#161C2E] focus:ring-2 focus:ring-[#3858C7]/20 transition-all"
+          />
+        </div>
       </div>
 
       {/* Logs Table with Infinite Scroll */}
@@ -270,8 +270,8 @@ const Logs = () => {
         className="overflow-auto h-[calc(100vh-165px)] rounded-xl relative"
       >
         <table className="w-full border-collapse text-left">
-          <thead className="sticky top-0 z-10 bg-[#F8F9FC]">
-            <tr className="border-b border-[#E2E6F2] text-[#8B90A5] text-[12.5px] font-medium">
+          <thead className="sticky top-0 z-10">
+            <tr className="border-b border-[#E2E6F2] dark:border-[#1E263C] text-[#8B90A5] dark:text-[#94A3B8] text-[12.5px] font-medium">
               <th className="py-3 px-3 w-12 font-medium">№</th>
               <th className="py-3 px-3 font-medium">Foydalanuvchi</th>
               <th className="py-3 px-3 font-medium">Vaqt</th>
@@ -281,10 +281,10 @@ const Logs = () => {
               <th className="py-3 px-3 font-medium text-right">IP manzili</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F1F3F9]">
+          <tbody className="divide-y divide-[#F1F3F9] dark:divide-[#1E263C]">
             {loading && logs.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-20 text-center text-[#8B90A5]">
+                <td colSpan={7} className="py-20 text-center text-[#8B90A5] dark:text-[#64748B]">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Loader2 size={28} className="animate-spin text-[#3858C7]" />
                     <span className="text-[13.5px]">Loglar yuklanmoqda...</span>
@@ -321,16 +321,16 @@ const Logs = () => {
                     <tr
                       key={log.id || index}
                       onClick={() => handleLogClick(log)}
-                      className="hover:bg-[#F8FAFC] font-medium cursor-pointer group text-[13.5px] text-[#1A1D2E] transition-colors"
+                      className="hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438]/50 font-medium cursor-pointer group text-[13.5px] text-[#1A1D2E] dark:text-white transition-colors"
                     >
-                      <td className="py-4 px-3 text-[#8B90A5]">{index + 1}</td>
-                      <td className="py-4 px-3 truncate max-w-[200px] font-semibold text-[#1A1D2E] group-hover:text-[#3858C7] transition-colors">
+                      <td className="py-4 px-3 text-[#8B90A5] dark:text-[#64748B]">{index + 1}</td>
+                      <td className="py-4 px-3 truncate max-w-[200px] font-semibold text-[#1A1D2E] dark:text-white group-hover:text-[#3858C7] dark:group-hover:text-[#7C9BFF] transition-colors">
                         {actorName}
                       </td>
-                      <td className="py-4 px-3 text-[#5E6480] whitespace-nowrap">
+                      <td className="py-4 px-3 text-[#5E6480] dark:text-[#94A3B8] whitespace-nowrap">
                         {timeFormatted}
                       </td>
-                      <td className="py-4 px-3 text-[#5E6480] truncate max-w-[180px]">
+                      <td className="py-4 px-3 text-[#5E6480] dark:text-[#94A3B8] truncate max-w-[180px]">
                         {tableName}
                       </td>
                       <td className="py-4 px-3">
@@ -341,12 +341,12 @@ const Logs = () => {
                         </span>
                       </td>
                       <td
-                        className="py-4 px-3 text-[#5E6480] text-right text-[13px] truncate max-w-[150px]"
+                        className="py-4 px-3 text-[#5E6480] dark:text-[#94A3B8] text-right text-[13px] truncate max-w-[150px]"
                         title={recordId}
                       >
                         {recordId}
                       </td>
-                      <td className="py-4 px-3 text-[#5E6480] text-[13px] text-right">
+                      <td className="py-4 px-3 text-[#5E6480] dark:text-[#94A3B8] text-[13px] text-right">
                         {ipAddr}
                       </td>
                     </tr>
@@ -356,7 +356,7 @@ const Logs = () => {
                 {/* Infinite Scroll loading indicator */}
                 {loadingMore && (
                   <tr>
-                    <td colSpan={7} className="py-4 text-center text-[#5B6078]">
+                    <td colSpan={7} className="py-4 text-center text-[#5B6078] dark:text-[#94A3B8]">
                       <div className="inline-flex items-center gap-2 text-xs font-semibold">
                         <Loader2 size={16} className="animate-spin text-[#3858C7]" />
                         <span>Ko'proq loglar yuklanmoqda...</span>
@@ -367,7 +367,7 @@ const Logs = () => {
               </>
             ) : (
               <tr>
-                <td colSpan={7} className="py-16 text-center text-[#8B90A5] text-[14px]">
+                <td colSpan={7} className="py-16 text-center text-[#8B90A5] dark:text-[#64748B] text-[14px]">
                   Hech qanday log topilmadi
                 </td>
               </tr>
@@ -379,18 +379,18 @@ const Logs = () => {
       {/* DETAIL MODAL: "Foydalanuvchi va so'rov haqida ma'lumot" */}
       {selectedLog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 duration-150 relative">
+          <div className="bg-white dark:bg-[#161C2E] rounded-3xl shadow-2xl border border-[#E2E6F2] dark:border-[#2B3553] w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 duration-150 relative">
             {/* Modal Header */}
-            <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#F1F3F9]">
+            <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#F1F3F9] dark:border-[#1E263C]">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setSelectedLog(null)}
-                  className="p-1.5 rounded-xl hover:bg-[#F1F3F9] text-[#1A1D2E] transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] text-[#1A1D2E] dark:text-white transition-colors cursor-pointer"
                 >
                   <ArrowLeft size={20} />
                 </button>
-                <h3 className="text-[17px] md:text-[18px] font-bold text-[#1A1D2E] flex items-center gap-2">
+                <h3 className="text-[17px] md:text-[18px] font-bold text-[#1A1D2E] dark:text-white flex items-center gap-2">
                   <span>Log tafsilotlari</span>
                   {detailLoading && (
                     <Loader2 size={16} className="animate-spin text-[#3858C7]" />
@@ -400,7 +400,7 @@ const Logs = () => {
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="p-1.5 rounded-xl text-[#8B90A5] hover:text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -410,10 +410,10 @@ const Logs = () => {
             <div className="space-y-4">
               {/* Foydalanuvchi */}
               <div>
-                <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
+                <label className="block text-[11.5px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1">
                   Foydalanuvchi
                 </label>
-                <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center text-[13.5px] text-[#1A1D2E] font-medium">
+                <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] flex items-center text-[13.5px] text-[#1A1D2E] dark:text-white font-medium">
                   {selectedLog.actor_name || selectedLog.actor || selectedLog.user || "Tizim"}
                 </div>
               </div>
@@ -421,19 +421,19 @@ const Logs = () => {
               {/* Vaqti & IP manzili */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
+                  <label className="block text-[11.5px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1">
                     Vaqti
                   </label>
-                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center justify-between text-[13.5px] text-[#1A1D2E]">
+                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] flex items-center justify-between text-[13.5px] text-[#1A1D2E] dark:text-white">
                     <span>{formatTimestamp(selectedLog.timestamp || selectedLog.time)}</span>
-                    <Calendar size={16} className="text-[#8B90A5]" />
+                    <Calendar size={16} className="text-[#8B90A5] dark:text-[#64748B]" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
+                  <label className="block text-[11.5px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1">
                     IP manzili
                   </label>
-                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center text-[13.5px] text-[#1A1D2E]">
+                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] flex items-center text-[13.5px] text-[#1A1D2E] dark:text-white">
                     {selectedLog.remote_addr || selectedLog.ipAddress || "—"}
                   </div>
                 </div>
@@ -442,18 +442,18 @@ const Logs = () => {
               {/* Harakati & Jadval nomi */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
+                  <label className="block text-[11.5px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1">
                     Harakati
                   </label>
-                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center text-[13.5px] text-[#1A1D2E] font-medium">
+                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] flex items-center text-[13.5px] text-[#1A1D2E] dark:text-white font-medium">
                     {getActionMeta(selectedLog.action).label}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
+                  <label className="block text-[11.5px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1">
                     Jadval / Obyekt
                   </label>
-                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center text-[13.5px] text-[#1A1D2E] truncate">
+                  <div className="h-11 px-3.5 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] flex items-center text-[13.5px] text-[#1A1D2E] dark:text-white truncate">
                     {selectedLog.content_type_name || selectedLog.object_repr || selectedLog.tableName || "—"}
                   </div>
                 </div>
@@ -461,20 +461,20 @@ const Logs = () => {
 
               {/* Yozuv raqami (Full width) */}
               <div>
-                <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
+                <label className="block text-[11.5px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1">
                   Yozuv raqami
                 </label>
-                <div className="min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#E2E6F2] bg-[#F8FAFC] flex items-center text-[13.5px] text-[#1A1D2E] break-all select-all leading-normal">
+                <div className="min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] flex items-center text-[13.5px] text-[#1A1D2E] dark:text-white break-all select-all leading-normal">
                   {selectedLog.object_pk || selectedLog.object_id || selectedLog.recordId || "—"}
                 </div>
               </div>
 
               {/* O'zgarishlar / Changes */}
               <div>
-                <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1">
+                <label className="block text-[11.5px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1">
                   O'zgarishlar
                 </label>
-                <div className="rounded-2xl border border-[#E2E6F2] bg-[#F8FAFC] p-4 text-[13px] text-[#1A1D2E] whitespace-pre-wrap overflow-auto min-h-[70px] max-h-[180px] leading-relaxed">
+                <div className="rounded-2xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] p-4 text-[13px] text-[#1A1D2E] dark:text-white whitespace-pre-wrap overflow-auto min-h-[70px] max-h-[180px] leading-relaxed">
                   {selectedLog.changes
                     ? typeof selectedLog.changes === "object"
                       ? JSON.stringify(selectedLog.changes, null, 2)
@@ -491,7 +491,7 @@ const Logs = () => {
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="inline-flex items-center gap-1.5 text-[14px] font-bold text-[#3858C7] hover:text-[#2844A8] py-2 px-4 rounded-xl hover:bg-[#EEF2FB] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-[14px] font-bold text-[#3858C7] dark:text-[#7C9BFF] hover:text-[#2844A8] py-2 px-4 rounded-xl hover:bg-[#EEF2FB] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
               >
                 <X size={16} />
                 <span>Yopish</span>
@@ -504,20 +504,20 @@ const Logs = () => {
       {/* FILTER MODAL: "Filtrlash" */}
       {isFilterOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-2xl p-6 animate-in zoom-in-95 duration-150 relative">
+          <div className="bg-white dark:bg-[#161C2E] rounded-3xl shadow-2xl border border-[#E2E6F2] dark:border-[#2B3553] w-full max-w-2xl p-6 animate-in zoom-in-95 duration-150 relative">
             {/* Modal Header */}
             <div className="mb-5">
               <div className="flex items-center gap-2 mb-1">
                 <button
                   type="button"
                   onClick={() => setIsFilterOpen(false)}
-                  className="p-1 rounded-lg hover:bg-[#F1F3F9] text-[#1A1D2E] transition-colors cursor-pointer"
+                  className="p-1 rounded-lg hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] text-[#1A1D2E] dark:text-white transition-colors cursor-pointer"
                 >
                   <ArrowLeft size={18} />
                 </button>
-                <h3 className="text-[18px] font-bold text-[#1A1D2E]">Filtrlash</h3>
+                <h3 className="text-[18px] font-bold text-[#1A1D2E] dark:text-white">Filtrlash</h3>
               </div>
-              <p className="text-[12.5px] text-[#5E6480] ml-7">
+              <p className="text-[12.5px] text-[#5E6480] dark:text-[#94A3B8] ml-7">
                 Kerakli filtrlarni tanlang, natijalar shunga qarab saralanadi
               </p>
             </div>
@@ -526,7 +526,7 @@ const Logs = () => {
             <div className="space-y-4">
               {/* Harakat Select */}
               <div>
-                <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1.5">
+                <label className="block text-[11.5px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
                   Harakat
                 </label>
                 <CustomSelect
@@ -541,7 +541,7 @@ const Logs = () => {
 
               {/* Vaqt oralig'i */}
               <div>
-                <label className="block text-[11.5px] font-medium text-[#5E6480] mb-1.5">
+                <label className="block text-[11.5px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
                   Vaqt oralig'i
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -574,11 +574,11 @@ const Logs = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="mt-8 flex items-center justify-end gap-3 pt-3 border-t border-[#F1F3F9]">
+            <div className="mt-8 flex items-center justify-end gap-3 pt-3 border-t border-[#F1F3F9] dark:border-[#1E263C]">
               <button
                 type="button"
                 onClick={handleClearFilter}
-                className="inline-flex items-center gap-1.5 text-[13.5px] font-bold text-[#1A1D2E] hover:text-[#EF4444] px-4 py-2.5 rounded-xl hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-[13.5px] font-bold text-[#1A1D2E] dark:text-white hover:text-[#EF4444] dark:hover:text-red-400 px-4 py-2.5 rounded-xl hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
               >
                 <X size={16} />
                 <span>Tozalash</span>

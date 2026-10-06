@@ -183,11 +183,51 @@ const Users = () => {
 
   return (
     <div className="p-5 py-4.5 space-y-4">
-      {/* Filter and Search Bar */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Search Input */}
-        <div className="relative">
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B90A5]">
+      {/* Filter and Search Bar: Filters on Left, Search on Right */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Left Side: Select Filters */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Region Filter */}
+          <div className="min-w-[170px]">
+            <CustomSelect
+              value={selectedRegion}
+              onChange={setSelectedRegion}
+              options={regionOptions}
+              placeholder="Viloyat"
+              searchPlaceholder="Viloyat izlash..."
+              className="h-8! rounded-xl"
+            />
+          </div>
+
+          {/* District Filter */}
+          <div className="min-w-[170px]">
+            <CustomSelect
+              value={selectedDistrict}
+              onChange={setSelectedDistrict}
+              options={districtOptions}
+              placeholder="Tuman"
+              searchPlaceholder="Tuman izlash..."
+              disabled={districtOptions.length <= 1 && !selectedRegion}
+              className="h-8! rounded-xl"
+            />
+          </div>
+
+          {/* Sort Order */}
+          <div className="min-w-[160px]">
+            <CustomSelect
+              value={sortOrder}
+              onChange={setSortOrder}
+              options={sortOptions}
+              placeholder="Saralash"
+              showSearch={false}
+              className="h-8! rounded-xl"
+            />
+          </div>
+        </div>
+
+        {/* Right Side: Search Input */}
+        <div className="relative ml-auto">
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B90A5] dark:text-[#64748B]">
             <HugeiconsIcon icon={Search01Icon} size={18} />
           </div>
           <input
@@ -195,44 +235,7 @@ const Users = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Ism Sharifi bo'yicha izlash"
-            className="w-[250px] bg-white border border-[#E2E6F2] rounded-xl pl-10 pr-4 h-8 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
-          />
-        </div>
-
-        {/* Region Filter */}
-        <div className="min-w-[170px]">
-          <CustomSelect
-            value={selectedRegion}
-            onChange={setSelectedRegion}
-            options={regionOptions}
-            placeholder="Viloyat"
-            searchPlaceholder="Viloyat izlash..."
-            className="h-8! rounded-xl"
-          />
-        </div>
-
-        {/* District Filter */}
-        <div className="min-w-[170px]">
-          <CustomSelect
-            value={selectedDistrict}
-            onChange={setSelectedDistrict}
-            options={districtOptions}
-            placeholder="Tuman"
-            searchPlaceholder="Tuman izlash..."
-            disabled={districtOptions.length <= 1 && !selectedRegion}
-            className="h-8! rounded-xl"
-          />
-        </div>
-
-        {/* Sort Order */}
-        <div className="min-w-[160px]">
-          <CustomSelect
-            value={sortOrder}
-            onChange={setSortOrder}
-            options={sortOptions}
-            placeholder="Saralash"
-            showSearch={false}
-            className="h-8! rounded-xl"
+            className="w-[250px] bg-white dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl pl-10 pr-4 h-8 text-[13.5px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none focus:border-[#4763E4] focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
           />
         </div>
       </div>
@@ -244,8 +247,8 @@ const Users = () => {
         className="bg-transparent overflow-auto h-[calc(100vh-150px)] relative"
       >
         <table className="w-full text-left border-collapse">
-          <thead className="sticky top-0 z-10 bg-[#F8F9FC]">
-            <tr className="border-b border-[#E2E6F2] text-[#8B90A5] text-[13px] font-medium">
+          <thead className="sticky top-0 z-10">
+            <tr className="border-b border-[#E2E6F2] dark:border-[#1E263C] text-[#8B90A5] dark:text-[#94A3B8] text-[13px] font-medium">
               <th className="py-3 px-4 font-normal w-12 text-center">#</th>
               <th className="py-3 px-4 font-normal">F.I.SH</th>
               <th className="py-3 px-4 font-normal">Tashkilot</th>
@@ -254,10 +257,10 @@ const Users = () => {
               <th className="py-3 px-4 font-normal">Tug'ilgan sanasi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E2E6F2]/50 text-[13.5px]">
+          <tbody className="divide-y divide-[#E2E6F2]/50 dark:divide-[#1E263C] text-[13.5px]">
             {loading && users.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-20 text-center text-[#8B90A5]">
+                <td colSpan={6} className="py-20 text-center text-[#8B90A5] dark:text-[#64748B]">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Loader2 size={28} className="animate-spin text-[#3858C7]" />
                     <span className="text-[13.5px]">Foydalanuvchilar yuklanmoqda...</span>
@@ -297,17 +300,17 @@ const Users = () => {
                     <tr
                       key={user.id || index}
                       onClick={() => navigate(`/users/${user.id}`)}
-                      className="hover:bg-white/60 transition-colors group cursor-pointer"
+                      className="hover:bg-white/60 dark:hover:bg-[#1C2438]/50 transition-colors group cursor-pointer"
                     >
                       {/* Index Number */}
-                      <td className="py-3.5 px-4 text-center text-[#5B6078] font-medium">
+                      <td className="py-3.5 px-4 text-center text-[#5B6078] dark:text-[#94A3B8] font-medium">
                         {index + 1}
                       </td>
 
                       {/* Full Name with Avatar Initials */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full overflow-hidden bg-[#EEF2FF] text-[#4361EE] border border-[#D7E2FC] font-bold text-xs flex items-center justify-center shrink-0 select-none shadow-2xs">
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-[#EEF2FF] dark:bg-[#1C2438] text-[#4361EE] dark:text-[#7C9BFF] border border-[#D7E2FC] dark:border-[#2B3553] font-bold text-xs flex items-center justify-center shrink-0 select-none shadow-2xs">
                             {user.avatar ? (
                               <img
                                 src={user.avatar}
@@ -319,11 +322,11 @@ const Users = () => {
                             )}
                           </div>
                           <div className="flex items-center gap-2 truncate max-w-[260px]">
-                            <span className="font-medium text-[#1A1D2E] group-hover:text-[#4763E4] transition-colors truncate">
+                            <span className="font-medium text-[#1A1D2E] dark:text-white group-hover:text-[#4763E4] dark:group-hover:text-[#7C9BFF] transition-colors truncate">
                               {fullName}
                             </span>
                             {user.is_blocked && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FEF2F2] text-[#EF4444] border border-[#FCA5A5]/40 shrink-0">
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FEF2F2] dark:bg-red-950/40 text-[#EF4444] dark:text-red-400 border border-[#FCA5A5]/40 dark:border-red-900/50 shrink-0">
                                 Bloklangan
                               </span>
                             )}
@@ -332,22 +335,22 @@ const Users = () => {
                       </td>
 
                       {/* Organization */}
-                      <td className="py-3.5 px-4 text-[#1A1D2E]">
+                      <td className="py-3.5 px-4 text-[#1A1D2E] dark:text-[#94A3B8]">
                         {organization}
                       </td>
 
                       {/* Region */}
-                      <td className="py-3.5 px-4 text-[#1A1D2E]">
+                      <td className="py-3.5 px-4 text-[#1A1D2E] dark:text-[#94A3B8]">
                         {regionName}
                       </td>
 
                       {/* District */}
-                      <td className="py-3.5 px-4 text-[#1A1D2E]">
+                      <td className="py-3.5 px-4 text-[#1A1D2E] dark:text-[#94A3B8]">
                         {districtName}
                       </td>
 
                       {/* Birth Date */}
-                      <td className="py-3.5 px-4 text-[#1A1D2E]">
+                      <td className="py-3.5 px-4 text-[#1A1D2E] dark:text-[#94A3B8]">
                         {birthDate}
                       </td>
                     </tr>
@@ -357,7 +360,7 @@ const Users = () => {
                 {/* Loading More Spinner row at the bottom */}
                 {loadingMore && (
                   <tr>
-                    <td colSpan={6} className="py-4 text-center text-[#5B6078]">
+                    <td colSpan={6} className="py-4 text-center text-[#5B6078] dark:text-[#94A3B8]">
                       <div className="inline-flex items-center gap-2 text-xs font-semibold">
                         <Loader2 size={16} className="animate-spin text-[#3858C7]" />
                         <span>Ko'proq yuklanmoqda...</span>
@@ -370,7 +373,7 @@ const Users = () => {
               <tr>
                 <td
                   colSpan={6}
-                  className="py-16 text-center text-[#8B90A5] text-sm"
+                  className="py-16 text-center text-[#8B90A5] dark:text-[#64748B] text-sm"
                 >
                   Foydalanuvchilar topilmadi
                 </td>

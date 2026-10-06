@@ -33,20 +33,20 @@ function CalendarDropdown({ value, onChange, options, className, ...props }) {
                     type="button"
                     onClick={() => setOpen((v) => !v)}
                     className={cn(
-                         "flex items-center gap-1 rounded-xl px-2.5 py-1 text-[13.5px] font-bold text-[#1A1D2E]",
-                         "hover:bg-[#F4F6FB] cursor-pointer select-none transition-colors",
+                         "flex items-center gap-1 rounded-xl px-2.5 py-1 text-[13.5px] font-bold text-[#1A1D2E] dark:text-white",
+                         "hover:bg-[#F4F6FB] dark:hover:bg-[#1C2438] cursor-pointer select-none transition-colors",
                          className
                     )}
                >
                     <span>{selected?.label}</span>
-                    <ChevronDownIcon className={cn("size-3.5 text-[#5B6078] transition-transform duration-150", open && "rotate-180")} />
+                    <ChevronDownIcon className={cn("size-3.5 text-[#5B6078] dark:text-[#94A3B8] transition-transform duration-150", open && "rotate-180")} />
                </button>
 
                {open && (
                     <div
                          className={cn(
-                              "absolute top-full left-0 z-50 mt-1 max-h-52 min-w-[8.5rem] overflow-y-auto rounded-2xl border border-[#E2E6F2] bg-white p-1.5 shadow-2xl",
-                              "text-[#1A1D2E]"
+                              "absolute top-full left-0 z-50 mt-1 max-h-52 min-w-[8.5rem] overflow-y-auto rounded-2xl border border-[#E2E6F2] dark:border-[#2B3553] bg-white dark:bg-[#161C2E] p-1.5 shadow-2xl",
+                              "text-[#1A1D2E] dark:text-white"
                          )}
                     >
                          {options?.map((opt) => {
@@ -61,12 +61,12 @@ function CalendarDropdown({ value, onChange, options, className, ...props }) {
                                         }}
                                         className={cn(
                                              "flex h-8 w-full cursor-pointer items-center justify-between rounded-xl px-2.5 text-[13px] font-medium transition-colors",
-                                             "text-[#1A1D2E] hover:bg-[#F4F6FB] hover:text-[#3858C7]",
-                                             active && "bg-[#EEF2FF] font-bold text-[#3858C7]"
+                                             "text-[#1A1D2E] dark:text-slate-200 hover:bg-[#F4F6FB] dark:hover:bg-[#1C2438] hover:text-[#3858C7] dark:hover:text-[#7F95E6]",
+                                             active && "bg-[#EEF2FF] dark:bg-[#232E47] font-bold text-[#3858C7] dark:text-[#7F95E6]"
                                         )}
                                    >
                                         <span>{opt.label}</span>
-                                        {active && <CheckIcon className="size-3.5 flex-shrink-0 text-[#3858C7]" />}
+                                        {active && <CheckIcon className="size-3.5 flex-shrink-0 text-[#3858C7] dark:text-[#7F95E6]" />}
                                    </button>
                               )
                          })}
@@ -96,7 +96,7 @@ function Calendar({
                <DayPicker
                     showOutsideDays={showOutsideDays}
                     className={cn(
-                         "bg-white p-2 select-none",
+                         "bg-white dark:bg-[#161C2E] p-2 select-none text-[#1A1D2E] dark:text-white",
                          className
                     )}
                     captionLayout={captionLayout}
@@ -107,45 +107,45 @@ function Calendar({
                          ...formatters,
                     }}
                     classNames={{
-                         root: cn("w-fit bg-white", defaultClassNames.root),
+                         root: cn("w-fit bg-white dark:bg-[#161C2E]", defaultClassNames.root),
                          months: cn("relative flex flex-col gap-3", defaultClassNames.months),
                          month: cn("flex w-full flex-col gap-3", defaultClassNames.month),
                          nav: cn("absolute inset-x-0 top-0 flex w-full items-center justify-between pointer-events-none", defaultClassNames.nav),
                          button_previous: cn(
-                              "h-8 w-8 rounded-xl bg-[#F8F9FC] hover:bg-[#EEF1F8] text-[#1A1D2E] flex items-center justify-center pointer-events-auto transition-colors cursor-pointer opacity-80 hover:opacity-100",
+                              "h-8 w-8 rounded-xl bg-[#F8F9FC] dark:bg-[#1C2438] hover:bg-[#EEF1F8] dark:hover:bg-[#232E47] text-[#1A1D2E] dark:text-white flex items-center justify-center pointer-events-auto transition-colors cursor-pointer opacity-80 hover:opacity-100",
                               defaultClassNames.button_previous
                          ),
                          button_next: cn(
-                              "h-8 w-8 rounded-xl bg-[#F8F9FC] hover:bg-[#EEF1F8] text-[#1A1D2E] flex items-center justify-center pointer-events-auto transition-colors cursor-pointer opacity-80 hover:opacity-100",
+                              "h-8 w-8 rounded-xl bg-[#F8F9FC] dark:bg-[#1C2438] hover:bg-[#EEF1F8] dark:hover:bg-[#232E47] text-[#1A1D2E] dark:text-white flex items-center justify-center pointer-events-auto transition-colors cursor-pointer opacity-80 hover:opacity-100",
                               defaultClassNames.button_next
                          ),
                          month_caption: cn("flex h-8 w-full items-center justify-center px-8", defaultClassNames.month_caption),
-                         dropdowns: cn("flex h-8 w-full items-center justify-center gap-1.5 text-sm font-bold text-[#1A1D2E]", defaultClassNames.dropdowns),
+                         dropdowns: cn("flex h-8 w-full items-center justify-center gap-1.5 text-sm font-bold text-[#1A1D2E] dark:text-white", defaultClassNames.dropdowns),
                          dropdown_root: cn("relative", defaultClassNames.dropdown_root),
                          dropdown: cn("hidden", defaultClassNames.dropdown),
                          caption_label: cn(
-                              "flex items-center gap-1 rounded-xl px-2.5 py-1 text-sm font-bold text-[#1A1D2E] hover:bg-[#F4F6FB] cursor-pointer select-none",
+                              "flex items-center gap-1 rounded-xl px-2.5 py-1 text-sm font-bold text-[#1A1D2E] dark:text-white hover:bg-[#F4F6FB] dark:hover:bg-[#1C2438] cursor-pointer select-none",
                               defaultClassNames.caption_label
                          ),
                          table: "w-full border-collapse",
-                         weekdays: cn("flex justify-between border-b border-[#F1F3F9] pb-1.5 mb-1", defaultClassNames.weekdays),
-                         weekday: cn("w-9 select-none py-1 text-center text-[12px] font-semibold text-[#8B90A5]", defaultClassNames.weekday),
+                         weekdays: cn("flex justify-between border-b border-[#F1F3F9] dark:border-[#232E47] pb-1.5 mb-1", defaultClassNames.weekdays),
+                         weekday: cn("w-9 select-none py-1 text-center text-[12px] font-semibold text-[#8B90A5] dark:text-[#64748B]", defaultClassNames.weekday),
                          week: cn("mt-1 flex w-full justify-between", defaultClassNames.week),
                          day: cn("relative h-9 w-9 select-none p-0 text-center flex items-center justify-center", defaultClassNames.day),
-                         today: cn("font-bold text-[#3858C7]", defaultClassNames.today),
-                         outside: cn("text-[#CBD5E1] opacity-50", defaultClassNames.outside),
-                         disabled: cn("text-[#CBD5E1] opacity-30 cursor-not-allowed", defaultClassNames.disabled),
+                         today: cn("font-bold text-[#3858C7] dark:text-[#7F95E6]", defaultClassNames.today),
+                         outside: cn("text-[#94A3B8] dark:text-[#64748B] opacity-60", defaultClassNames.outside),
+                         disabled: cn("text-[#94A3B8] dark:text-[#64748B] opacity-60 cursor-not-allowed", defaultClassNames.disabled),
                          hidden: cn("invisible", defaultClassNames.hidden),
                          ...classNames,
                     }}
                     components={{
                          Root: ({ className, rootRef, ...props }) => (
-                              <div data-slot="calendar" ref={rootRef} className={cn("bg-white", className)} {...props} />
+                              <div data-slot="calendar" ref={rootRef} className={cn("bg-white dark:bg-[#161C2E]", className)} {...props} />
                          ),
                          Chevron: ({ className, orientation, ...props }) => {
-                              if (orientation === "left") return <ChevronLeftIcon className={cn("size-4 text-[#1A1D2E]", className)} {...props} />
-                              if (orientation === "right") return <ChevronRightIcon className={cn("size-4 text-[#1A1D2E]", className)} {...props} />
-                              return <ChevronDownIcon className={cn("size-4 text-[#1A1D2E]", className)} {...props} />
+                              if (orientation === "left") return <ChevronLeftIcon className={cn("size-4 text-[#1A1D2E] dark:text-white", className)} {...props} />
+                              if (orientation === "right") return <ChevronRightIcon className={cn("size-4 text-[#1A1D2E] dark:text-white", className)} {...props} />
+                              return <ChevronDownIcon className={cn("size-4 text-[#1A1D2E] dark:text-white", className)} {...props} />
                          },
                          Dropdown: (dropdownProps) => <CalendarDropdown {...dropdownProps} />,
                          DayButton: ({ ...props }) => <CalendarDayButton locale={locale} {...props} />,
@@ -231,18 +231,20 @@ function CalendarDayButton({ className, day, modifiers, locale, ...props }) {
                data-outside={modifiers.outside}
                data-disabled={modifiers.disabled}
                className={cn(
-                    "inline-flex h-8 w-8 items-center justify-center rounded-xl text-[13px] font-medium transition-all",
+                    "inline-flex h-8 w-8 items-center justify-center rounded-xl text-[13px] font-medium transition-all relative",
                     "cursor-pointer select-none outline-none",
-                    "hover:bg-[#F4F6FB] text-[#1A1D2E]",
+                    "hover:bg-[#F4F6FB] dark:hover:bg-[#1C2438] text-[#1A1D2E] dark:text-slate-200",
+                    // Bugungi sana belgisi:
+                    "data-[today=true]:font-bold data-[today=true]:text-[#3858C7] dark:data-[today=true]:text-[#7F95E6] data-[today=true]:border data-[today=true]:border-[#3858C7]/50 dark:data-[today=true]:border-[#7F95E6]/50",
                     // Bitta sana tanlangan:
-                    "data-[selected-single=true]:bg-[#3858C7] data-[selected-single=true]:text-white data-[selected-single=true]:font-bold data-[selected-single=true]:shadow-xs data-[selected-single=true]:hover:bg-[#2F4BB8]",
+                    "data-[selected-single=true]:bg-[#3858C7]! data-[selected-single=true]:text-white! data-[selected-single=true]:font-bold! data-[selected-single=true]:border-transparent! data-[selected-single=true]:shadow-xs data-[selected-single=true]:hover:bg-[#2F4BB8]!",
                     // Oraliq:
-                    "data-[range-start=true]:bg-[#3858C7] data-[range-start=true]:text-white data-[range-start=true]:rounded-xl data-[range-start=true]:hover:bg-[#2F4BB8]",
-                    "data-[range-end=true]:bg-[#3858C7] data-[range-end=true]:text-white data-[range-end=true]:rounded-xl data-[range-end=true]:hover:bg-[#2F4BB8]",
-                    "data-[range-middle=true]:bg-[#EEF2FF] data-[range-middle=true]:text-[#3858C7] data-[range-middle=true]:rounded-none data-[range-middle=true]:hover:bg-[#E0E7FF]",
+                    "data-[range-start=true]:bg-[#3858C7]! data-[range-start=true]:text-white! data-[range-start=true]:rounded-xl data-[range-start=true]:border-transparent! data-[range-start=true]:hover:bg-[#2F4BB8]!",
+                    "data-[range-end=true]:bg-[#3858C7]! data-[range-end=true]:text-white! data-[range-end=true]:rounded-xl data-[range-end=true]:border-transparent! data-[range-end=true]:hover:bg-[#2F4BB8]!",
+                    "data-[range-middle=true]:bg-[#EEF2FF] dark:data-[range-middle=true]:bg-[#232E47] data-[range-middle=true]:text-[#3858C7] dark:data-[range-middle=true]:text-[#7F95E6] data-[range-middle=true]:rounded-none data-[range-middle=true]:border-transparent! data-[range-middle=true]:hover:bg-[#E0E7FF] dark:data-[range-middle=true]:hover:bg-[#2B3553]",
                     "data-[round-l=true]:rounded-l-xl data-[round-r=true]:rounded-r-xl",
-                    "data-[outside=true]:text-[#CBD5E1] data-[outside=true]:opacity-60",
-                    "data-[disabled=true]:text-[#CBD5E1] data-[disabled=true]:opacity-30 data-[disabled=true]:cursor-not-allowed data-[disabled=true]:pointer-events-none",
+                    "data-[outside=true]:text-[#94A3B8] dark:data-[outside=true]:text-[#64748B] data-[outside=true]:opacity-60",
+                    "data-[disabled=true]:text-[#94A3B8] dark:data-[disabled=true]:text-[#64748B] data-[disabled=true]:opacity-60 data-[disabled=true]:cursor-not-allowed data-[disabled=true]:pointer-events-none data-[disabled=true]:hover:bg-transparent",
                     className
                )}
                onClick={handleClick}

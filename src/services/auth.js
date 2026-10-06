@@ -6,6 +6,16 @@ import { axiosAPI } from "./axiosAPI";
  */
 export const loginWithPassport = async () => {
   try {
+    const currentPath = window.location.pathname + window.location.search;
+    if (
+      currentPath &&
+      currentPath !== "/" &&
+      currentPath !== "/leanding" &&
+      currentPath !== "/auth/callback"
+    ) {
+      sessionStorage.setItem("redirect_after_login", currentPath);
+      localStorage.setItem("redirect_after_login", currentPath);
+    }
     const currentCallback = `${window.location.origin}/auth/callback`;
     const response = await axiosAPI.get("auth/passport/url/", {
       params: { redirect_uri: currentCallback },

@@ -36,7 +36,7 @@ export default function ParticipantTile({
 
   useEffect(() => {
     setImgError(false)
-  }, [formattedAvatar])
+  }, [avatar, formattedAvatar])
 
   // Attach video track to <video> element
   useEffect(() => {
@@ -78,8 +78,8 @@ export default function ParticipantTile({
       }}
       className={`relative w-full h-full ${
         isFullScreenFocus
-          ? 'rounded-none bg-black border-0'
-          : 'rounded-2xl sm:rounded-3xl shadow-md'
+          ? 'rounded-none bg-black border-0 shadow-none'
+          : 'rounded-2xl sm:rounded-3xl shadow-sm'
       } overflow-hidden ${
         isScreenShare
           ? isFullScreenFocus
@@ -94,7 +94,7 @@ export default function ParticipantTile({
                 ? 'border-2 border-[#5B7BF0] shadow-[0_0_20px_rgba(91,123,240,0.25)]'
                 : 'border border-black/5 dark:border-white/5'
             }`
-      } transition-all duration-300 ease-out flex items-center justify-center select-none group`}
+      } transition-all duration-300 ease-out flex items-center justify-center select-none group isolate`}
     >
       {/* Video element */}
       {(isCameraEnabled || isScreenShare) && videoTrack ? (
@@ -116,23 +116,24 @@ export default function ParticipantTile({
         <div className="flex items-center justify-center w-full h-full p-4 relative">
           {/* Active Speaking Halo Glow */}
           {isSpeaking && (
-            <div className="absolute w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-blue-500/25 dark:bg-blue-500/35 blur-2xl pointer-events-none -z-0 animate-pulse" />
+            <div className="absolute w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-blue-500/25 dark:bg-blue-500/35 blur-2xl pointer-events-none -z-0 animate-pulse" />
           )}
 
           <div
-            className={`relative flex items-center justify-center rounded-full transition-all duration-300 shadow-xl select-none z-10
+            className={`relative flex items-center justify-center rounded-full transition-all duration-300 shadow-md select-none z-10 overflow-hidden
               ${isSpeaking ? 'ring-4 ring-[#5B7BF0]/60 scale-105' : 'ring-2 ring-white/20'}
-              w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 ${getAvatarGradient(displayName)} text-white`}
+              w-18 h-18 sm:w-22 sm:h-22 md:w-26 md:h-26 ${getAvatarGradient(displayName)} text-white`}
           >
             {formattedAvatar && !imgError ? (
               <img
                 src={formattedAvatar}
                 alt={displayName}
                 className="w-full h-full rounded-full object-cover"
+                draggable={false}
                 onError={() => setImgError(true)}
               />
             ) : (
-              <span className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-wider">{initials}</span>
+              <span className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-wider">{initials}</span>
             )}
           </div>
         </div>

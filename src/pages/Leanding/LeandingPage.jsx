@@ -270,8 +270,8 @@ const InteractiveDynamicsChart = () => {
         </div>
       </div>
 
-      {/* Week Badges / Ticks */}
-      <div className="flex items-center justify-between gap-0.5 sm:gap-1 pt-2 border-t border-[#EEF1F7] text-[10px] sm:text-[11px] font-semibold text-[#8F95A8] overflow-x-auto">
+      {/* Week Badges / Ticks - Full width 12-col grid, no scrollbar */}
+      <div className="w-full grid grid-cols-12 gap-0.5 sm:gap-1 pt-2 border-t border-[#EEF1F7] text-[10px] sm:text-[11px] font-semibold text-[#8F95A8] select-none">
         {weeklyDynamicsData.map((d, idx) => {
           const isActive = idx === activeWeekIndex;
           return (
@@ -280,9 +280,9 @@ const InteractiveDynamicsChart = () => {
               type="button"
               onClick={() => setActiveWeekIndex(idx)}
               onMouseEnter={() => setActiveWeekIndex(idx)}
-              className={`px-1 sm:px-1.5 py-0.5 rounded-md transition-all shrink-0 cursor-pointer ${
+              className={`w-full py-0.5 sm:py-1 text-center rounded-md transition-all truncate cursor-pointer ${
                 isActive
-                  ? "bg-[#3F57B3] text-white font-extrabold scale-105 sm:scale-110 shadow-xs"
+                  ? "bg-[#3F57B3] text-white font-extrabold shadow-xs"
                   : "hover:text-[#1A1D2E] hover:bg-[#F1F3F9]"
               }`}
             >
@@ -298,10 +298,10 @@ const InteractiveDynamicsChart = () => {
 
 // ================= 2. INTERACTIVE DONUT CHART =================
 const statusData = [
-  { id: "otkazilgan", label: "Oʻtkazilgan", count: 184, percent: "71.9%", color: "#38C98D", dashArray: "162.5 226.2", dashOffset: "0" },
-  { id: "rejalashtirilgan", label: "Rejalashtirilgan", count: 37, percent: "14.5%", color: "#3B5BDB", dashArray: "32.7 226.2", dashOffset: "-162.5" },
-  { id: "joriy", label: "Joriy", count: 2, percent: "0.8%", color: "#E07A28", dashArray: "1.8 226.2", dashOffset: "-195.2" },
-  { id: "bekor", label: "Bekor qilingan", count: 33, percent: "12.9%", color: "#9AA5B8", dashArray: "29.2 226.2", dashOffset: "-197.0" },
+  { id: "otkazilgan", label: "Oʻtkazilgan", count: 184, percent: "71.9%", color: "#26C281", dashArray: "162.5 226.2", dashOffset: "0" },
+  { id: "rejalashtirilgan", label: "Rejalashtirilgan", count: 37, percent: "14.5%", color: "#4361EE", dashArray: "32.7 226.2", dashOffset: "-162.5" },
+  { id: "joriy", label: "Joriy", count: 2, percent: "0.8%", color: "#F59E0B", dashArray: "1.8 226.2", dashOffset: "-195.2" },
+  { id: "bekor", label: "Bekor qilingan", count: 33, percent: "12.9%", color: "#8D99AE", dashArray: "29.2 226.2", dashOffset: "-197.0" },
 ];
 
 const InteractiveDonutChart = () => {
@@ -311,9 +311,9 @@ const InteractiveDonutChart = () => {
   return (
     <div
       onMouseLeave={() => setHoveredStatusIndex(null)}
-      className="w-full min-h-[260px] sm:h-[270px] rounded-[20px] sm:rounded-[24px] bg-white p-4 sm:p-6 text-[#1A1D2E] shadow-sm flex flex-col justify-between border border-transparent hover:border-[#E2E6F2] transition-colors"
+      className="w-full h-full min-h-[260px] sm:min-h-[270px] rounded-[20px] sm:rounded-[24px] bg-white p-4 sm:p-5 text-[#1A1D2E] shadow-sm flex flex-col justify-between border border-transparent hover:border-[#E2E6F2] transition-colors"
     >
-      <div className="flex items-center justify-between h-5">
+      <div className="flex items-center justify-between h-5 mb-1">
         <span className="text-[11px] sm:text-[12px] font-extrabold text-[#5B6078] tracking-wider uppercase block">
           HOLAT BOʻYICHA
         </span>
@@ -325,9 +325,9 @@ const InteractiveDonutChart = () => {
         </span>
       </div>
 
-      <div className="flex flex-col xs:flex-row items-center justify-between gap-3 my-auto pt-2 sm:pt-1">
+      <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 my-auto py-1">
         {/* Interactive Donut graphic */}
-        <div className="relative w-[105px] h-[105px] sm:w-[114px] sm:h-[114px] shrink-0 flex items-center justify-center">
+        <div className="relative w-[95px] h-[95px] sm:w-[108px] sm:h-[108px] shrink-0 flex items-center justify-center">
           <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90 overflow-visible">
             {/* Base Slices */}
             {statusData.map((item, idx) => {
@@ -343,7 +343,7 @@ const InteractiveDonutChart = () => {
                   strokeWidth="13"
                   strokeDasharray={item.dashArray}
                   strokeDashoffset={item.dashOffset}
-                  strokeLinecap="round"
+                  strokeLinecap="butt"
                   onMouseEnter={() => setHoveredStatusIndex(idx)}
                   className="transition-all duration-200 cursor-pointer"
                   opacity={hoveredStatusIndex !== null && !isHovered ? 0.45 : 1}
@@ -360,10 +360,10 @@ const InteractiveDonutChart = () => {
                 r="36"
                 fill="none"
                 stroke={activeItem.color}
-                strokeWidth="16.5"
+                strokeWidth="15"
                 strokeDasharray={activeItem.dashArray}
                 strokeDashoffset={activeItem.dashOffset}
-                strokeLinecap="round"
+                strokeLinecap="butt"
                 className="transition-all duration-150 cursor-pointer pointer-events-none drop-shadow-sm"
               />
             )}
@@ -371,12 +371,12 @@ const InteractiveDonutChart = () => {
 
           {/* Center Dynamic Label */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
-            <span className="text-[20px] sm:text-[23px] font-['Unbounded',sans-serif] font-bold text-[#1A1D2E] leading-none">
+            <span className="text-[18px] sm:text-[21px] font-['Unbounded',sans-serif] font-bold text-[#1A1D2E] leading-none">
               {activeItem ? activeItem.count : 256}
             </span>
             <span
               style={{ color: activeItem ? activeItem.color : "#8F95A8" }}
-              className="text-[10px] sm:text-[11px] font-extrabold mt-0.5"
+              className="text-[9.5px] sm:text-[10.5px] font-extrabold mt-0.5"
             >
               {activeItem ? activeItem.percent : "Jami"}
             </span>
@@ -384,29 +384,29 @@ const InteractiveDonutChart = () => {
         </div>
 
         {/* Legend */}
-        <div className="space-y-1 sm:space-y-1.5 flex-1 w-full min-w-0 pl-0 xs:pl-1.5">
+        <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
           {statusData.map((item, idx) => {
             const isHovered = hoveredStatusIndex === idx;
             return (
               <div
                 key={item.id}
                 onMouseEnter={() => setHoveredStatusIndex(idx)}
-                className={`flex items-center justify-between py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-xl transition-colors cursor-pointer ${
+                className={`flex items-center justify-between py-1 px-1.5 sm:px-2 rounded-xl transition-colors cursor-pointer ${
                   isHovered ? "bg-[#F1F3F9]" : "hover:bg-[#F8FAFC]"
                 }`}
               >
-                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 pr-1">
                   <span
                     style={{ backgroundColor: item.color }}
-                    className={`w-2.5 h-2.5 rounded-full shrink-0 transition-transform duration-150 ${
+                    className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0 transition-transform duration-150 ${
                       isHovered ? "scale-125" : ""
                     }`}
                   ></span>
-                  <span className={`text-[12px] sm:text-[12.5px] truncate ${isHovered ? "font-bold text-[#1A1D2E]" : "font-medium text-[#475569]"}`}>
+                  <span className={`text-[11px] sm:text-[12px] truncate ${isHovered ? "font-bold text-[#1A1D2E]" : "font-medium text-[#475569]"}`}>
                     {item.label}
                   </span>
                 </div>
-                <span className="text-[12.5px] sm:text-[13.5px] font-extrabold text-[#1A1D2E] shrink-0">
+                <span className="text-[11.5px] sm:text-[12.5px] font-extrabold text-[#1A1D2E] shrink-0">
                   {item.count}
                 </span>
               </div>
@@ -435,7 +435,7 @@ const InteractiveWeeklyBarChart = () => {
   return (
     <div
       onMouseLeave={() => setHoveredDayIndex(null)}
-      className="w-full min-h-[260px] sm:h-[270px] rounded-[20px] sm:rounded-[24px] bg-white p-4 sm:p-6 text-[#1A1D2E] shadow-sm flex flex-col justify-between border border-transparent hover:border-[#E2E6F2] transition-colors"
+      className="w-full h-full min-h-[260px] sm:min-h-[270px] rounded-[20px] sm:rounded-[24px] bg-white p-4 sm:p-5 text-[#1A1D2E] shadow-sm flex flex-col justify-between border border-transparent hover:border-[#E2E6F2] transition-colors"
     >
       <div className="flex items-center justify-between h-5">
         <span className="text-[11px] sm:text-[12px] font-extrabold text-[#5B6078] tracking-wider uppercase block">

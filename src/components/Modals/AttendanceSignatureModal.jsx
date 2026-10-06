@@ -79,7 +79,8 @@ export default function AttendanceSignatureModal({
           ctx.lineCap = "round";
           ctx.lineJoin = "round";
           ctx.lineWidth = 2.5;
-          ctx.strokeStyle = "#1E293B";
+          const isDark = document.documentElement.classList.contains("dark");
+          ctx.strokeStyle = isDark ? "#FFFFFF" : "#1E293B";
         }
         clearCanvas();
       }, 50);
@@ -184,8 +185,8 @@ export default function AttendanceSignatureModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150 font-['Manrope',sans-serif]">
-      <div className="bg-white dark:bg-[#12161F] rounded-3xl shadow-2xl border border-slate-200/90 dark:border-white/10 w-full max-w-[500px] p-6 space-y-4.5 animate-in zoom-in-95 duration-150 relative">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150 font-['Manrope',sans-serif]">
+      <div className="bg-white dark:bg-[#161C2E] rounded-3xl shadow-2xl border border-slate-200/90 dark:border-[#2B3553] w-full max-w-[500px] p-6 space-y-4.5 animate-in zoom-in-95 duration-150 relative">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
@@ -194,18 +195,18 @@ export default function AttendanceSignatureModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 dark:hover:bg-[#232E47] text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
           >
             <FaXmark size={15} />
           </button>
         </div>
 
         {/* Meeting Information Box */}
-        <div className="bg-[#F8FAFC] dark:bg-[#181C24] p-3.5 sm:p-4 rounded-2xl border border-slate-200/70 dark:border-white/5 space-y-1.5">
+        <div className="bg-[#F8FAFC] dark:bg-[#121624] p-3.5 sm:p-4 rounded-2xl border border-slate-200/70 dark:border-[#2B3553] space-y-1.5">
           <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
             {meetingTitle}
           </h4>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-[#94A3B8]">
             <span>
               Sana:{" "}
               <strong className="text-slate-700 dark:text-slate-200 font-semibold">
@@ -233,21 +234,21 @@ export default function AttendanceSignatureModal({
             Imzo *
           </label>
           <div
-            className={`relative w-full h-44 rounded-2xl bg-white overflow-hidden transition-all select-none touch-none ${
+            className={`relative w-full h-44 rounded-2xl bg-white dark:bg-[#121624] overflow-hidden transition-all select-none touch-none ${
               hasSignature
-                ? "border-2 border-[#3B59BA] shadow-xs"
-                : "border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-slate-400"
+                ? "border-2 border-[#3858C7] shadow-xs"
+                : "border-2 border-dashed border-slate-300 dark:border-[#2B3553] hover:border-slate-400"
             }`}
           >
             {/* Placeholder before user starts drawing */}
             {!hasSignature && (
-              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center text-slate-400 p-4">
-                <HugeiconsIcon icon={Edit02Icon} size={22} className="text-slate-400 mb-1" />
-                <span className="text-xs sm:text-sm font-normal text-slate-400 text-center">
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center text-slate-400 dark:text-[#64748B] p-4">
+                <HugeiconsIcon icon={Edit02Icon} size={22} className="text-slate-400 dark:text-[#64748B] mb-1" />
+                <span className="text-xs sm:text-sm font-normal text-slate-400 dark:text-[#64748B] text-center">
                   Sichqoncha bilan shu yerga imzo chizing
                 </span>
-                <div className="w-48 border-b border-slate-200 mt-4 relative flex items-center justify-start">
-                  <span className="text-[11px] text-slate-300 absolute -top-2 left-0">✕</span>
+                <div className="w-48 border-b border-slate-200 dark:border-[#2B3553] mt-4 relative flex items-center justify-start">
+                  <span className="text-[11px] text-slate-300 dark:text-[#475569] absolute -top-2 left-0">✕</span>
                 </div>
               </div>
             )}
@@ -267,14 +268,14 @@ export default function AttendanceSignatureModal({
 
           {/* Sub-label and Clear Button */}
           <div className="flex items-center justify-between text-xs pt-0.5 px-0.5">
-            <span className="text-[11px] text-slate-400">
+            <span className="text-[11px] text-slate-400 dark:text-[#64748B]">
               Imzo rasm sifatida saqlanadi
             </span>
             {hasSignature && (
               <button
                 type="button"
                 onClick={clearCanvas}
-                className="text-xs font-semibold text-slate-500 hover:text-red-500 cursor-pointer transition-colors"
+                className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] hover:text-red-500 cursor-pointer transition-colors"
               >
                 Tozalash
               </button>
@@ -283,7 +284,7 @@ export default function AttendanceSignatureModal({
         </div>
 
         {/* Warning Notice Box */}
-        <div className="p-3 sm:p-3.5 rounded-xl bg-[#FFFBEB] dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/30 text-amber-800 dark:text-amber-200 text-xs font-medium leading-relaxed">
+        <div className="p-3 sm:p-3.5 rounded-xl bg-[#FFFBEB] dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 text-amber-800 dark:text-amber-200 text-xs font-medium leading-relaxed">
           Imzo qo'yilmasa, yig'ilishdagi qatnashishingiz tasdiqlanmagan hisoblanadi.
         </div>
 
@@ -292,7 +293,7 @@ export default function AttendanceSignatureModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-[#F0F3F7] dark:bg-[#1E2430] hover:bg-slate-200 dark:hover:bg-[#283040] text-slate-700 dark:text-slate-200 font-semibold text-xs sm:text-sm cursor-pointer transition-all active:scale-95"
+            className="px-5 py-2.5 rounded-xl bg-[#F0F3F7] dark:bg-[#1C2438] hover:bg-slate-200 dark:hover:bg-[#232E47] text-slate-700 dark:text-slate-200 font-semibold text-xs sm:text-sm cursor-pointer transition-all active:scale-95"
           >
             Keyinroq
           </button>
@@ -300,7 +301,7 @@ export default function AttendanceSignatureModal({
             type="button"
             onClick={handleSubmit}
             disabled={!hasSignature || isSubmitting}
-            className={`px-5 py-2.5 rounded-xl bg-[#3B59BA] hover:bg-[#324D9E] text-white font-semibold text-xs sm:text-sm flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm ${
+            className={`px-5 py-2.5 rounded-xl bg-[#3858C7] hover:bg-[#2F4BB8] text-white font-semibold text-xs sm:text-sm flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm ${
               !hasSignature || isSubmitting ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >

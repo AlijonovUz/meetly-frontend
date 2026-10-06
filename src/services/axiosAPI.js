@@ -77,6 +77,11 @@ axiosAPI.interceptors.response.use(
             window.location.pathname !== "/leanding" &&
             window.location.pathname !== "/auth/callback"
           ) {
+            const currentPath = window.location.pathname + window.location.search;
+            if (currentPath && currentPath !== "/" && currentPath !== "/leanding") {
+              sessionStorage.setItem("redirect_after_login", currentPath);
+              localStorage.setItem("redirect_after_login", currentPath);
+            }
             window.location.href = "/leanding";
           }
           return Promise.reject(refreshErr);
@@ -90,6 +95,11 @@ axiosAPI.interceptors.response.use(
           window.location.pathname !== "/leanding" &&
           window.location.pathname !== "/auth/callback"
         ) {
+          const currentPath = window.location.pathname + window.location.search;
+          if (currentPath && currentPath !== "/" && currentPath !== "/leanding") {
+            sessionStorage.setItem("redirect_after_login", currentPath);
+            localStorage.setItem("redirect_after_login", currentPath);
+          }
           window.location.href = "/leanding";
         }
       }

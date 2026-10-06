@@ -419,7 +419,7 @@ export default function ParticipantsDrawer({
 
       {/* Confirmation Modal: Ishtirokchini chiqarasizmi? (Screenshot 2) */}
       {removeTargetParticipant && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150 font-['Manrope',sans-serif]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150 font-['Manrope',sans-serif]">
           <div className="bg-white dark:bg-[#12161F] rounded-3xl shadow-2xl border border-slate-200/80 dark:border-white/10 w-full max-w-[440px] p-6 space-y-4 animate-in zoom-in-95 duration-150 relative">
             {/* Top Red Icon (User cross) */}
             <div className="w-11 h-11 rounded-2xl bg-red-50 dark:bg-red-950/40 text-[#DC2626] flex items-center justify-center">

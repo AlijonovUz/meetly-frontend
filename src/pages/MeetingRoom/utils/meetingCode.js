@@ -58,9 +58,13 @@ export function getFullMeetingUrl(id, uid, code) {
  * Strips /api suffix from VITE_BASE_URL so media files are loaded from host root
  */
 export function formatAvatarUrl(url) {
-  if (!url || typeof url !== 'string') return ''
+  if (!url) return ''
+  if (typeof url === 'object') {
+    url = url.url || url.file || url.path || url.avatar || ''
+  }
+  if (typeof url !== 'string') return ''
   const trimmed = url.trim()
-  if (!trimmed) return ''
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return ''
   if (
     trimmed.startsWith('http://') ||
     trimmed.startsWith('https://') ||
@@ -77,14 +81,14 @@ export function formatAvatarUrl(url) {
 
 export function getAvatarGradient(name = '') {
   const gradients = [
-    'bg-[#1a73e8]',
-    'bg-[#1e8e3e]',
-    'bg-[#9334e6]',
-    'bg-[#007b83]',
-    'bg-[#e37400]',
-    'bg-[#d93025]',
-    'bg-[#d01884]',
-    'bg-[#3949ab]',
+    'bg-gradient-to-br from-[#3B82F6] to-[#1D4ED8]',
+    'bg-gradient-to-br from-[#10B981] to-[#059669]',
+    'bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9]',
+    'bg-gradient-to-br from-[#F59E0B] to-[#D97706]',
+    'bg-gradient-to-br from-[#06B6D4] to-[#0891B2]',
+    'bg-gradient-to-br from-[#EC4899] to-[#DB2777]',
+    'bg-gradient-to-br from-[#6366F1] to-[#4338CA]',
+    'bg-gradient-to-br from-[#14B8A6] to-[#0F766E]',
   ]
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)

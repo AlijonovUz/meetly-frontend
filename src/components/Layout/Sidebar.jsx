@@ -20,17 +20,18 @@ import { mockUserProfile } from "../../data/mockData";
 import { IoMoon } from "react-icons/io5";
 import { LogOut, ChevronDown } from "lucide-react";
 import { logout, getCurrentUser } from "../../services/auth";
+import { useTheme } from "../../context/ThemeContext";
 
 const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isDark, toggleTheme } = useTheme();
   const reduxUser = useSelector((state) => state.references?.currentUser);
   const currentUser = reduxUser || getCurrentUser();
   const isStaff = Boolean(
     currentUser?.is_staff || currentUser?.is_superuser || currentUser?.role === "admin"
   );
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(
     location.pathname.startsWith("/reports") || true
   );
@@ -114,7 +115,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   return (
     <aside
       onClick={handleSidebarClick}
-      className={`h-screen bg-[#3858C7] text-white flex flex-col justify-between transition-all duration-300 ease-in-out select-none flex-shrink-0 relative ${sidebarCollapsed ? "w-[76px] cursor-pointer" : "w-[260px]"
+      className={`h-screen bg-[#3858C7] dark:bg-[#2B3553] dark:border-r dark:border-[#21262D] text-white flex flex-col justify-between transition-all duration-300 ease-in-out select-none flex-shrink-0 relative ${sidebarCollapsed ? "w-[76px] cursor-pointer" : "w-[260px]"
         }`}
       title={sidebarCollapsed ? "Yon panelni ochish uchun bosing" : undefined}
     >
@@ -131,7 +132,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           className={`h-[60px] flex items-center px-4 flex-shrink-0 ${sidebarCollapsed ? "justify-center" : "justify-between"
             }`}
         >
-          <div className="flex items-center gap-3 overflow-hidden">
+          <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={() => navigate("/")}>
             <img src={sidebarCollapsed ? "/logo2.svg" : "/logo.svg"} alt="logo" className="pointer-events-none object-contain" />
           </div>
 
@@ -161,8 +162,8 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 end={item.end}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 group ${isActive
-                    ? "bg-[#2844A8] text-white font-bold shadow-2xs"
-                    : "text-white/80 hover:bg-white/10 hover:text-white"
+                    ? "bg-[#2844A8] dark:bg-[#283D91] text-white font-bold shadow-2xs"
+                    : "text-white/80 hover:bg-white/10 dark:hover:bg-white/5 hover:text-white"
                   } ${sidebarCollapsed ? "justify-center px-0" : ""}`
                 }
                 title={sidebarCollapsed ? item.label : undefined}
@@ -198,7 +199,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 cursor-pointer ${location.pathname.startsWith("/reports")
                   ? "text-white font-bold"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
+                  : "text-white/80 hover:bg-white/10 dark:hover:bg-white/5 hover:text-white"
                   } ${sidebarCollapsed ? "justify-center px-0" : ""}`}
                 title={sidebarCollapsed ? "Hisobotlar" : undefined}
               >
@@ -237,7 +238,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                         key={sub.to}
                         to={sub.to}
                         className={`block px-4 py-2.5 rounded-xl text-[13px] transition-colors ${isSubActive
-                          ? "bg-[#2844A8] text-white font-medium"
+                          ? "bg-[#2844A8] dark:bg-[#283D91] text-white font-medium"
                           : "text-white/80 hover:text-white hover:bg-white/5"
                           }`}
                       >
@@ -253,7 +254,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
       </div>
 
       {/* Bottom Area: Secondary Nav & Profile */}
-      <div className="p-3 border-t border-white/15 space-y-2 flex-shrink-0 relative" ref={profileMenuRef}>
+      <div className="p-3 border-t border-white/15 dark:border-white/10 space-y-2 flex-shrink-0 relative" ref={profileMenuRef}>
         {/* Bottom Nav Items (Logs, Settings) */}
         <nav className="space-y-1">
           {bottomNavItems.map((item) => (
@@ -262,8 +263,8 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
               to={item.to}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 group ${isActive
-                  ? "bg-[#2844A8] text-white font-bold shadow-2xs"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
+                  ? "bg-[#2844A8] dark:bg-[#283D91] text-white font-bold shadow-2xs"
+                  : "text-white/80 hover:bg-white/10 dark:hover:bg-white/5 hover:text-white"
                 } ${sidebarCollapsed ? "justify-center px-0" : ""}`
               }
               title={sidebarCollapsed ? item.label : undefined}
@@ -287,7 +288,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
         </nav>
 
         {/* User Profile Card Button */}
-        <div className="pt-2 border-t border-white/15 relative">
+        <div className="pt-2 border-t border-white/15 dark:border-white/10 relative">
           {(() => {
             const displayName =
               [currentUser?.first_name, currentUser?.last_name, currentUser?.patronymic]
@@ -309,12 +310,12 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
               <button
                 type="button"
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all duration-200 cursor-pointer text-left ${profileMenuOpen ? "bg-[#2844A8]" : "hover:bg-white/10"
+                className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all duration-200 cursor-pointer text-left ${profileMenuOpen ? "bg-[#2844A8] dark:bg-[#1C2438]" : "hover:bg-white/10 dark:hover:bg-white/5"
                   } ${sidebarCollapsed ? "justify-center p-1" : ""}`}
                 title={`${displayName} (${displayRole})`}
               >
                 {/* Avatar */}
-                <div className="w-9 h-9 rounded-xl bg-white/20 text-white font-bold flex items-center justify-center text-xs shadow-inner flex-shrink-0 backdrop-blur-xs">
+                <div className="w-9 h-9 rounded-xl bg-white/20 dark:bg-white/10 text-white font-bold flex items-center justify-center text-xs shadow-inner flex-shrink-0 backdrop-blur-xs">
                   {currentUser?.avatar ? (
                     <img
                       src={currentUser.avatar}
@@ -346,22 +347,22 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           {/* Profile Popover Menu (as in mockup image) */}
           {profileMenuOpen && (
             <div
-              className={`absolute z-50 bg-white text-[#1A1D2E] rounded-2xl shadow-2xl border border-[#E2E6F2] p-4 space-y-3 animate-in fade-in zoom-in-95 duration-150 left-full bottom-0 ml-5 w-64`}
+              className={`absolute z-50 bg-white dark:bg-[#161B22] text-[#1A1D2E] dark:text-white rounded-2xl shadow-2xl border border-[#E2E6F2] dark:border-[#2B3553] p-4 space-y-3 animate-in fade-in zoom-in-95 duration-150 left-full bottom-0 ml-5 w-64`}
             >
               {/* Row 1: Qorong'i mavzu (Dark mode toggle) */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5 text-[13.5px] font-medium text-[#1A1D2E]">
-                  <IoMoon size={18} className="text-[#1A1D2E]" />
+                <div className="flex items-center gap-2.5 text-[13.5px] font-medium text-[#1A1D2E] dark:text-white">
+                  <IoMoon size={18} className="text-[#1A1D2E] dark:text-[#FFFFFF]" />
                   <span>Qorong'i mavzu</span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={darkMode}
-                    onChange={(e) => setDarkMode(e.target.checked)}
+                    checked={isDark}
+                    onChange={toggleTheme}
                     className="sr-only peer"
                   />
-                  <div className="w-10 h-5.5 bg-[#E2E6F2] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[18px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-transparent after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-[#3858C7]"></div>
+                  <div className="w-10 h-5.5 bg-[#E2E6F2] dark:bg-[#232E47] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[18px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-transparent after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-[#3858C7]"></div>
                 </label>
               </div>
 
@@ -372,18 +373,18 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                   setProfileMenuOpen(false);
                   navigate("/profile");
                 }}
-                className="w-full flex items-center justify-between py-1 text-[13.5px] font-medium text-[#1A1D2E] hover:text-[#3858C7] transition-colors cursor-pointer"
+                className="w-full flex items-center justify-between py-1 text-[13.5px] font-medium text-[#1A1D2E] dark:text-white hover:text-[#3858C7] dark:hover:text-[#7F95E6] transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
-                  <img src="/profielcard_icon.svg" alt="" />
+                  <img src={isDark ? "/profielcard_icon_dark.svg" : "/profielcard_icon.svg"} alt="" className="dark:brightness-200" />
                   <span>Shaxsiy kabinet</span>
                 </div>
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-[#8B90A5]" />
+                <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-[#8B90A5] dark:text-[#64748B]" />
               </button>
 
               {/* Divider */}
               <div
-                className="border-t border-[#F1F3F9] pt-2 flex justify-end cursor-pointer"
+                className="border-t border-[#F1F3F9] dark:border-[#232E47] pt-2 flex justify-end cursor-pointer"
                 onClick={() => {
                   setProfileMenuOpen(false);
                   logout();

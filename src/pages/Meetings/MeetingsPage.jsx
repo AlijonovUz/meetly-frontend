@@ -6,6 +6,7 @@ import {
   Search01Icon,
   FilterVerticalIcon,
   Cancel01Icon,
+  ArrowDown01Icon,
 } from "@hugeicons/core-free-icons";
 import { CustomSelect, DatePicker } from "../../components/UI";
 import { Check, Loader2 } from "lucide-react";
@@ -257,33 +258,33 @@ const MeetingsPage = () => {
   // Status badge styling
   const renderStatusBadge = (status) => {
     const st = (status || "").toLowerCase();
-    if (st === "completed" || st === "o'tkazilgan") {
+    if (st === "completed" || st === "o'tkazilgan" || st === "oʻtkazilgan") {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#4AC99B]"></span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] bg-[#F1F3F9] dark:bg-[#1C2438] border border-transparent dark:border-[#2B3553]/60">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
           <span>O'tkazilgan</span>
         </span>
       );
     }
     if (st === "ongoing" || st === "active" || st === "joriy") {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#D97706]"></span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] bg-[#F1F3F9] dark:bg-[#1C2438] border border-transparent dark:border-[#2B3553]/60">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
           <span>Joriy</span>
         </span>
       );
     }
     if (st === "cancelled" || st === "bekor qilingan") {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] bg-[#F1F3F9] dark:bg-[#1C2438] border border-transparent dark:border-[#2B3553]/60">
           <span className="w-1.5 h-1.5 rounded-full bg-[#94A3B8]"></span>
           <span>Bekor qilingan</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#DD4C1E]"></span>
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] bg-[#F1F3F9] dark:bg-[#1C2438] border border-transparent dark:border-[#2B3553]/60">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6]"></span>
         <span>Rejalashtirilgan</span>
       </span>
     );
@@ -293,48 +294,68 @@ const MeetingsPage = () => {
     <div className="p-5 py-4.5 space-y-4 font-['Manrope',sans-serif]">
       {/* Top Filter and Actions Row */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        {/* Left Side: Tabs + Search + Filter Button */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Status Tabs Pill */}
-          <div className="inline-flex items-center p-1 bg-[#F1F3F9] rounded-xl gap-1 select-none">
-            {[
-              { id: "all", label: "Barchasi", count: counts.all },
-              { id: "ongoing", label: "Joriy", count: counts.ongoing, isRed: true },
-              { id: "scheduled", label: "Rejalashtirilgan", count: counts.scheduled },
-              { id: "completed", label: "O’tkazilgan", count: counts.completed },
-            ].map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${isActive
-                      ? "bg-white text-[#1A1D2E] shadow-2xs font-semibold"
-                      : "text-[#5B6078] hover:text-[#1A1D2E]"
+        {/* Left Side: Status Tabs Pill */}
+        <div className="inline-flex items-center p-1 bg-[#F1F3F9] dark:bg-[#121624] border border-transparent dark:border-[#2B3553] rounded-xl gap-1 select-none">
+          {[
+            { id: "all", label: "Barchasi", count: counts.all },
+            { id: "ongoing", label: "Joriy", count: counts.ongoing, isRed: true },
+            { id: "scheduled", label: "Rejalashtirilgan", count: counts.scheduled },
+            { id: "completed", label: "O’tkazilgan", count: counts.completed },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${isActive
+                    ? "bg-white dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white shadow-2xs font-semibold"
+                    : "text-[#5B6078] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white"
+                  }`}
+              >
+                <span className="leading-tight">{tab.label}</span>
+                <span
+                  className={`min-w-[20px] h-[18px] px-1.5 inline-flex items-center justify-center rounded-full text-[11px] font-medium leading-none transition-colors ${tab.isRed && !isActive
+                    ? "bg-[#F8D7DA]! dark:bg-[#EF4444]/20! text-[#DC2626] dark:text-[#F87171]"
+                      : tab.isRed
+                        ? "bg-[#EF4444] text-white font-bold"
+                        : isActive
+                          ? "bg-[#F1F3F9] dark:bg-[#121624] text-[#1A1D2E] dark:text-white"
+                          : "bg-white dark:bg-[#1C2438] text-[#8B90A5] dark:text-[#94A3B8]"
                     }`}
                 >
-                  <span className="leading-tight">{tab.label}</span>
-                  <span
-                    className={`min-w-[20px] h-[18px] px-1.5 inline-flex items-center justify-center rounded-full text-[11px] font-medium leading-none transition-colors ${tab.isRed && !isActive
-                      ? "bg-[#F8D7DA]! text-[#DC2626]"
-                        : tab.isRed
-                          ? "bg-[#EF4444] text-white font-bold"
-                          : isActive
-                            ? "bg-[#F1F3F9] text-[#1A1D2E]"
-                            : "bg-white text-[#8B90A5]"
-                      }`}
-                  >
-                    {tab.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Side: Filter Button (First) then Search Input (Second) */}
+        <div className="flex items-center gap-3 ml-auto">
+          {/* Filter Modal Trigger Button */}
+          <button
+            type="button"
+            onClick={() => setFilterModalOpen(true)}
+            className={`flex items-center gap-2 px-3.5 h-9 rounded-xl border text-[13px] font-semibold transition-all cursor-pointer ${activeFilterCount > 0
+                ? "bg-[#EEF2FF] dark:bg-[#3858C7]/20 border-[#4763E4]/30 dark:border-[#3858C7] text-[#3858C7] dark:text-[#7F95E6]"
+                : "bg-[#F1F3F9] dark:bg-[#1C2438] border-[#E2E6F2] dark:border-[#2B3553] text-[#5B6078] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white hover:bg-[#E8ECF6] dark:hover:bg-[#232E47]"
+              }`}
+          >
+            <HugeiconsIcon icon={FilterVerticalIcon} size={16} />
+            <span>
+              Filtrlash{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+            </span>
+            <HugeiconsIcon
+              icon={ArrowDown01Icon}
+              size={14}
+              className={`transition-transform duration-200 text-[#8B90A5] dark:text-[#94A3B8] ${filterModalOpen ? "rotate-180" : ""}`}
+            />
+          </button>
 
           {/* Search Input */}
           <div className="relative min-w-[240px] sm:min-w-[280px]">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8B90A5]">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8B90A5] dark:text-[#64748B]">
               <HugeiconsIcon icon={Search01Icon} size={18} />
             </div>
             <input
@@ -342,34 +363,19 @@ const MeetingsPage = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Nomi bo'yicha izlash"
-              className="w-full bg-[#F8F9FC] border border-[#E2E6F2] rounded-xl pl-10 pr-4 h-9 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:bg-white focus:ring-2 focus:ring-[#4763E4]/10 transition-all shadow-2xs"
+              className="w-full bg-[#F8F9FC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl pl-10 pr-4 h-9 text-[13.5px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none focus:border-[#3858C7] focus:bg-white dark:focus:bg-[#121624] focus:ring-2 focus:ring-[#3858C7]/10 transition-all shadow-2xs"
             />
           </div>
-
-          {/* Filter Modal Trigger Button */}
-          <button
-            type="button"
-            onClick={() => setFilterModalOpen(true)}
-            className={`flex items-center gap-2 px-3.5 h-9 rounded-xl border text-[13px] font-semibold transition-all cursor-pointer ${activeFilterCount > 0
-                ? "bg-[#EEF2FF] border-[#4763E4]/30 text-[#4763E4]"
-                : "bg-[#F1F3F9] border-[#E2E6F2] text-[#5B6078] hover:text-[#1A1D2E] hover:bg-[#E8ECF6]"
-              }`}
-          >
-            <HugeiconsIcon icon={FilterVerticalIcon} size={16} />
-            <span>
-              Filtrlash{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
-            </span>
-          </button>
         </div>
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-center justify-between">
+        <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-300 text-sm rounded-xl flex items-center justify-between">
           <span>{error}</span>
           <button
             type="button"
             onClick={fetchMeetingsData}
-            className="text-xs font-bold underline cursor-pointer hover:text-red-900"
+            className="text-xs font-bold underline cursor-pointer hover:text-red-900 dark:hover:text-red-200"
           >
             Qayta urinish
           </button>
@@ -379,8 +385,8 @@ const MeetingsPage = () => {
       {/* Meetings Table */}
       <div className="overflow-auto h-[calc(100vh-160px)]">
         <table className="w-full text-left border-collapse table-fixed">
-          <thead className="sticky top-0 z-10 bg-[#F8F9FC]">
-            <tr className="border-b border-[#E2E6F2] bg-[#F8F9FC] text-[#8B90A5] text-[13px] font-medium">
+          <thead className="sticky top-0 z-10">
+            <tr className="border-b border-[#E2E6F2] dark:border-[#2B3553] text-[#8B90A5] dark:text-[#94A3B8] text-[13px] font-medium">
               <th className="py-3 px-4 font-normal w-[52px] text-center">№</th>
               <th className="py-3 px-4 font-normal w-[26%]">Nomi</th>
               <th className="py-3 px-4 font-normal w-[18%]">
@@ -395,12 +401,12 @@ const MeetingsPage = () => {
               <th className="py-3 px-4 font-normal w-[16%] text-right pr-6">Holati</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E2E6F2]/60 text-[13.5px]">
+          <tbody className="divide-y divide-[#E2E6F2]/60 dark:divide-[#2B3553]/60 text-[13.5px]">
             {loading ? (
               <tr>
-                <td colSpan={7} className="py-20 text-center text-[#8B90A5]">
+                <td colSpan={7} className="py-20 text-center text-[#8B90A5] dark:text-[#64748B]">
                   <div className="flex flex-col items-center justify-center gap-2">
-                    <Loader2 className="w-6 h-6 text-[#4763E4] animate-spin" />
+                    <Loader2 className="w-6 h-6 text-[#3858C7] animate-spin" />
                     <span>Yig'ilishlar yuklanmoqda...</span>
                   </div>
                 </td>
@@ -426,37 +432,37 @@ const MeetingsPage = () => {
                   <tr
                     key={meeting.id}
                     onClick={() => navigate(`/meetings/${meeting.id}`)}
-                    className="hover:bg-[#F8F9FC] transition-colors group cursor-pointer"
+                    className="hover:bg-[#F8F9FC] dark:hover:bg-[#161C2E] transition-colors group cursor-pointer"
                   >
                     {/* Index */}
-                    <td className="py-3.5 px-4 text-center text-[#8B90A5] font-medium text-[13px]">
+                    <td className="py-3.5 px-4 text-center text-[#8B90A5] dark:text-[#64748B] font-medium text-[13px]">
                       {index + 1}
                     </td>
 
                     {/* Name */}
                     <td className="py-3.5 px-4 truncate">
-                      <span className="font-semibold text-[#1A1D2E] group-hover:text-[#4763E4] transition-colors line-clamp-1">
+                      <span className="font-semibold text-[#1A1D2E] dark:text-white group-hover:text-[#3858C7] dark:group-hover:text-[#7F95E6] transition-colors line-clamp-1">
                         {title}
                       </span>
                     </td>
 
                     {/* Organizer */}
-                    <td className="py-3.5 px-4 text-[#1A1D2E] truncate">
+                    <td className="py-3.5 px-4 text-[#1A1D2E] dark:text-slate-300 truncate">
                       {orgName}
                     </td>
 
                     {/* Created Date */}
-                    <td className="py-3.5 px-4 text-[#1A1D2E] whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-[#1A1D2E] dark:text-slate-300 whitespace-nowrap">
                       {createdAt}
                     </td>
 
                     {/* Start Time */}
-                    <td className="py-3.5 px-4 text-[#1A1D2E] whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-[#1A1D2E] dark:text-slate-300 whitespace-nowrap">
                       {startTime}
                     </td>
 
                     {/* Duration */}
-                    <td className="py-3.5 px-4 text-[#1A1D2E] whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-[#1A1D2E] dark:text-slate-300 whitespace-nowrap">
                       {duration}
                     </td>
 
@@ -471,7 +477,7 @@ const MeetingsPage = () => {
               <tr>
                 <td
                   colSpan={7}
-                  className="py-16 text-center text-[#8B90A5] text-[13.5px]"
+                  className="py-16 text-center text-[#8B90A5] dark:text-[#64748B] text-[13.5px]"
                 >
                   Yig'ilishlar topilmadi
                 </td>
@@ -484,16 +490,16 @@ const MeetingsPage = () => {
       {/* ================= MODAL: FILTRLASH ================= */}
       {filterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-[600px] overflow-visible p-6 space-y-5 animate-in zoom-in-95 duration-150 relative">
+          <div className="bg-white dark:bg-[#161C2E] rounded-3xl shadow-2xl border border-[#E2E6F2] dark:border-[#2B3553] w-full max-w-[600px] overflow-visible p-6 space-y-5 animate-in zoom-in-95 duration-150 relative">
             {/* Header */}
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-[#1A1D2E] tracking-tight">
+              <h3 className="text-xl font-bold text-[#1A1D2E] dark:text-white tracking-tight">
                 Filtrlash
               </h3>
               <button
                 type="button"
                 onClick={() => setFilterModalOpen(false)}
-                className="p-1 rounded-lg text-[#8B90A5] hover:text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white hover:bg-[#F1F3F9] dark:hover:bg-[#232E47] transition-colors cursor-pointer"
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={20} />
               </button>
@@ -504,7 +510,7 @@ const MeetingsPage = () => {
               {/* Organizer (Only visible if user is_staff) */}
               {isStaff && (
                 <div className="relative z-30">
-                  <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+                  <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
                     Tashkilotchi
                   </label>
                   <CustomSelect
@@ -522,7 +528,7 @@ const MeetingsPage = () => {
 
               {/* Created Date Range */}
               <div>
-                <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+                <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
                   Yaratilgan sana
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -557,7 +563,7 @@ const MeetingsPage = () => {
 
               {/* Start Date Range */}
               <div>
-                <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+                <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
                   Boshlanish sanasi
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -592,20 +598,20 @@ const MeetingsPage = () => {
             </div>
 
             {/* Action Footer */}
-            <div className="pt-3 flex items-center justify-between gap-3 border-t border-[#E2E6F2]/60">
+            <div className="pt-3 flex items-center justify-between gap-3 border-t border-[#E2E6F2]/60 dark:border-[#2B3553]/60">
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="flex items-center gap-1.5 px-3.5 py-3 rounded-xl text-[13.5px] font-semibold text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-3 rounded-xl text-[13.5px] font-semibold text-[#1A1D2E] dark:text-white hover:bg-[#F1F3F9] dark:hover:bg-[#232E47] transition-colors cursor-pointer"
               >
-                <HugeiconsIcon icon={Cancel01Icon} size={16} className="text-[#1A1D2E]" />
+                <HugeiconsIcon icon={Cancel01Icon} size={16} className="text-[#1A1D2E] dark:text-white" />
                 <span>Tozalash</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleApplyFilters}
-                className="flex items-center gap-2 bg-[#3F57B3] hover:bg-[#344AA5] text-white text-[13.5px] font-semibold px-3.5 py-3 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+                className="flex items-center gap-2 bg-[#3858C7] hover:bg-[#2F4BB8] text-white text-[13.5px] font-semibold px-5 py-3 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
               >
                 <Check strokeWidth={2.5} size={18} />
                 <span>Qo'llash</span>

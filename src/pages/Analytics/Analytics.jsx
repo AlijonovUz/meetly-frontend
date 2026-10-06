@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Plus, Loader2 } from "lucide-react";
+import { Calendar, ChevronDown, X, Loader2 } from "lucide-react";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { getDashboardStats } from "../../services/reportsApi";
+import { DatePicker } from "../../components/UI";
 import dayjs from "dayjs";
 
 const PERIOD_OPTIONS = [
@@ -27,9 +28,38 @@ const Analytics = () => {
   const isStaff = Boolean(currentUser?.is_staff);
 
   const [selectedPeriod, setSelectedPeriod] = useState("30 kun");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [isCustomRangeActive, setIsCustomRangeActive] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const datePickerRef = useRef(null);
+  const todayStr = dayjs().format("YYYY-MM-DD");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
+
+  // Close datePicker on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target)) {
+        if (
+          e.target.closest &&
+          (e.target.closest("[data-radix-popper-content-wrapper]") ||
+            e.target.closest('[role="dialog"]'))
+        ) {
+          return;
+        }
+        setDatePickerOpen(false);
+      }
+    };
+    if (datePickerOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [datePickerOpen]);
 
   // Sana oraliqlarini hisoblash (start_date, end_date)
   const getDateRangeForPeriod = useCallback((periodLabel) => {
@@ -66,11 +96,19 @@ const Analytics = () => {
   }, []);
 
   // API orqali ma'lumotlarni yuklab olish
-  const fetchDashboard = useCallback(async (periodLabel) => {
+  const fetchDashboard = useCallback(async (periodLabel, customRange = null) => {
     try {
       setLoading(true);
       setError(null);
-      const { start_date, end_date } = getDateRangeForPeriod(periodLabel);
+      let start_date, end_date;
+      if (customRange?.start_date || customRange?.end_date) {
+        start_date = customRange.start_date;
+        end_date = customRange.end_date;
+      } else {
+        const range = getDateRangeForPeriod(periodLabel);
+        start_date = range.start_date;
+        end_date = range.end_date;
+      }
       const res = await getDashboardStats({ start_date, end_date });
       setDashboardData(res);
     } catch (err) {
@@ -83,7 +121,50 @@ const Analytics = () => {
 
   useEffect(() => {
     fetchDashboard(selectedPeriod);
-  }, [selectedPeriod, fetchDashboard]);
+  }, []);
+
+  const handleApplyCustomDate = () => {
+    if (!customStartDate && !customEndDate) return;
+    const today = dayjs().endOf("day");
+
+    let startObj = customStartDate ? dayjs(customStartDate).startOf("day") : dayjs(customEndDate).startOf("day");
+    let endObj = customEndDate ? dayjs(customEndDate).endOf("day") : dayjs(customStartDate).endOf("day");
+
+    if (startObj.isAfter(today)) startObj = today.startOf("day");
+    if (endObj.isAfter(today)) endObj = today;
+    if (endObj.isBefore(startObj)) endObj = startObj.endOf("day");
+
+    const customRange = {
+      start_date: startObj.toISOString(),
+      end_date: endObj.toISOString(),
+    };
+
+    const label = customStartDate && customEndDate && customStartDate !== customEndDate
+      ? `${dayjs(customStartDate).format("DD.MM.YYYY")} - ${dayjs(customEndDate).format("DD.MM.YYYY")}`
+      : `${dayjs(customStartDate || customEndDate).format("DD.MM.YYYY")}`;
+
+    setIsCustomRangeActive(true);
+    setSelectedPeriod(label);
+    fetchDashboard(label, customRange);
+    setDatePickerOpen(false);
+  };
+
+  const handleResetCustomDate = () => {
+    setCustomStartDate("");
+    setCustomEndDate("");
+    setIsCustomRangeActive(false);
+    setSelectedPeriod("30 kun");
+    fetchDashboard("30 kun", null);
+    setDatePickerOpen(false);
+  };
+
+  const handleSelectPresetPeriod = (label) => {
+    setIsCustomRangeActive(false);
+    setCustomStartDate("");
+    setCustomEndDate("");
+    setSelectedPeriod(label);
+    fetchDashboard(label, null);
+  };
 
   // Mini sparkline bar generator
   const renderMiniBars = (sparklineData = []) => {
@@ -94,7 +175,7 @@ const Analytics = () => {
             <div
               key={i}
               style={{ height: `${h}%` }}
-              className="w-1.5 rounded-full bg-[#E2E6F2]"
+              className="w-1.5 rounded-full bg-[#E2E6F2] dark:bg-[#232E47]"
             />
           ))}
         </div>
@@ -124,7 +205,7 @@ const Analytics = () => {
               title={tooltip}
               style={{ height: `${h}%` }}
               className={`w-1.5 rounded-full transition-all duration-300 ${
-                isHighlighted ? "bg-[#3858C7]" : "bg-[#B7C7F3]"
+                isHighlighted ? "bg-[#3858C7] dark:bg-[#4D6FE8]" : "bg-[#B7C7F3] dark:bg-[#232E47]"
               }`}
             />
           );
@@ -244,23 +325,23 @@ const Analytics = () => {
     const rawByStatus = statusObj?.by_status || (Array.isArray(statusObj) ? statusObj : []);
 
     const defaultItems = [
-      { id: "completed", key: "completed", label: "Oʻtkazilgan", count: 0, color: "#10B981" },
-      { id: "scheduled", key: "scheduled", label: "Rejalashtirilgan", count: 0, color: "#3858C7" },
-      { id: "ongoing", key: "ongoing", label: "Joriy", count: 0, color: "#F97316" },
-      { id: "cancelled", key: "cancelled", label: "Bekor qilingan", count: 0, color: "#98A2B3" },
+      { id: "completed", key: "completed", label: "Oʻtkazilgan", count: 0, color: "#26C281" },
+      { id: "scheduled", key: "scheduled", label: "Rejalashtirilgan", count: 0, color: "#4361EE" },
+      { id: "ongoing", key: "ongoing", label: "Joriy", count: 0, color: "#F59E0B" },
+      { id: "cancelled", key: "cancelled", label: "Bekor qilingan", count: 0, color: "#8D99AE" },
     ];
 
     const items = rawByStatus.length > 0 ? rawByStatus.map((st) => {
       const key = st.key || st.status || "other";
       const color =
         st.color ||
-        (key === "completed" || key === "attended" || key === "o'tkazilgan"
-          ? "#10B981"
+        (key === "completed" || key === "attended" || key === "qatnashdim" || key === "o'tkazilgan"
+          ? "#26C281"
           : key === "scheduled" || key === "rejalashtirilgan"
-          ? "#3858C7"
-          : key === "ongoing" || key === "late" || key === "joriy"
-          ? "#F97316"
-          : "#98A2B3");
+          ? "#4361EE"
+          : key === "ongoing" || key === "late" || key === "kechikdim" || key === "joriy"
+          ? "#F59E0B"
+          : "#8D99AE");
       const count = st.count ?? 0;
       const percentage = total > 0 ? Math.round((count / total) * 100) : (st.percentage ?? 0);
       return {
@@ -338,7 +419,7 @@ const Analytics = () => {
           org.user_name ||
           org.organizer ||
           "Noma'lum";
-        const count = org.count ?? org.meetings_count ?? 0;
+        const count = org.count ?? org.meeting_count ?? 0;
         const percentage = org.percentage ?? Math.round((count / maxCount) * 100);
         const color = colors[index % colors.length];
         return { name, count, percentage, color };
@@ -362,7 +443,7 @@ const Analytics = () => {
     const st = (status || "").toLowerCase();
     if (st === "completed" || st === "o'tkazilgan" || st === "oʻtkazilgan") {
       return (
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#10B981] bg-[#ECFDF5] px-2.5 py-1 rounded-full whitespace-nowrap">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#10B981] dark:text-[#34D399] bg-[#ECFDF5] dark:bg-[#10B981]/15 px-2.5 py-1 rounded-full whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
           {statusDisplay || "Oʻtkazilgan"}
         </span>
@@ -370,7 +451,7 @@ const Analytics = () => {
     }
     if (st === "ongoing" || st === "joriy") {
       return (
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#F97316] bg-[#FFF7ED] px-2.5 py-1 rounded-full whitespace-nowrap">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#F97316] dark:text-[#FB923C] bg-[#FFF7ED] dark:bg-[#F97316]/15 px-2.5 py-1 rounded-full whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
           {statusDisplay || "Joriy"}
         </span>
@@ -378,14 +459,14 @@ const Analytics = () => {
     }
     if (st === "scheduled" || st === "rejalashtirilgan") {
       return (
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#3858C7] bg-[#EEF2FB] px-2.5 py-1 rounded-full whitespace-nowrap">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#3858C7] dark:text-[#7F95E6] bg-[#EEF2FB] dark:bg-[#3858C7]/20 px-2.5 py-1 rounded-full whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full bg-[#3858C7]"></span>
           {statusDisplay || "Rejalashtirilgan"}
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#64748B] bg-[#F1F5F9] px-2.5 py-1 rounded-full whitespace-nowrap">
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8] bg-[#F1F5F9] dark:bg-[#1C2438] px-2.5 py-1 rounded-full whitespace-nowrap">
         <span className="w-1.5 h-1.5 rounded-full bg-[#94A3B8]"></span>
         {statusDisplay || "Bekor qilingan"}
       </span>
@@ -425,40 +506,40 @@ const Analytics = () => {
   }, [dashboardData, selectedPeriod, isStaff]);
 
   return (
-    <div className="p-4 sm:p-6 py-5 font-['Manrope',sans-serif] min-h-screen">
+    <div className="p-4 sm:p-6 py-5 font-['Manrope',sans-serif]">
       {/* Top Header Row */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div>
           {!isStaff && (
-            <div className="text-[12px] font-semibold text-[#8B90A5] mb-0.5">
+            <div className="text-[12px] font-semibold text-[#8B90A5] dark:text-[#94A3B8] mb-0.5">
               Dashboard
             </div>
           )}
-          <h1 className="text-[22px] md:text-[24px] font-bold text-[#1A1D2E] flex items-center gap-2.5">
+          <h1 className="text-[22px] md:text-[24px] font-bold text-[#1A1D2E] dark:text-white flex items-center gap-2.5">
             <span>{isStaff ? "Dashboard" : "Mening statistikam"}</span>
             {loading && (
               <Loader2 className="w-4 h-4 text-[#3858C7] animate-spin" />
             )}
           </h1>
-          <p className="text-[12.5px] text-[#8B90A5] mt-0.5">
+          <p className="text-[12.5px] text-[#8B90A5] dark:text-[#94A3B8] mt-0.5">
             {formattedSubtitle}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Segmented Period Tabs */}
-          <div className="flex items-center p-1 rounded-xl bg-[#F4F6FB] border border-[#E2E6F2]">
+          <div className="flex items-center p-1 rounded-xl bg-[#F4F6FB] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553]">
             {PERIOD_OPTIONS.map((p) => {
-              const isActive = selectedPeriod === p.label;
+              const isActive = !isCustomRangeActive && selectedPeriod === p.label;
               return (
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setSelectedPeriod(p.label)}
+                  onClick={() => handleSelectPresetPeriod(p.label)}
                   className={`px-3 sm:px-3.5 py-1.5 text-[12px] sm:text-[12.5px] font-semibold rounded-lg transition-all cursor-pointer shrink-0 ${
                     isActive
-                      ? "bg-white text-[#1A1D2E] shadow-sm font-extrabold"
-                      : "text-[#5E6480] hover:text-[#1A1D2E]"
+                      ? "bg-white dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white shadow-sm font-extrabold"
+                      : "text-[#5E6480] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white"
                   }`}
                 >
                   {p.label}
@@ -467,25 +548,109 @@ const Analytics = () => {
             })}
           </div>
 
-          {/* New Meeting Button */}
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("open-create-meeting-modal"))}
-            className="inline-flex items-center gap-2 bg-[#3858C7] hover:bg-[#2C48B0] active:scale-[0.98] text-white font-bold text-[13px] h-9 px-4 rounded-xl transition-all shadow-xs cursor-pointer shrink-0"
-          >
-            <Plus size={16} strokeWidth={3.5} />
-            <span className="hidden sm:inline">Yangi yigʻilish</span>
-          </button>
+          {/* Custom Date Range Filter Dropdown */}
+          <div className="relative" ref={datePickerRef}>
+            <button
+              type="button"
+              onClick={() => setDatePickerOpen((prev) => !prev)}
+              className={`inline-flex items-center gap-2 h-9 px-3.5 rounded-xl text-[12.5px] font-bold transition-all shadow-xs cursor-pointer shrink-0 border ${
+                isCustomRangeActive
+                  ? "bg-[#3858C7] text-white border-[#3858C7] shadow-sm"
+                  : "bg-white dark:bg-[#161C2E] border-[#E2E6F2] dark:border-[#2B3553] text-[#1A1D2E] dark:text-[#E2E8F0] hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438]"
+              }`}
+            >
+              <Calendar size={15} className={isCustomRangeActive ? "text-white" : "text-[#5E6480] dark:text-[#94A3B8]"} />
+              <span>{isCustomRangeActive ? selectedPeriod : "Sana bo'yicha"}</span>
+              <ChevronDown
+                size={14}
+                className={`transition-transform duration-200 ${datePickerOpen ? "rotate-180" : ""} ${
+                  isCustomRangeActive ? "text-white" : "text-[#5E6480] dark:text-[#94A3B8]"
+                }`}
+              />
+            </button>
+
+            {/* Date Range Popover */}
+            {datePickerOpen && (
+              <div className="absolute right-0 top-full mt-2 w-[310px] sm:w-[330px] p-4 rounded-2xl bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 font-['Manrope',sans-serif]">
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#F1F3F9] dark:border-[#1E263C]">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} className="text-[#3858C7] dark:text-[#4D6FE8]" />
+                    <span className="text-[13px] font-bold text-[#1A1D2E] dark:text-white">
+                      Sana bo'yicha filtrlash
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDatePickerOpen(false)}
+                    className="w-6 h-6 rounded-lg flex items-center justify-center text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] cursor-pointer"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#5B6078] dark:text-[#94A3B8] mb-1">
+                      Boshlanish sanasi
+                    </label>
+                    <DatePicker
+                      value={customStartDate}
+                      onChange={(d) => setCustomStartDate(d ? dayjs(d).format("YYYY-MM-DD") : "")}
+                      maxDate={customEndDate ? new Date(customEndDate) : new Date()}
+                      placeholder="KK.OO.YYYY"
+                      inputClassName="h-9 px-3 text-[12.5px] rounded-xl bg-[#F8FAFC] dark:bg-[#121624] border-[#E2E6F2] dark:border-[#2B3553]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#5B6078] dark:text-[#94A3B8] mb-1">
+                      Tugash sanasi
+                    </label>
+                    <DatePicker
+                      value={customEndDate}
+                      onChange={(d) => setCustomEndDate(d ? dayjs(d).format("YYYY-MM-DD") : "")}
+                      maxDate={new Date()}
+                      minDate={customStartDate ? new Date(customStartDate) : undefined}
+                      placeholder="KK.OO.YYYY"
+                      inputClassName="h-9 px-3 text-[12.5px] rounded-xl bg-[#F8FAFC] dark:bg-[#121624] border-[#E2E6F2] dark:border-[#2B3553]"
+                    />
+                  </div>
+
+                  <p className="text-[11px] text-[#8B90A5] dark:text-[#64748B]">
+                    * Faqat bugungacha bo'lgan sanalarni tanlash mumkin.
+                  </p>
+
+                  <div className="flex items-center gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleResetCustomDate}
+                      className="flex-1 h-8.5 rounded-xl text-[12px] font-bold bg-[#F1F3F9] dark:bg-[#1C2438] text-[#5B6078] dark:text-[#94A3B8] hover:bg-[#E2E6F2] dark:hover:bg-[#232E47] transition-all cursor-pointer"
+                    >
+                      Tozalash
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleApplyCustomDate}
+                      disabled={!customStartDate && !customEndDate}
+                      className="flex-1 h-8.5 rounded-xl text-[12px] font-bold bg-[#3858C7] hover:bg-[#2C48B0] disabled:opacity-50 disabled:cursor-not-allowed text-white transition-all shadow-xs cursor-pointer"
+                    >
+                      Qo'llash
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-center justify-between">
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-300 text-sm rounded-xl flex items-center justify-between">
           <span>{error}</span>
           <button
             type="button"
             onClick={() => fetchDashboard(selectedPeriod)}
-            className="text-xs font-bold underline cursor-pointer hover:text-red-900"
+            className="text-xs font-bold underline cursor-pointer hover:text-red-900 dark:hover:text-red-200"
           >
             Qayta urinish
           </button>
@@ -495,12 +660,12 @@ const Analytics = () => {
       {/* 4 KPI Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {/* Card 1: Foydalanuvchilar / Qatnashgan yig'ilishlarim */}
-        <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
+        <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
-            <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
+            <span className="text-[11px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
               {card1?.label || (isStaff ? "FOYDALANUVCHILAR" : "QATNASHGAN YIG'ILISHLARIM")}
             </span>
-            <div className="text-[26px] font-extrabold text-[#1A1D2E] my-1 tracking-tight">
+            <div className="text-[26px] font-extrabold text-[#1A1D2E] dark:text-white my-1 tracking-tight">
               {card1?.current !== undefined
                 ? Number(card1.current).toLocaleString("uz-UZ")
                 : card1?.count !== undefined
@@ -511,8 +676,8 @@ const Analytics = () => {
               <div
                 className={`inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg ${
                   card1.change_percentage >= 0
-                    ? "text-[#10B981] bg-[#ECFDF5]"
-                    : "text-[#EF4444] bg-[#FEF2F2]"
+                    ? "text-[#10B981] dark:text-[#34D399] bg-[#ECFDF5] dark:bg-[#10B981]/15"
+                    : "text-[#EF4444] dark:text-[#F87171] bg-[#FEF2F2] dark:bg-[#EF4444]/15"
                 }`}
               >
                 <span>{card1.change_percentage >= 0 ? "↑" : "↓"}</span>
@@ -522,7 +687,7 @@ const Analytics = () => {
                 </span>
               </div>
             ) : card1?.change_count !== undefined ? (
-              <div className="inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg text-[#10B981] bg-[#ECFDF5]">
+              <div className="inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg text-[#10B981] dark:text-[#34D399] bg-[#ECFDF5] dark:bg-[#10B981]/15">
                 <span>↑</span>
                 <span>+{card1.change_count} ta</span>
               </div>
@@ -532,12 +697,12 @@ const Analytics = () => {
         </div>
 
         {/* Card 2: Jami yig'ilishlar / Qatnashish foizim */}
-        <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
+        <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
-            <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
+            <span className="text-[11px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
               {card2?.label || (isStaff ? "JAMI YIG'ILISHLAR" : "QATNASHISH FOIZIM")}
             </span>
-            <div className="text-[26px] font-extrabold text-[#1A1D2E] my-1 tracking-tight">
+            <div className="text-[26px] font-extrabold text-[#1A1D2E] dark:text-white my-1 tracking-tight">
               {card2?.current !== undefined
                 ? isStaff
                   ? Number(card2.current).toLocaleString("uz-UZ")
@@ -548,8 +713,8 @@ const Analytics = () => {
               <div
                 className={`inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg ${
                   card2.change_percentage >= 0
-                    ? "text-[#10B981] bg-[#ECFDF5]"
-                    : "text-[#EF4444] bg-[#FEF2F2]"
+                    ? "text-[#10B981] dark:text-[#34D399] bg-[#ECFDF5] dark:bg-[#10B981]/15"
+                    : "text-[#EF4444] dark:text-[#F87171] bg-[#FEF2F2] dark:bg-[#EF4444]/15"
                 }`}
               >
                 <span>{card2.change_percentage >= 0 ? "↑" : "↓"}</span>
@@ -564,12 +729,12 @@ const Analytics = () => {
         </div>
 
         {/* Card 3: Joriy yig'ilishlar / Imzo kutilmoqda */}
-        <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
+        <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
-            <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
+            <span className="text-[11px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
               {card3?.label || (isStaff ? "JORIY YIGʻILISHLAR" : "IMZO KUTILMOQDA")}
             </span>
-            <div className="text-[26px] font-extrabold text-[#1A1D2E] my-1 tracking-tight">
+            <div className="text-[26px] font-extrabold text-[#1A1D2E] dark:text-white my-1 tracking-tight">
               {card3?.count !== undefined
                 ? Number(card3.count).toLocaleString("uz-UZ")
                 : card3?.current !== undefined
@@ -577,12 +742,12 @@ const Analytics = () => {
                 : "0"}
             </div>
             {isStaff ? (
-              <div className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-[#F97316] bg-[#FFF7ED] px-2 py-0.5 rounded-lg">
+              <div className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-[#F97316] dark:text-[#FB923C] bg-[#FFF7ED] dark:bg-[#F97316]/15 px-2 py-0.5 rounded-lg">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
                 <span>Hozir o'tmoqda</span>
               </div>
             ) : (
-              <div className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-2.5 py-0.5 rounded-lg">
+              <div className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-[#D97706] dark:text-[#FBBF24] bg-[#FFFBEB] dark:bg-[#F59E0B]/15 px-2.5 py-0.5 rounded-lg">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#D97706]"></span>
                 <span>Imzolash kerak</span>
               </div>
@@ -592,12 +757,12 @@ const Analytics = () => {
         </div>
 
         {/* Card 4: O'rtacha qatnashish / Sarflangan vaqt */}
-        <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
+        <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
-            <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
+            <span className="text-[11px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
               {card4?.label || (isStaff ? "O'RTACHA QATNASHISH" : "SARFLANGAN VAQT")}
             </span>
-            <div className="text-[26px] font-extrabold text-[#1A1D2E] my-1 tracking-tight">
+            <div className="text-[26px] font-extrabold text-[#1A1D2E] dark:text-white my-1 tracking-tight">
               {card4?.current !== undefined
                 ? isStaff
                   ? `${card4.current}%`
@@ -612,8 +777,8 @@ const Analytics = () => {
               <div
                 className={`inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg ${
                   card4.change_percentage >= 0
-                    ? "text-[#10B981] bg-[#ECFDF5]"
-                    : "text-[#EF4444] bg-[#FEF2F2]"
+                    ? "text-[#10B981] dark:text-[#34D399] bg-[#ECFDF5] dark:bg-[#10B981]/15"
+                    : "text-[#EF4444] dark:text-[#F87171] bg-[#FEF2F2] dark:bg-[#EF4444]/15"
                 }`}
               >
                 <span>{card4.change_percentage >= 0 ? "↑" : "↓"}</span>
@@ -623,7 +788,7 @@ const Analytics = () => {
                 </span>
               </div>
             ) : card4?.change != null ? (
-              <div className="inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg text-[#10B981] bg-[#ECFDF5]">
+              <div className="inline-flex items-center gap-1 text-[11.5px] font-bold px-2 py-0.5 rounded-lg text-[#10B981] dark:text-[#34D399] bg-[#ECFDF5] dark:bg-[#10B981]/15">
                 <span>↑</span>
                 <span>+{card4.change} soat</span>
               </div>
@@ -644,21 +809,21 @@ const Analytics = () => {
             setIsHoveringDynamics(false);
             setActiveWeekIndex(null);
           }}
-          className="lg:col-span-2 bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-4 sm:p-5 shadow-2xs hover-card-lift flex flex-col justify-between select-none relative group transition-all"
+          className="lg:col-span-2 bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-4 sm:p-5 shadow-2xs hover-card-lift flex flex-col justify-between select-none relative group transition-all"
         >
           {/* Header Info */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
             <div>
-              <span className="text-[11px] sm:text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase block">
+              <span className="text-[11px] sm:text-[11.5px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
                 {isStaff
                   ? `YIGʻILISHLAR DINAMIKASI, ${dynamicsWeeks.length} HAFTA`
                   : `MENING QATNASHISHIM, ${dynamicsWeeks.length} HAFTA`}
               </span>
               <div className="flex items-center gap-2.5 mt-1">
-                <span className="text-[24px] sm:text-[28px] font-['Unbounded',sans-serif] font-semibold text-[#1A1D2E] leading-none">
+                <span className="text-[24px] sm:text-[28px] font-['Unbounded',sans-serif] font-semibold text-[#1A1D2E] dark:text-white leading-none">
                   {dashboardData?.dynamics?.total ?? dynamicsWeeks.reduce((acc, curr) => acc + curr.count, 0)}
                 </span>
-                <span className="h-[22px] px-2 rounded-full bg-[#E8F7F0] text-[#16A34A] text-[11px] font-extrabold inline-flex items-center gap-1">
+                <span className="h-[22px] px-2 rounded-full bg-[#E8F7F0] dark:bg-[#10B981]/15 text-[#16A34A] dark:text-[#34D399] text-[11px] font-extrabold inline-flex items-center gap-1">
                   <span>↑</span>
                   <span>{activeDynamicsData.growth}</span>
                 </span>
@@ -666,7 +831,7 @@ const Analytics = () => {
             </div>
 
             {/* Dynamic Active Week Badge */}
-            <div className="h-[32px] px-3.5 rounded-xl bg-[#1A1D2E] text-white text-[11.5px] font-extrabold flex items-center gap-2 shadow-md transition-all">
+            <div className="h-[32px] px-3.5 rounded-xl bg-[#1A1D2E] dark:bg-[#1C2438] text-white text-[11.5px] font-extrabold flex items-center gap-2 shadow-md border dark:border-[#2B3553] transition-all">
               <span className={`w-2 h-2 rounded-full bg-[#38C98D] ${isHoveringDynamics ? "animate-ping" : ""}`}></span>
               <span>
                 {isHoveringDynamics
@@ -694,11 +859,11 @@ const Analytics = () => {
               </defs>
 
               {/* Grid Horizontal Lines */}
-              <line x1="10" y1="25" x2="586" y2="25" stroke="#F1F3F9" strokeWidth="1" />
-              <line x1="10" y1="65" x2="586" y2="65" stroke="#F1F3F9" strokeWidth="1" />
-              <line x1="10" y1="105" x2="586" y2="105" stroke="#F1F3F9" strokeWidth="1" />
-              <line x1="10" y1="145" x2="586" y2="145" stroke="#F1F3F9" strokeWidth="1" />
-              <line x1="10" y1="175" x2="586" y2="175" stroke="#E2E6F2" strokeWidth="1" />
+              <line x1="10" y1="25" x2="586" y2="25" stroke="currentColor" className="text-[#F1F3F9] dark:text-[#1E263C]" strokeWidth="1" />
+              <line x1="10" y1="65" x2="586" y2="65" stroke="currentColor" className="text-[#F1F3F9] dark:text-[#1E263C]" strokeWidth="1" />
+              <line x1="10" y1="105" x2="586" y2="105" stroke="currentColor" className="text-[#F1F3F9] dark:text-[#1E263C]" strokeWidth="1" />
+              <line x1="10" y1="145" x2="586" y2="145" stroke="currentColor" className="text-[#F1F3F9] dark:text-[#1E263C]" strokeWidth="1" />
+              <line x1="10" y1="175" x2="586" y2="175" stroke="currentColor" className="text-[#E2E6F2] dark:text-[#2B3553]" strokeWidth="1" />
 
               {/* Area Fill */}
               <path
@@ -714,7 +879,7 @@ const Analytics = () => {
                 stroke="#3858C7"
                 strokeWidth="3"
                 strokeLinecap="round"
-                className="transition-all duration-300"
+                className="transition-all duration-300 dark:stroke-[#4D6FE8]"
               />
 
               {/* Active Vertical Guideline (only when hovering) */}
@@ -728,7 +893,7 @@ const Analytics = () => {
                   strokeWidth="1.5"
                   strokeDasharray="3 3"
                   opacity="0.85"
-                  className="transition-all duration-150"
+                  className="transition-all duration-150 dark:stroke-[#4D6FE8]"
                 />
               )}
 
@@ -771,21 +936,21 @@ const Analytics = () => {
                   top: `${(activeDynamicsData.y / 200) * 100}%`,
                 }}
               >
-                <div className="bg-[#1A1D2E] text-white text-[10.5px] sm:text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-xl whitespace-nowrap border border-white/10 flex flex-col items-center">
+                <div className="bg-[#1A1D2E] dark:bg-[#1C2438] text-white text-[10.5px] sm:text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-xl whitespace-nowrap border border-white/10 dark:border-[#2B3553] flex flex-col items-center">
                   <span className="text-[#38C98D] text-[9.5px] sm:text-[10px] font-extrabold">
                     {activeDynamicsData.fullLabel} {activeDynamicsData.date ? `(${activeDynamicsData.date})` : ""}
                   </span>
                   <span className="text-white text-[11px] sm:text-[12px] font-black">
                     {activeDynamicsData.count} ta yigʻilish
                   </span>
-                  <div className="w-2 h-2 bg-[#1A1D2E] rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2 border-r border-b border-white/10"></div>
+                  <div className="w-2 h-2 bg-[#1A1D2E] dark:bg-[#1C2438] rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2 border-r border-b border-white/10 dark:border-[#2B3553]"></div>
                 </div>
               </div>
             )}
           </div>
 
           {/* X Axis Week Buttons Grid - 100% full width, no scrollbar */}
-          <div className="w-full grid grid-cols-12 gap-0.5 sm:gap-1 pt-2.5 border-t border-[#EEF1F7] text-[10px] sm:text-[11px] font-semibold text-[#8F95A8] select-none">
+          <div className="w-full grid grid-cols-12 gap-0.5 sm:gap-1 pt-2.5 border-t border-[#EEF1F7] dark:border-[#1E263C] text-[10px] sm:text-[11px] font-semibold text-[#8F95A8] dark:text-[#64748B] select-none">
             {dynamicsWeeks.map((d, idx) => {
               const isActive = idx === currentActiveWeekIndex;
               const isHighlight = isHoveringDynamics && isActive;
@@ -804,7 +969,7 @@ const Analytics = () => {
                   className={`w-full py-1 text-center rounded-md transition-all truncate cursor-pointer ${
                     isHighlight
                       ? "bg-[#3858C7] text-white font-extrabold shadow-xs"
-                      : "hover:text-[#1A1D2E] hover:bg-[#F1F3F9]"
+                      : "hover:text-[#1A1D2E] dark:hover:text-white hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438]"
                   }`}
                   title={`${d.fullLabel}: ${d.count} ta`}
                 >
@@ -819,10 +984,10 @@ const Analytics = () => {
         {/* Right: Status Donut Chart (1 col) */}
         <div
           onMouseLeave={() => setHoveredStatusIndex(null)}
-          className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-4 sm:p-5 shadow-2xs hover-card-lift flex flex-col justify-between transition-all"
+          className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-4 sm:p-5 shadow-2xs hover-card-lift flex flex-col justify-between transition-all"
         >
           <div className="flex items-center justify-between h-5 mb-2">
-            <span className="text-[11px] sm:text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase block">
+            <span className="text-[11px] sm:text-[11.5px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
               {isStaff ? "HOLAT BO'YICHA" : "MENING YIG'ILISHLARIM"}
             </span>
             <span
@@ -844,7 +1009,8 @@ const Analytics = () => {
                     cy="50"
                     r="36"
                     fill="none"
-                    stroke="#F1F3F9"
+                    stroke="currentColor"
+                    className="text-[#F1F3F9] dark:text-[#1E263C]"
                     strokeWidth="13"
                   />
                 )}
@@ -863,7 +1029,7 @@ const Analytics = () => {
                       strokeWidth="13"
                       strokeDasharray={item.dashArray}
                       strokeDashoffset={item.dashOffset}
-                      strokeLinecap="round"
+                      strokeLinecap="butt"
                       onMouseEnter={() => setHoveredStatusIndex(idx)}
                       className="transition-all duration-200 cursor-pointer"
                       opacity={hoveredStatusIndex !== null && !isHovered ? 0.4 : 1}
@@ -880,10 +1046,10 @@ const Analytics = () => {
                     r="36"
                     fill="none"
                     stroke={activeStatusItem.color}
-                    strokeWidth="16.5"
+                    strokeWidth="15"
                     strokeDasharray={activeStatusItem.dashArray}
                     strokeDashoffset={activeStatusItem.dashOffset}
-                    strokeLinecap="round"
+                    strokeLinecap="butt"
                     className="transition-all duration-150 cursor-pointer pointer-events-none drop-shadow-sm"
                   />
                 )}
@@ -891,7 +1057,7 @@ const Analytics = () => {
 
               {/* Centered Dynamic Total & Label */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
-                <span className="text-[22px] font-['Unbounded',sans-serif] font-bold text-[#1A1D2E] leading-none">
+                <span className="text-[22px] font-['Unbounded',sans-serif] font-bold text-[#1A1D2E] dark:text-white leading-none">
                   {activeStatusItem ? activeStatusItem.count : statusChartData.total.toLocaleString("uz-UZ")}
                 </span>
                 <span
@@ -905,7 +1071,7 @@ const Analytics = () => {
           </div>
 
           {/* Status Breakdown Legend with Hover Highlight */}
-          <div className="space-y-1.5 mt-2 pt-2.5 border-t border-[#F1F3F9]">
+          <div className="space-y-1.5 mt-2 pt-2.5 border-t border-[#F1F3F9] dark:border-[#1E263C]">
             {statusChartData.items.map((st, idx) => {
               const isHovered = hoveredStatusIndex === idx;
               return (
@@ -913,7 +1079,7 @@ const Analytics = () => {
                   key={st.key}
                   onMouseEnter={() => setHoveredStatusIndex(idx)}
                   className={`flex items-center justify-between py-1 px-2 rounded-xl transition-colors cursor-pointer ${
-                    isHovered ? "bg-[#F1F3F9]" : "hover:bg-[#F8FAFC]"
+                    isHovered ? "bg-[#F1F3F9] dark:bg-[#1C2438]" : "hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438]/50"
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0 pr-2">
@@ -923,13 +1089,13 @@ const Analytics = () => {
                         isHovered ? "scale-125" : ""
                       }`}
                     ></span>
-                    <span className={`text-[12.5px] truncate ${isHovered ? "font-bold text-[#1A1D2E]" : "font-medium text-[#5E6480]"}`}>
+                    <span className={`text-[12.5px] truncate ${isHovered ? "font-bold text-[#1A1D2E] dark:text-white" : "font-medium text-[#5E6480] dark:text-[#94A3B8]"}`}>
                       {st.label}
                     </span>
                   </div>
-                  <div className="font-semibold text-[#1A1D2E] text-[12.5px] shrink-0">
+                  <div className="font-semibold text-[#1A1D2E] dark:text-white text-[12.5px] shrink-0">
                     {st.count ?? 0}{" "}
-                    <span className="text-[#8B90A5] font-normal text-[11px] ml-1">
+                    <span className="text-[#8B90A5] dark:text-[#64748B] font-normal text-[11px] ml-1">
                       {st.percent}
                     </span>
                   </div>
@@ -943,15 +1109,15 @@ const Analytics = () => {
       {/* Bottom Section: 3 Columns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Col 1: Bugungi yig'ilishlar */}
-        <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 shadow-2xs hover-card-lift flex flex-col justify-between transition-all">
+        <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 shadow-2xs hover-card-lift flex flex-col justify-between transition-all">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
+            <span className="text-[11.5px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase">
               {isStaff ? "BUGUNGI YIG'ILISHLAR" : "BUGUNGI YIG'ILISHLARIM"}
             </span>
             {isStaff && (
               <Link
                 to="/meetings"
-                className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] hover:text-[#2844A8] transition-colors"
+                className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] dark:text-[#7F95E6] hover:text-[#2844A8] transition-colors"
               >
                 Barchasi <FaArrowRightLong size={12} />
               </Link>
@@ -960,7 +1126,7 @@ const Analytics = () => {
 
           <div className="space-y-2 flex-1">
             {todayMeetings.length === 0 ? (
-              <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5]">
+              <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5] dark:text-[#64748B]">
                 <p className="text-[13px] font-medium">
                   Bugun rejalashtirilgan yig'ilishlar yo'q
                 </p>
@@ -978,17 +1144,17 @@ const Analytics = () => {
                 return (
                   <div
                     key={m.id || idx}
-                    className="flex items-center justify-between p-2 rounded-xl hover:bg-[#F8FAFC] transition-colors"
+                    className="flex items-center justify-between p-2 rounded-xl hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438] transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0 pr-2">
-                      <span className="text-[12.5px] font-bold text-[#1A1D2E] min-w-[42px] shrink-0">
+                      <span className="text-[12.5px] font-bold text-[#1A1D2E] dark:text-white min-w-[42px] shrink-0">
                         {time}
                       </span>
                       <div className="min-w-0">
-                        <h4 className="text-[13px] font-bold text-[#1A1D2E] leading-tight truncate">
+                        <h4 className="text-[13px] font-bold text-[#1A1D2E] dark:text-white leading-tight truncate">
                           {title}
                         </h4>
-                        <p className="text-[11.5px] text-[#8B90A5] mt-0.5 truncate">
+                        <p className="text-[11.5px] text-[#8B90A5] dark:text-[#94A3B8] mt-0.5 truncate">
                           {organizer}
                         </p>
                       </div>
@@ -1004,14 +1170,14 @@ const Analytics = () => {
         {/* Col 2: Qatnashish, hafta kunlari */}
         <div
           onMouseLeave={() => setHoveredDayIndex(null)}
-          className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 px-6 shadow-2xs hover-card-lift flex flex-col justify-between transition-all"
+          className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 px-6 shadow-2xs hover-card-lift flex flex-col justify-between transition-all"
         >
           <div className="flex items-center justify-between h-5 mb-4">
-            <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase block">
+            <span className="text-[11.5px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
               {isStaff ? "QATNASHISH, HAFTA KUNLARI" : "QATNASHISHIM, HAFTA KUNLARI"}
             </span>
             <span
-              className={`text-[11.5px] font-extrabold text-[#3858C7] transition-opacity duration-150 ${
+              className={`text-[11.5px] font-extrabold text-[#3858C7] dark:text-[#7F95E6] transition-opacity duration-150 ${
                 activeWeekday ? "opacity-100" : "opacity-0"
               }`}
             >
@@ -1030,7 +1196,7 @@ const Analytics = () => {
                 >
                   <span
                     className={`text-[11px] font-bold transition-colors duration-150 ${
-                      isHovered ? "text-[#3858C7]" : "text-[#1A1D2E]"
+                      isHovered ? "text-[#3858C7] dark:text-[#7F95E6]" : "text-[#1A1D2E] dark:text-white"
                     }`}
                   >
                     {item.value}%
@@ -1042,7 +1208,7 @@ const Analytics = () => {
                           ? "bg-[#3858C7] shadow-md shadow-[#3858C7]/30"
                           : item.isPeak
                           ? "bg-[#3858C7]"
-                          : "bg-[#B7C7F3] group-hover:bg-[#A3B8EE]"
+                          : "bg-[#B7C7F3] dark:bg-[#232E47] group-hover:bg-[#A3B8EE] dark:group-hover:bg-[#2B3553]"
                       }`}
                       style={{
                         height: `${Math.max(item.value, item.value === 0 ? 6 : item.value)}%`,
@@ -1052,10 +1218,10 @@ const Analytics = () => {
                   <span
                     className={`text-[11px] transition-colors duration-150 ${
                       isHovered
-                        ? "font-extrabold text-[#3858C7]"
+                        ? "font-extrabold text-[#3858C7] dark:text-[#7F95E6]"
                         : item.isPeak
-                        ? "font-bold text-[#3858C7]"
-                        : "font-semibold text-[#8B90A5]"
+                        ? "font-bold text-[#3858C7] dark:text-[#7F95E6]"
+                        : "font-semibold text-[#8B90A5] dark:text-[#64748B]"
                     }`}
                   >
                     {item.day}
@@ -1068,14 +1234,14 @@ const Analytics = () => {
 
         {/* Col 3: Faol tashkilotchilar (Staff) / Imzolarim (User) */}
         {isStaff ? (
-          <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 shadow-2xs hover-card-lift flex flex-col justify-start transition-all">
+          <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 shadow-2xs hover-card-lift flex flex-col justify-start transition-all">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
+              <span className="text-[11.5px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase">
                 FAOL TASHKILOTCHILAR
               </span>
               <Link
                 to="/reports/organizers"
-                className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] hover:text-[#2844A8] transition-colors"
+                className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] dark:text-[#7F95E6] hover:text-[#2844A8] transition-colors"
               >
                 Barchasi <FaArrowRightLong size={12} />
               </Link>
@@ -1083,19 +1249,19 @@ const Analytics = () => {
 
             <div className="space-y-3.5 flex-1">
               {topOrganizers.length === 0 ? (
-                <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5]">
+                <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5] dark:text-[#64748B]">
                   <p className="text-[13px] font-medium">
                     Faol tashkilotchilar mavjud emas
                   </p>
                 </div>
               ) : (
                 topOrganizers.slice(0, 5).map((org, idx) => (
-                  <div key={idx} className="p-1.5 rounded-xl hover:bg-[#F8FAFC] transition-colors">
-                    <div className="flex items-center justify-between text-[12.5px] font-semibold text-[#1A1D2E] mb-1">
+                  <div key={idx} className="p-1.5 rounded-xl hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438] transition-colors">
+                    <div className="flex items-center justify-between text-[12.5px] font-semibold text-[#1A1D2E] dark:text-white mb-1">
                       <span className="truncate pr-2">{org.name}</span>
                       <span className="shrink-0 font-bold">{org.count} ta</span>
                     </div>
-                    <div className="w-full bg-[#F1F3F9] h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-[#F1F3F9] dark:bg-[#121624] h-2 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{
@@ -1110,14 +1276,14 @@ const Analytics = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 shadow-2xs hover-card-lift flex flex-col justify-between transition-all">
+          <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 shadow-2xs hover-card-lift flex flex-col justify-between transition-all">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
+              <span className="text-[11.5px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase">
                 IMZOLARIM
               </span>
               <Link
                 to="/reports/signatures"
-                className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] hover:text-[#2844A8] transition-colors"
+                className="flex items-center gap-1 text-[12px] font-bold text-[#3858C7] dark:text-[#7F95E6] hover:text-[#2844A8] transition-colors"
               >
                 Barchasi <FaArrowRightLong size={12} />
               </Link>
@@ -1125,7 +1291,7 @@ const Analytics = () => {
 
             <div className="space-y-2 flex-1">
               {userSignatures.length === 0 ? (
-                <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5]">
+                <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5] dark:text-[#64748B]">
                   <p className="text-[13px] font-medium">
                     Imzolar mavjud emas
                   </p>
@@ -1144,14 +1310,14 @@ const Analytics = () => {
                   return (
                     <div
                       key={sig.id || idx}
-                      className="flex items-center justify-between text-[13px] p-2 rounded-xl hover:bg-[#F8FAFC] transition-colors"
+                      className="flex items-center justify-between text-[13px] p-2 rounded-xl hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438] transition-colors"
                     >
                       <div className="min-w-0 pr-2">
-                        <span className="font-semibold text-[#1A1D2E] truncate block leading-tight">
+                        <span className="font-semibold text-[#1A1D2E] dark:text-white truncate block leading-tight">
                           {title}
                         </span>
                         {organizer && (
-                          <span className="text-[11.5px] text-[#8B90A5] truncate block mt-0.5">
+                          <span className="text-[11.5px] text-[#8B90A5] dark:text-[#94A3B8] truncate block mt-0.5">
                             {organizer}
                           </span>
                         )}
@@ -1159,8 +1325,8 @@ const Analytics = () => {
                       <span
                         className={`font-bold text-[11.5px] px-2.5 py-0.5 rounded-full shrink-0 ${
                           !isSigned
-                            ? "text-[#D97706] bg-[#FFFBEB]"
-                            : "text-[#10B981] bg-[#ECFDF5]"
+                            ? "text-[#D97706] dark:text-[#FBBF24] bg-[#FFFBEB] dark:bg-[#F59E0B]/15"
+                            : "text-[#10B981] dark:text-[#34D399] bg-[#ECFDF5] dark:bg-[#10B981]/15"
                         }`}
                       >
                         {isSigned ? "Imzolangan" : "Kutilmoqda"}

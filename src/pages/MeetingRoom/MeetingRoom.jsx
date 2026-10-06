@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { flushSync, createPortal } from 'react-dom'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Room, RoomEvent, VideoPresets, Track, ConnectionQuality, setLogLevel, LogLevel } from 'livekit-client'
-import { getCurrentUser, getMyProfile } from '../../services/auth'
+import { getCurrentUser, getMyProfile, isAuthenticated } from '../../services/auth'
 import { axiosAPI } from '../../services/axiosAPI'
 import { removeMeetingParticipant } from '../../services/meetingsApi'
 import { toast } from '../../Toast/ToastProvider'
@@ -318,10 +318,24 @@ export default function MeetingRoom() {
   const location = useLocation()
   const [user, setUser] = useState(() => getCurrentUser())
 
+  // Unauthenticated user redirect to /leanding with saved return path
   useEffect(() => {
-    getMyProfile().then((u) => {
-      if (u) setUser(u)
-    }).catch(() => {})
+    if (!isAuthenticated()) {
+      const currentPath = window.location.pathname + window.location.search
+      if (currentPath && currentPath !== '/leanding' && currentPath !== '/auth/callback') {
+        sessionStorage.setItem('redirect_after_login', currentPath)
+        localStorage.setItem('redirect_after_login', currentPath)
+      }
+      navigate('/leanding', { replace: true })
+    }
+  }, [navigate])
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      getMyProfile().then((u) => {
+        if (u) setUser(u)
+      }).catch(() => {})
+    }
   }, [])
 
   // Meeting & State Machine
@@ -4033,9 +4047,6 @@ export default function MeetingRoom() {
 
       {/* Main Conference Body with Outer Rounded Stage Frame */}
       <div className={`flex-1 flex overflow-hidden relative ${isScreenFocused ? 'p-0 m-0 w-full h-full' : (mainStageItem ? 'px-1.5 sm:px-3 pt-0 pb-0.5' : 'px-2 sm:px-4 pt-0.5 pb-1')} min-h-0`}>
-        {/* Large Rounded Container matching Figma screenshots */}
-        <div className={`w-full h-full flex-1 flex overflow-hidden ${isScreenFocused ? 'rounded-none bg-black p-0 shadow-none border-0' : 'rounded-2xl sm:rounded-3xl bg-[#DFE5EE] dark:bg-[#13161D] shadow-inner ' + (mainStageItem ? 'p-1 sm:p-1.5' : 'p-2 sm:p-3')} relative transition-colors`}>
-
           {mainStageItem ? (
             /* Google Meet Presentation Stage (Single Full View) + Right Sidebar Filmstrip */
             <div className={`w-full h-full flex flex-col lg:flex-row ${isScreenFocused ? 'gap-0 p-0' : 'gap-3'} overflow-hidden`}>
@@ -4044,7 +4055,7 @@ export default function MeetingRoom() {
                 style={{ viewTransitionName: getViewTransitionName(mainStageItem.identity) }}
                 className={`flex-1 h-full min-h-0 min-w-0 flex items-center justify-center relative overflow-hidden transition-all duration-300 ${isScreenFocused
                     ? 'rounded-none bg-black border-0 shadow-none p-0'
-                    : 'rounded-2xl sm:rounded-3xl bg-transparent border-0 shadow-xl'
+                    : 'rounded-2xl sm:rounded-3xl bg-transparent border-0'
                   }`}
               >
                 <div className="w-full h-full flex items-center justify-center">
@@ -4080,7 +4091,7 @@ export default function MeetingRoom() {
                     <div
                       key={item.identity}
                       style={{ viewTransitionName: getViewTransitionName(item.identity) }}
-                      className="w-48 sm:w-56 lg:w-full aspect-video shrink-0 rounded-2xl sm:rounded-3xl flex flex-col items-stretch transition-shadow hover:shadow-xl"
+                      className="w-48 sm:w-56 lg:w-full aspect-video shrink-0 flex flex-col items-stretch"
                     >
                       <ParticipantTile
                         participant={item}
@@ -4114,7 +4125,7 @@ export default function MeetingRoom() {
                 <div
                   key={cameraItems[0]?.identity}
                   style={{ viewTransitionName: getViewTransitionName(cameraItems[0]?.identity) }}
-                  className="w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center"
+                  className="w-full h-full flex items-center justify-center"
                 >
                   <ParticipantTile
                     participant={cameraItems[0]}
@@ -4141,7 +4152,7 @@ export default function MeetingRoom() {
                     <div
                       key={item.identity}
                       style={{ viewTransitionName: getViewTransitionName(item.identity) }}
-                      className="flex-1 w-full h-full min-h-0 min-w-0 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl flex flex-col items-stretch"
+                      className="flex-1 w-full h-full min-h-0 min-w-0 flex flex-col items-stretch"
                     >
                       <ParticipantTile
                         participant={item}
@@ -4170,7 +4181,7 @@ export default function MeetingRoom() {
                     <div
                       key={item.identity}
                       style={{ viewTransitionName: getViewTransitionName(item.identity) }}
-                      className="flex-1 w-full h-full min-h-0 min-w-0 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl flex flex-col items-stretch"
+                      className="flex-1 w-full h-full min-h-0 min-w-0 flex flex-col items-stretch"
                     >
                       <ParticipantTile
                         participant={item}
@@ -4201,7 +4212,7 @@ export default function MeetingRoom() {
                       <div
                         key={item.identity}
                         style={{ viewTransitionName: getViewTransitionName(item.identity) }}
-                        className="flex-1 w-full h-full min-h-0 min-w-0 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl flex flex-col items-stretch"
+                        className="flex-1 w-full h-full min-h-0 min-w-0 flex flex-col items-stretch"
                       >
                         <ParticipantTile
                           participant={item}
@@ -4229,7 +4240,7 @@ export default function MeetingRoom() {
                       <div
                         key={item.identity}
                         style={{ viewTransitionName: getViewTransitionName(item.identity) }}
-                        className="flex-1 w-full h-full min-h-0 min-w-0 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl flex flex-col items-stretch"
+                        className="flex-1 w-full h-full min-h-0 min-w-0 flex flex-col items-stretch"
                       >
                         <ParticipantTile
                           participant={item}
@@ -4259,7 +4270,7 @@ export default function MeetingRoom() {
                     <div
                       key={item.identity}
                       style={{ viewTransitionName: getViewTransitionName(item.identity) }}
-                      className="w-full h-full min-h-0 min-w-0 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl flex flex-col items-stretch"
+                      className="w-full h-full min-h-0 min-w-0 flex flex-col items-stretch"
                     >
                       <ParticipantTile
                         participant={item}
@@ -4284,7 +4295,6 @@ export default function MeetingRoom() {
               )}
             </div>
           )}
-        </div>
 
         {/* In-Meeting Chat Drawer */}
         <ChatDrawer
@@ -4435,7 +4445,7 @@ export default function MeetingRoom() {
           : 'T'
 
         return (
-          <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200 select-none">
+          <div className="fixed inset-0 z-[110] bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-200 select-none">
             <div className="w-full max-w-[440px] rounded-3xl bg-white dark:bg-[#0B0D11] border border-slate-100 dark:border-white/10 p-6 sm:p-7 shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] text-left flex flex-col gap-4 animate-in zoom-in-95 duration-200 overflow-hidden">
               {/* Blue Mic Icon at top left */}
               <div className="text-[#3B59BA]">
@@ -4555,7 +4565,7 @@ export default function MeetingRoom() {
           : 'T'
 
         return (
-          <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200 select-none">
+          <div className="fixed inset-0 z-[110] bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-200 select-none">
             <div className="w-full max-w-[440px] rounded-3xl bg-white dark:bg-[#0B0D11] border border-slate-100 dark:border-white/10 p-6 sm:p-7 shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] text-left flex flex-col gap-4 animate-in zoom-in-95 duration-200 overflow-hidden">
               {/* Blue Camera Icon at top left */}
               <div className="text-[#3B59BA]">

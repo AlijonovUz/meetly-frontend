@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { Search, Filter, FileSpreadsheet, Loader2, RefreshCw, Eye, X } from "lucide-react";
+import { Search, Filter, FileSpreadsheet, Loader2, RefreshCw, Eye, X, ChevronDown } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CheckmarkCircle02Icon, Cancel01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
 import { DatePicker, CustomSelect } from "../../components/UI";
@@ -367,39 +367,43 @@ const SignaturesReportPage = () => {
 
   return (
     <div className="p-6 py-5 font-['Manrope',sans-serif]">
-      {/* Top Controls: Search (Left), Filter Toggle, Shakllantirish Button (Right) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div className="flex items-center gap-3">
-          {/* Search Input */}
-          <div className="relative w-64 md:w-72">
-            <Search
-              size={18}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B90A5] pointer-events-none"
-            />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Nomi bo'yicha izlash"
-              className="w-full h-9 pl-10 pr-4 rounded-lg border border-[#E2E6F2] bg-[#F4F6FB] text-[13.5px] text-[#1A1D2E] placeholder:text-[#8B90A5] outline-none focus:border-[#3858C7] focus:bg-white focus:ring-2 focus:ring-[#3858C7]/10 transition-all"
-            />
-          </div>
-
-          {/* Collapsible Filter Toggle */}
-          <button
-            type="button"
-            onClick={() => setIsFilterVisible(!isFilterVisible)}
-            className={`inline-flex items-center gap-2 h-9 px-4 rounded-lg border text-[13.5px] font-semibold transition-all cursor-pointer ${
-              isFilterVisible || activeFiltersCount > 0
-                ? "border-[#E2E6F2] bg-[#F4F6FB] text-[#1A1D2E]"
-                : "border-[#E2E6F2] bg-white text-[#1A1D2E] hover:bg-[#F8FAFC]"
+      {/* Top Controls: Filter Toggle (First), Search (Second), Shakllantirish Button (Third) - Right Aligned */}
+      <div className="flex flex-wrap items-center justify-end gap-3 mb-6">
+        {/* Collapsible Filter Toggle */}
+        <button
+          type="button"
+          onClick={() => setIsFilterVisible(!isFilterVisible)}
+          className={`inline-flex items-center gap-2 h-9 px-4 rounded-lg border text-[13.5px] font-semibold transition-all cursor-pointer ${
+            isFilterVisible || activeFiltersCount > 0
+              ? "border-[#E2E6F2] dark:border-[#2B3553] bg-[#F4F6FB] dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white"
+              : "border-[#E2E6F2] dark:border-[#2B3553] bg-white dark:bg-[#161C2E] text-[#1A1D2E] dark:text-white hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438]"
+          }`}
+        >
+          <Filter size={16} strokeWidth={2.5} className="text-[#5E6480] dark:text-[#94A3B8]" />
+          <span>
+            Filtrlash {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+          </span>
+          <ChevronDown
+            size={14}
+            className={`transition-transform duration-200 text-[#8B90A5] dark:text-[#94A3B8] ${
+              isFilterVisible ? "rotate-180" : ""
             }`}
-          >
-            <Filter size={16} strokeWidth={2.5} className="text-[#5E6480]" />
-            <span>
-              Filtrlash {activeFiltersCount > 0 && `(${activeFiltersCount})`}
-            </span>
-          </button>
+          />
+        </button>
+
+        {/* Search Input */}
+        <div className="relative w-64 md:w-72">
+          <Search
+            size={18}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B90A5] dark:text-[#64748B] pointer-events-none"
+          />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Nomi bo'yicha izlash"
+            className="w-full h-9 pl-10 pr-4 rounded-lg border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F4F6FB] dark:bg-[#121624] text-[13.5px] text-[#1A1D2E] dark:text-white placeholder:text-[#8B90A5] dark:placeholder:text-[#64748B] outline-none focus:border-[#3858C7] focus:bg-white dark:focus:bg-[#161C2E] focus:ring-2 focus:ring-[#3858C7]/10 transition-all"
+          />
         </div>
 
         {/* Generate Action Button */}
@@ -432,7 +436,7 @@ const SignaturesReportPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-1">
             {/* Row 1 */}
             <div>
-              <label className="block text-[12px] font-medium text-[#5E6480] mb-1.5">
+              <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
                 Sana, dan
               </label>
               <DatePicker
@@ -443,7 +447,7 @@ const SignaturesReportPage = () => {
             </div>
 
             <div>
-              <label className="block text-[12px] font-medium text-[#5E6480] mb-1.5">
+              <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
                 Sana, gacha
               </label>
               <DatePicker
@@ -454,7 +458,7 @@ const SignaturesReportPage = () => {
             </div>
 
             <div>
-              <label className="block text-[12px] font-medium text-[#5E6480] mb-1.5">
+              <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
                 Yig'ilish
               </label>
               <CustomSelect
@@ -470,7 +474,7 @@ const SignaturesReportPage = () => {
 
             {/* Row 2 */}
             <div>
-              <label className="block text-[12px] font-medium text-[#5E6480] mb-1.5">
+              <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
                 Ishtirokchi
               </label>
               <CustomSelect
@@ -485,7 +489,7 @@ const SignaturesReportPage = () => {
             </div>
 
             <div>
-              <label className="block text-[12px] font-medium text-[#5E6480] mb-1.5">
+              <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
                 Tashkilotchi
               </label>
               <CustomSelect
@@ -500,7 +504,7 @@ const SignaturesReportPage = () => {
             </div>
 
             <div>
-              <label className="block text-[12px] font-medium text-[#5E6480] mb-1.5">
+              <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
                 Imzo holati
               </label>
               <CustomSelect
@@ -521,7 +525,7 @@ const SignaturesReportPage = () => {
 
       {/* Error state */}
       {error && (
-        <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center justify-between">
+        <div className="mb-4 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-sm flex items-center justify-between">
           <span>{error}</span>
           <button
             type="button"
@@ -536,12 +540,12 @@ const SignaturesReportPage = () => {
 
       {/* Report Content */}
       {!isGenerated && !loading ? (
-        <div className="py-28 text-center text-[#5E6480] text-[13.5px] font-medium select-none">
+        <div className="py-28 text-center text-[#5E6480] dark:text-[#94A3B8] text-[13.5px] font-medium select-none">
           Hisobot hali shakllantirilmagan. Filtrlarni tanlang va «Shakllantirish» tugmasini bosing.
         </div>
       ) : (
         <div className="animate-in fade-in duration-200">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-[12.5px] text-[#5E6480] font-medium mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[12.5px] text-[#5E6480] dark:text-[#94A3B8] font-medium mb-3">
             <span>{periodLabelText}</span>
           </div>
 
@@ -551,8 +555,8 @@ const SignaturesReportPage = () => {
             className="overflow-auto max-h-[calc(100vh-230px)]"
           >
             <table className="w-full border-collapse text-left">
-              <thead className="sticky top-0 bg-[#F8F9FC] z-10">
-                <tr className="border-b border-[#F1F3F9] text-[#5B6078] text-[13px] font-medium">
+              <thead className="sticky top-0 z-10">
+                <tr className="border-b border-[#F1F3F9] dark:border-[#1E263C] text-[#5B6078] dark:text-[#94A3B8] text-[13px] font-medium">
                   <th className="py-3 px-3 w-12 font-medium">№</th>
                   <th className="py-3 px-3 font-medium">Ishtirokchi</th>
                   <th className="py-3 px-3 font-medium">Yig'ilish</th>
@@ -562,10 +566,10 @@ const SignaturesReportPage = () => {
                   <th className="py-3 px-3 font-medium text-right pr-4">Holati</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F1F3F9]">
+              <tbody className="divide-y divide-[#F1F3F9] dark:divide-[#1E263C]">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="py-20 text-center text-[#8B90A5]">
+                    <td colSpan={7} className="py-20 text-center text-[#8B90A5] dark:text-[#64748B]">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Loader2 size={24} className="animate-spin text-[#3858C7]" />
                         <span className="text-[13px]">Imzolar hisoboti yuklanmoqda...</span>
@@ -574,7 +578,7 @@ const SignaturesReportPage = () => {
                   </tr>
                 ) : reportsData.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-20 text-center text-[#8B90A5] text-[13.5px]">
+                    <td colSpan={7} className="py-20 text-center text-[#8B90A5] dark:text-[#64748B] text-[13.5px]">
                       Tanlangan parametrlar bo'yicha hech qanday imzo topilmadi.
                     </td>
                   </tr>
@@ -599,10 +603,10 @@ const SignaturesReportPage = () => {
                       return (
                         <tr
                           key={row.id || idx}
-                          className="hover:bg-[#F8FAFC] transition-colors text-[13px] text-[#1A1D2E]"
+                          className="hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438]/50 transition-colors text-[13px] text-[#1A1D2E] dark:text-white"
                         >
-                          <td className="py-3.5 px-3 text-[#8B90A5]">{rowIdx}</td>
-                          <td className="py-3.5 px-3 font-semibold text-[#1A1D2E]">
+                          <td className="py-3.5 px-3 text-[#8B90A5] dark:text-[#64748B]">{rowIdx}</td>
+                          <td className="py-3.5 px-3 font-semibold text-[#1A1D2E] dark:text-white">
                             <div className="flex items-center gap-2.5">
                               {row.participant?.avatar ? (
                                 <img
@@ -611,7 +615,7 @@ const SignaturesReportPage = () => {
                                   className="w-7 h-7 rounded-full object-cover"
                                 />
                               ) : (
-                                <div className="w-7 h-7 rounded-full bg-[#EEF2FB] text-[#3858C7] text-xs font-bold flex items-center justify-center">
+                                <div className="w-7 h-7 rounded-full bg-[#EEF2FB] dark:bg-[#1C2438] text-[#3858C7] text-xs font-bold flex items-center justify-center">
                                   {participantName[0]?.toUpperCase() || "I"}
                                 </div>
                               )}
@@ -619,19 +623,19 @@ const SignaturesReportPage = () => {
                             </div>
                           </td>
                           <td className="py-3.5 px-3">
-                            <div className="font-semibold text-[#1A1D2E] leading-tight">
+                            <div className="font-semibold text-[#1A1D2E] dark:text-white leading-tight">
                               {meetingTitle}
                             </div>
                             {meetingCode && (
-                              <div className="text-[11px] text-[#8B90A5] mt-0.5 font-mono">
+                              <div className="text-[11px] text-[#8B90A5] dark:text-[#64748B] mt-0.5 font-mono">
                                 {meetingCode}
                               </div>
                             )}
                           </td>
-                          <td className="py-3.5 px-3 text-[#5E6480] text-right whitespace-nowrap">
+                          <td className="py-3.5 px-3 text-[#5E6480] dark:text-[#94A3B8] text-right whitespace-nowrap">
                             {meetingDateFormatted}
                           </td>
-                          <td className="py-3.5 px-3 text-[#5E6480] text-right whitespace-nowrap">
+                          <td className="py-3.5 px-3 text-[#5E6480] dark:text-[#94A3B8] text-right whitespace-nowrap">
                             {signedAtFormatted}
                           </td>
                           <td className="py-3.5 px-3 text-center">
@@ -639,21 +643,21 @@ const SignaturesReportPage = () => {
                               <button
                                 type="button"
                                 onClick={() => setPreviewSignatureUrl(row.signature)}
-                                className="inline-flex items-center justify-center p-1 rounded-md border border-[#E2E6F2] bg-white hover:bg-[#F8FAFC] hover:border-[#3858C7] transition-all cursor-pointer group shadow-2xs"
+                                className="inline-flex items-center justify-center p-1 rounded-md border border-[#E2E6F2] dark:border-[#2B3553] bg-white dark:bg-[#1C2438] hover:bg-[#F8FAFC] dark:hover:bg-[#252E46] hover:border-[#3858C7] transition-all cursor-pointer group shadow-2xs"
                                 title="Imzoni kattalashtirib ko'rish"
                               >
                                 <img
                                   src={row.signature}
                                   alt="Imzo"
-                                  className="h-6 max-w-[72px] object-contain group-hover:scale-105 transition-transform"
+                                  className="h-6 max-w-[72px] object-contain group-hover:scale-105 transition-transform dark:invert"
                                 />
                               </button>
                             ) : (
-                              <span className="text-[#8B90A5] text-xs"></span>
+                              <span className="text-[#8B90A5] dark:text-[#64748B] text-xs">—</span>
                             )}
                           </td>
                           <td className="py-3.5 px-3 text-right pr-4">
-                            <span className="inline-flex bg-[#F1F3F9] py-0.5 px-2 rounded-md items-center gap-1.5 text-xs font-medium text-[#5B6078]">
+                            <span className="inline-flex bg-[#F1F3F9] dark:bg-[#1C2438] py-0.5 px-2 rounded-md items-center gap-1.5 text-xs font-medium text-[#5B6078] dark:text-[#94A3B8]">
                               <span
                                 className={`w-1.5 h-1.5 rounded-full ${
                                   isSigned ? "bg-[#10B981]" : "bg-[#F59E0B]"
@@ -667,7 +671,7 @@ const SignaturesReportPage = () => {
                     })}
                     {loadingMore && (
                       <tr>
-                        <td colSpan={7} className="py-4 text-center text-[#8B90A5]">
+                        <td colSpan={7} className="py-4 text-center text-[#8B90A5] dark:text-[#64748B]">
                           <div className="flex items-center justify-center gap-2 text-xs font-medium">
                             <Loader2 size={16} className="animate-spin text-[#3858C7]" />
                             <span>Yana yuklanmoqda...</span>
@@ -686,29 +690,29 @@ const SignaturesReportPage = () => {
       {/* Signature Image Preview Modal */}
       {previewSignatureUrl && (
         <div
-          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setPreviewSignatureUrl(null)}
         >
           <div
-            className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-200"
+            className="bg-white dark:bg-[#161C2E] border border-transparent dark:border-[#2B3553] rounded-3xl p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F3F9]">
-              <h3 className="text-[16px] font-bold text-[#1A1D2E]">Imzo ko'rinishi</h3>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F3F9] dark:border-[#1E263C]">
+              <h3 className="text-[16px] font-bold text-[#1A1D2E] dark:text-white">Imzo ko'rinishi</h3>
               <button
                 type="button"
                 onClick={() => setPreviewSignatureUrl(null)}
-                className="p-1.5 rounded-xl hover:bg-[#F1F3F9] text-[#8B90A5] hover:text-[#1A1D2E] transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="bg-[#F8FAFC] border border-[#E2E6F2] rounded-2xl p-6 flex items-center justify-center min-h-[180px]">
+            <div className="bg-[#F8FAFC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-6 flex items-center justify-center min-h-[180px]">
               <img
                 src={previewSignatureUrl}
                 alt="Imzo"
-                className="max-h-48 max-w-full object-contain"
+                className="max-h-48 max-w-full object-contain dark:invert"
               />
             </div>
 
@@ -728,7 +732,7 @@ const SignaturesReportPage = () => {
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className={`bg-white border rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${
+          <div className={`bg-white dark:bg-[#161C2E] border dark:border-[#2B3553] rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${
             toastMessage.type === "warning" ? "border-[#F59E0B]/40" : "border-[#10B981]/40"
           }`}>
             <div className={`flex-shrink-0 mt-0.5 ${
@@ -737,17 +741,17 @@ const SignaturesReportPage = () => {
               <HugeiconsIcon icon={toastMessage.type === "warning" ? Alert02Icon : CheckmarkCircle02Icon} size={22} />
             </div>
             <div className="flex-1 pr-2">
-              <h4 className="text-[14px] font-bold text-[#1A1D2E] leading-tight">
+              <h4 className="text-[14px] font-bold text-[#1A1D2E] dark:text-white leading-tight">
                 {toastMessage.title}
               </h4>
-              <p className="text-[12.5px] text-[#5E6480] mt-1 leading-snug">
+              <p className="text-[12.5px] text-[#5E6480] dark:text-[#94A3B8] mt-1 leading-snug">
                 {toastMessage.description}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setToastMessage(null)}
-              className="text-[#8B90A5] hover:text-[#1A1D2E] p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+              className="text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white p-1 rounded-lg hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={16} />
             </button>

@@ -245,40 +245,40 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
     customBlockedReason || user.blocked_reason || "Yig'ilishlarda spam xabarlar yuborgan.";
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] sm:bg-[#F8FAFC] font-['Manrope',sans-serif] flex items-center justify-center p-4 sm:p-6 text-[#1A1D2E] relative overflow-hidden">
+    <div className="min-h-screen bg-[#FFFFFF] sm:bg-[#F8FAFC] dark:bg-[#0B0F19] sm:dark:bg-[#0B0F19] font-['Manrope',sans-serif] flex items-center justify-center p-4 sm:p-6 text-[#1A1D2E] dark:text-white relative overflow-hidden">
       {/* Main Container */}
       {!appealData ? (
         /* ================= 02.6 BLOKLANGAN FOYDALANUVCHI, KIRISHDA (Matching Image 2) ================= */
         <div className="w-full max-w-[560px] mx-auto text-center animate-in fade-in duration-200 py-6">
           {/* User Blocked Icon */}
-          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#FEE4E2] text-[#D92D20] flex items-center justify-center mx-auto mb-5 shadow-2xs">
+          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#FEE4E2] dark:bg-red-950/40 text-[#D92D20] dark:text-red-400 flex items-center justify-center mx-auto mb-5 shadow-2xs">
             <HugeiconsIcon icon={UserBlock01Icon} size={26} strokeWidth={2.2} />
           </div>
 
           {/* Heading */}
-          <h2 className="text-[22px] sm:text-[24px] font-bold text-[#101828] tracking-tight">
+          <h2 className="text-[22px] sm:text-[24px] font-bold text-[#101828] dark:text-white tracking-tight">
             Hisobingiz bloklangan
           </h2>
 
           {/* Subtitle */}
-          <p className="text-[14px] text-[#475467] max-w-md mx-auto mt-2 leading-relaxed">
+          <p className="text-[14px] text-[#475467] dark:text-[#94A3B8] max-w-md mx-auto mt-2 leading-relaxed">
             Administrator hisobingizni blokladi, shu sababli tizimdan foydalana olmaysiz.
           </p>
 
           {/* Details Box */}
-          <div className="bg-white border border-[#EAECF0] rounded-2xl p-5 my-6 space-y-3.5 text-[14px] text-left shadow-xs">
+          <div className="bg-white dark:bg-[#161C2E] border border-[#EAECF0] dark:border-[#2B3553] rounded-2xl p-5 my-6 space-y-3.5 text-[14px] text-left shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-[#667085] font-normal">Bloklangan sana</span>
-              <span className="font-bold text-[#101828]">{blockDate}</span>
+              <span className="text-[#667085] dark:text-[#94A3B8] font-normal">Bloklangan sana</span>
+              <span className="font-bold text-[#101828] dark:text-white">{blockDate}</span>
             </div>
             <div className="flex items-start justify-between gap-4">
-              <span className="text-[#667085] font-normal shrink-0">Sabab</span>
-              <span className="font-bold text-[#101828] text-right">{blockReason}</span>
+              <span className="text-[#667085] dark:text-[#94A3B8] font-normal shrink-0">Sabab</span>
+              <span className="font-bold text-[#101828] dark:text-white text-right">{blockReason}</span>
             </div>
           </div>
 
           {/* Bottom Helper Note */}
-          <p className="text-[13px] text-[#667085] mb-6 leading-normal">
+          <p className="text-[13px] text-[#667085] dark:text-[#94A3B8] mb-6 leading-normal">
             Agar bu xato deb hisoblasangiz, administratorga e'tiroz yuboring.
           </p>
 
@@ -296,7 +296,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
             <button
               type="button"
               onClick={logout}
-              className="h-11 px-5 rounded-xl bg-[#F2F4F7] hover:bg-[#E4E7EC] active:scale-[0.98] text-[#344054] text-[14px] font-semibold inline-flex items-center justify-center gap-2 transition-all cursor-pointer"
+              className="h-11 px-5 rounded-xl bg-[#F2F4F7] dark:bg-[#1C2438] hover:bg-[#E4E7EC] dark:hover:bg-[#252E46] active:scale-[0.98] text-[#344054] dark:text-[#94A3B8] text-[14px] font-semibold inline-flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
               <HugeiconsIcon icon={Logout03Icon} strokeWidth={3} size={16} />
               <span>Chiqish</span>
@@ -307,12 +307,12 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
         /* ================= 02.8 E'TIROZ YUBORILDI (STATUS / STEPPER) ================= */
         <div className="w-full max-w-xl mx-auto py-8 text-center animate-in fade-in zoom-in-95 duration-200">
           {/* Telegram Airplane Icon */}
-          <div className="w-16 h-16 rounded-full bg-[#EBF1FF] text-[#3858C7] flex items-center justify-center mx-auto mb-5 shadow-2xs">
+          <div className="w-16 h-16 rounded-full bg-[#EBF1FF] dark:bg-[#1C2438] text-[#3858C7] dark:text-[#7C9BFF] flex items-center justify-center mx-auto mb-5 shadow-2xs">
             <HugeiconsIcon icon={SentIcon} size={28} className="translate-x-0.5 -translate-y-0.5" />
           </div>
 
           {/* Heading */}
-          <h2 className="text-2xl sm:text-[26px] font-bold text-[#1A1D2E] tracking-tight mb-2">
+          <h2 className="text-2xl sm:text-[26px] font-bold text-[#1A1D2E] dark:text-white tracking-tight mb-2">
             {appealData.status === "APPROVED"
               ? "E'tirozingiz tasdiqlandi!"
               : appealData.status === "REJECTED"
@@ -321,7 +321,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
           </h2>
 
           {/* Subtitle */}
-          <p className="text-[14px] text-[#5B6078] max-w-md mx-auto mb-7 leading-relaxed">
+          <p className="text-[14px] text-[#5B6078] dark:text-[#94A3B8] max-w-md mx-auto mb-7 leading-relaxed">
             {appealData.status === "APPROVED"
               ? "Hisobingiz administrator tomonidan blokdan chiqarildi. Endi Passport orqali tizimga kirishingiz mumkin."
               : appealData.status === "REJECTED"
@@ -330,17 +330,17 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
           </p>
 
           {/* Stepper Card */}
-          <div className="w-full max-w-[460px] bg-white border border-[#E2E6F2] rounded-2xl p-5 sm:p-6 mb-7 text-left space-y-5 shadow-none mx-auto">
+          <div className="w-full max-w-[460px] bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-5 sm:p-6 mb-7 text-left space-y-5 shadow-none mx-auto">
             {/* Step 1: E'tiroz yuborildi (Done) */}
             <div className="flex items-start gap-3.5">
               <div className="w-6 h-6 rounded-full bg-[#10B981] text-white flex items-center justify-center shrink-0 mt-0.5">
                 <CheckCircle2 size={16} strokeWidth={2.5} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-[13.5px] text-[#1A1D2E]">
+                <div className="font-bold text-[13.5px] text-[#1A1D2E] dark:text-white">
                   E'tiroz yuborildi
                 </div>
-                <div className="text-[12px] text-[#8B90A5] mt-0.5">
+                <div className="text-[12px] text-[#8B90A5] dark:text-[#64748B] mt-0.5">
                   {appealData.created_at
                     ? dayjs(appealData.created_at).format("DD.MM.YYYY HH:mm")
                     : (appealData.date ? dayjs(appealData.date).format("DD.MM.YYYY HH:mm") : dayjs().format("DD.MM.YYYY HH:mm"))}
@@ -355,17 +355,17 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
                   <CheckCircle2 size={16} strokeWidth={2.5} />
                 </div>
               ) : (
-                <div className="w-6 h-6 rounded-full bg-[#E0EAFF] flex items-center justify-center shrink-0 mt-0.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#3858C7]"></div>
+                <div className="w-6 h-6 rounded-full bg-[#E0EAFF] dark:bg-[#1C2438] flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#3858C7] dark:bg-[#7C9BFF]"></div>
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-[13.5px] text-[#1A1D2E]">
+                <div className="font-bold text-[13.5px] text-[#1A1D2E] dark:text-white">
                   {appealData.status === "APPROVED" || appealData.status === "REJECTED"
                     ? "Ko'rib chiqildi"
                     : "Ko'rib chiqilmoqda"}
                 </div>
-                <div className="text-[12px] text-[#8B90A5] mt-0.5">
+                <div className="text-[12px] text-[#8B90A5] dark:text-[#64748B] mt-0.5">
                   {appealData.reviewed_at
                     ? dayjs(appealData.reviewed_at).format("DD.MM.YYYY HH:mm")
                     : "Odatda 1 ish kuni ichida"}
@@ -380,19 +380,19 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
                   <CheckCircle2 size={16} strokeWidth={2.5} />
                 </div>
               ) : appealData.status === "REJECTED" ? (
-                <div className="w-6 h-6 rounded-full bg-[#FEF3F2] text-[#D92D20] flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-[#FEF3F2] dark:bg-red-950/40 text-[#D92D20] dark:text-red-400 flex items-center justify-center shrink-0 mt-0.5">
                   <HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={2.5} />
                 </div>
               ) : (
-                <div className="w-6 h-6 rounded-full border-2 border-[#D0D5DD] flex items-center justify-center shrink-0 mt-0.5"></div>
+                <div className="w-6 h-6 rounded-full border-2 border-[#D0D5DD] dark:border-[#2B3553] flex items-center justify-center shrink-0 mt-0.5"></div>
               )}
               <div className="flex-1 min-w-0">
                 <div
                   className={`font-semibold text-[13.5px] ${appealData.status === "APPROVED"
-                      ? "text-[#10B981] font-bold"
-                      : appealData.status === "REJECTED"
-                        ? "text-[#D92D20] font-bold"
-                        : "text-[#8B90A5]"
+                    ? "text-[#10B981] font-bold"
+                    : appealData.status === "REJECTED"
+                      ? "text-[#D92D20] dark:text-red-400 font-bold"
+                      : "text-[#8B90A5] dark:text-[#64748B]"
                     }`}
                 >
                   {appealData.status === "APPROVED"
@@ -401,7 +401,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
                       ? "Rad etildi"
                       : "Javob"}
                 </div>
-                <div className="text-[12px] text-[#8B90A5] mt-0.5">
+                <div className="text-[12px] text-[#8B90A5] dark:text-[#64748B] mt-0.5">
                   {appealData.status === "APPROVED"
                     ? "Hisobingiz blokdan chiqarildi"
                     : appealData.status === "REJECTED"
@@ -421,7 +421,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
                 className="h-11 px-6 rounded-xl bg-[#3858C7] hover:bg-[#2B46AC] active:scale-[0.98] text-white text-[13.5px] font-semibold inline-flex items-center gap-2 transition-all cursor-pointer shadow-xs"
               >
                 <HugeiconsIcon icon={Login03Icon} strokeWidth={2.5} size={16} />
-                <span>Passport orqali kirish</span>
+                <span>Kirish</span>
               </button>
             )}
 
@@ -439,7 +439,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
             <button
               type="button"
               onClick={logout}
-              className="h-11 px-6 rounded-xl bg-[#F2F4F7] hover:bg-[#E4E7EC] active:scale-[0.98] text-[#344054] text-[13.5px] font-semibold inline-flex items-center gap-2 transition-all cursor-pointer shadow-none"
+              className="h-11 px-6 rounded-xl bg-[#F2F4F7] dark:bg-[#1C2438] hover:bg-[#E4E7EC] dark:hover:bg-[#252E46] active:scale-[0.98] text-[#344054] dark:text-[#94A3B8] text-[13.5px] font-semibold inline-flex items-center gap-2 transition-all cursor-pointer shadow-none"
             >
               <HugeiconsIcon icon={Logout03Icon} strokeWidth={2.5} size={16} />
               <span>Chiqish</span>
@@ -450,23 +450,23 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
-          <div className="bg-white w-full max-w-[560px] rounded-3xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2]">
+          <div className="bg-white dark:bg-[#161C2E] w-full max-w-[560px] rounded-3xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 border border-[#E2E6F2] dark:border-[#2B3553]">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-[#F1F3F9]">
-              <h3 className="font-bold text-[18px] text-[#1A1D2E]">
+            <div className="flex items-center justify-between pb-2 border-b border-[#F1F3F9] dark:border-[#1E263C]">
+              <h3 className="font-bold text-[18px] text-[#1A1D2E] dark:text-white">
                 E'tiroz yuborish
               </h3>
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
-                className="text-[#8B90A5] hover:text-[#1A1D2E] p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white p-1 rounded-lg hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
             {/* Modal Description */}
-            <p className="text-[13px] text-[#5B6078] leading-relaxed">
+            <p className="text-[13px] text-[#5B6078] dark:text-[#94A3B8] leading-relaxed">
               Bloklanish sababini hisobga olgan holda, nima uchun hisobingiz ochilishi kerakligini tushuntiring.
             </p>
 
@@ -478,7 +478,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
                   value={reasonInput}
                   onChange={(e) => setReasonInput(e.target.value)}
                   placeholder="Men spam yubormaganman. Bu xabarlar ish guruhidagi e'lonlar edi, iltimos qayta ko'rib chiqing..."
-                  className="w-full bg-[#FAFAFC] border border-[#E2E6F2] rounded-2xl p-3.5 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/15 transition-all resize-none leading-relaxed"
+                  className="w-full bg-[#FAFAFC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-3.5 text-[13.5px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/15 transition-all resize-none leading-relaxed"
                   required
                 />
               </div>
@@ -488,7 +488,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2.5 flex items-center gap-1.5 rounded-xl hover:bg-[#F8FAFC] text-[13.5px] font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2.5 flex items-center gap-1.5 rounded-xl hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438] text-[13.5px] font-bold text-[#1A1D2E] dark:text-white transition-colors cursor-pointer"
                 >
                   <X strokeWidth={2.5} size={16} />
                   Bekor qilish
@@ -497,8 +497,8 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
                   type="submit"
                   disabled={!reasonInput.trim() || submitting}
                   className={`px-5 py-2.5 rounded-xl text-white text-[13.5px] font-semibold transition-all shadow-xs flex items-center gap-2 ${reasonInput.trim() && !submitting
-                      ? "bg-[#3858C7] hover:bg-[#2B46AC] cursor-pointer active:scale-95"
-                      : "bg-[#3858C7]/50 cursor-not-allowed"
+                    ? "bg-[#3858C7] hover:bg-[#2B46AC] cursor-pointer active:scale-95"
+                    : "bg-[#3858C7]/50 cursor-not-allowed"
                     }`}
                 >
                   {submitting ? (
@@ -518,9 +518,9 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
       {toastMessage && (
         <div className="fixed top-6 right-6 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300">
           <div
-            className={`bg-white border rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${toastMessage.type === "error"
-                ? "border-[#FECDCA]"
-                : "border-[#10B981]/40"
+            className={`bg-white dark:bg-[#161C2E] border dark:border-[#2B3553] rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${toastMessage.type === "error"
+              ? "border-[#FECDCA] dark:border-red-900/50"
+              : "border-[#10B981]/40"
               }`}
           >
             <div
@@ -528,7 +528,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
                 }`}
             >
               {toastMessage.type === "error" ? (
-                <div className="w-5.5 h-5.5 rounded-full bg-[#FEF3F2] flex items-center justify-center text-[#D92D20]">
+                <div className="w-5.5 h-5.5 rounded-full bg-[#FEF3F2] dark:bg-red-950/40 flex items-center justify-center text-[#D92D20] dark:text-red-400">
                   <HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={2.5} />
                 </div>
               ) : (
@@ -537,19 +537,19 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
             </div>
             <div className="flex-1 pr-2">
               <h4
-                className={`text-[14px] font-bold leading-tight ${toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#1A1D2E]"
+                className={`text-[14px] font-bold leading-tight ${toastMessage.type === "error" ? "text-[#D92D20] dark:text-red-400" : "text-[#1A1D2E] dark:text-white"
                   }`}
               >
                 {toastMessage.title}
               </h4>
-              <p className="text-[12.5px] text-[#5E6480] mt-1 leading-snug">
+              <p className="text-[12.5px] text-[#5E6480] dark:text-[#94A3B8] mt-1 leading-snug">
                 {toastMessage.description}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setToastMessage(null)}
-              className="text-[#8B90A5] hover:text-[#1A1D2E] p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+              className="text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white p-1 rounded-lg hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] transition-colors cursor-pointer"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={16} />
             </button>

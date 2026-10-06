@@ -8,6 +8,13 @@ import {
 
 const DirectMeetingRedirect = () => {
   const { id } = useParams();
+  const authed = isAuthenticated();
+  if (!authed) {
+    const target = `/join/${id}`;
+    sessionStorage.setItem("redirect_after_login", target);
+    localStorage.setItem("redirect_after_login", target);
+    return <Navigate to="/leanding" replace />;
+  }
   return <Navigate to={`/join/${id}`} replace />;
 };
 
@@ -52,6 +59,11 @@ const AdminRouteGuard = () => {
   if (!authed) {
     if (location.pathname === "/") {
       return <LeandingPage />;
+    }
+    const currentPath = location.pathname + location.search;
+    if (currentPath && currentPath !== "/" && currentPath !== "/leanding") {
+      sessionStorage.setItem("redirect_after_login", currentPath);
+      localStorage.setItem("redirect_after_login", currentPath);
     }
     return <NotFoundPage />;
   }

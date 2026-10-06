@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Copy01Icon,
@@ -129,6 +130,14 @@ const MeetingDetailPage = () => {
       setMeeting(data);
       setAttendances(attendancesRes.results || []);
 
+      if (data?.title || data?.name) {
+        window.dispatchEvent(
+          new CustomEvent("set-navbar-title", {
+            detail: { id, title: data.title || data.name },
+          })
+        );
+      }
+
       const { date, time } = extractDateAndTimeToFields(data.start_date);
       setStartDateStr(date);
       setStartTimeStr(time);
@@ -181,6 +190,15 @@ const MeetingDetailPage = () => {
         const [hh, mm] = startTimeStr.split(":").map(Number);
         const newDate = new Date(y, m - 1, d, hh, mm);
         if (!isNaN(newDate.getTime())) {
+          if (newDate < new Date(Date.now() - 60000)) {
+            setToastMessage({
+              type: "error",
+              title: "Xatolik yuz berdi",
+              description: "Boshlanish vaqti hozirgi vaqtdan oldin bo'lishi mumkin emas.",
+            });
+            setIsSaving(false);
+            return;
+          }
           isoStartDate = newDate.toISOString();
         }
       }
@@ -356,6 +374,21 @@ const MeetingDetailPage = () => {
     );
   };
 
+  const isSelectedDateToday = useMemo(() => {
+    if (!startDateStr) return false;
+    const parts = startDateStr.split(".");
+    if (parts.length === 3) {
+      const d = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const y = parseInt(parts[2], 10);
+      const sel = new Date(y, m, d);
+      return dayjs(sel).isSame(dayjs(), "day");
+    }
+    return false;
+  }, [startDateStr]);
+
+  const minStartTime = isSelectedDateToday ? dayjs().format("HH:mm") : undefined;
+
   if (loading) {
     return (
       <div className="p-10 flex flex-col items-center justify-center min-h-[50vh] text-[#8B90A5] gap-3 font-['Manrope',sans-serif]">
@@ -389,17 +422,17 @@ const MeetingDetailPage = () => {
     <div className="p-6 py-5 space-y-4 font-['Manrope',sans-serif]">
       {/* Header Section */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl sm:text-[26px] font-bold text-[#1A1D2E] tracking-tight truncate max-w-full">
+        <h1 className="text-2xl sm:text-[26px] font-bold text-[#1A1D2E] dark:text-white tracking-tight truncate max-w-full">
           {meeting.title || meeting.name || "Yig'ilish"}
         </h1>
 
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Imzo qo'yish tugmasi (faqat imzo qo'yilmagan va bekor qilinmagan bo'lsa) */}
-          {!isSigned && !isCancelled && (
+          {/* Imzo qo'yish tugmasi (faqat yig'ilish qatnashchisi bo'lsa, imzo qo'yilmagan va bekor qilinmagan bo'lsa) */}
+          {Boolean(myAttendance) && !isSigned && !isCancelled && isCompleted && (
             <button
               type="button"
               onClick={() => setSignatureModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-3 bg-[#3F57B3] hover:bg-[#344896] active:scale-[0.98] text-white rounded-xl text-[13.5px] font-bold transition-all shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-3 bg-[#3858C7] hover:bg-[#2F4BB8] active:scale-[0.98] text-white rounded-xl text-[13.5px] font-bold transition-all shadow-xs cursor-pointer"
             >
               <HugeiconsIcon icon={Edit02Icon} size={16} strokeWidth={2.2} />
               <span>Imzo qo'yish</span>
@@ -408,12 +441,12 @@ const MeetingDetailPage = () => {
 
           {/* Right Action: Cancel Button OR Status Pill */}
           {isCancelled ? (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#5B6078] bg-[#EEF2F6]">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#5B6078] dark:text-[#94A3B8] bg-[#EEF2F6] dark:bg-[#1E263C]">
               <span className="w-2 h-2 rounded-full bg-[#94A3B8]"></span>
               <span>Bekor qilingan</span>
             </div>
           ) : isCompleted ? (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#10B981] bg-[#ECFDF5] border border-[#A7F3D0]">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#10B981] dark:text-[#34D399] bg-[#ECFDF5] dark:bg-[#10B981]/15 border border-[#A7F3D0] dark:border-[#10B981]/30">
               <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
               <span>Tugallangan</span>
             </div>
@@ -421,14 +454,14 @@ const MeetingDetailPage = () => {
             <button
               type="button"
               onClick={() => setCancelModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-3 border bg-white border-[#EF4444] text-[#EF4444] hover:bg-[#FEF2F2] active:scale-[0.98] rounded-xl text-[13.5px] font-extrabold transition-all shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-3 border bg-white dark:bg-[#161C2E] border-[#EF4444] text-[#EF4444] hover:bg-[#FEF2F2] dark:hover:bg-[#EF4444]/10 active:scale-[0.98] rounded-xl text-[13.5px] font-extrabold transition-all shadow-2xs cursor-pointer"
             >
               <Ban size={16} strokeWidth={2.2} />
               <span>Yig'ilishni bekor qilish</span>
             </button>
           ) : (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#3B82F6] bg-[#EFF6FF] border border-[#BFDBFE]">
-              <span className="w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse"></span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#3858C7] dark:text-[#7F95E6] bg-[#EEF2FB] dark:bg-[#3858C7]/15 border border-[#BFDBFE] dark:border-[#3858C7]/30">
+              <span className="w-2 h-2 rounded-full bg-[#3858C7] animate-pulse"></span>
               <span>Davom etmoqda</span>
             </div>
           )}
@@ -437,15 +470,15 @@ const MeetingDetailPage = () => {
 
       {/* Cancelled Banner (Shown when status is cancelled) */}
       {isCancelled && (
-        <div className="bg-[#FEF2F2] border border-[#FCA5A5] rounded-2xl p-4 sm:p-5 text-[13px] text-[#1A1D2E] space-y-1 animate-in fade-in duration-200">
-          <h4 className="font-bold text-[#DC2626] text-[14px]">
+        <div className="bg-[#FEF2F2] dark:bg-red-950/25 border border-[#FCA5A5] dark:border-red-900/40 rounded-2xl p-4 sm:p-5 text-[13px] text-[#1A1D2E] dark:text-slate-200 space-y-1 animate-in fade-in duration-200">
+          <h4 className="font-bold text-[#DC2626] dark:text-red-400 text-[14px]">
             Yig'ilish bekor qilingan
           </h4>
-          <p className="text-[#4B5563] leading-relaxed">
+          <p className="text-[#4B5563] dark:text-slate-400 leading-relaxed">
             {formatDisplayDateTime(meeting.updated_at || meeting.completed_at)},{" "}
-            <span className="font-semibold text-[#1A1D2E]">{organizerName}</span>{" "}
+            <span className="font-semibold text-[#1A1D2E] dark:text-white">{organizerName}</span>{" "}
             tomonidan. Sabab:{" "}
-            <span className="text-[#1A1D2E]">
+            <span className="text-[#1A1D2E] dark:text-white">
               {meeting.cancellation_reason || "Ko'rsatilmagan"}
             </span>
           </p>
@@ -454,14 +487,14 @@ const MeetingDetailPage = () => {
 
       {/* Taklif havolasi Card */}
       <div className="space-y-1.5">
-        <label className="block text-[13px] font-medium text-[#5B6078]">
+        <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8]">
           Taklif havolasi
         </label>
-        <div className={`flex items-center justify-between border rounded-2xl px-5 h-11 bg-white border-[#E2E6F2] shadow-2xs transition-colors ${
+        <div className={`flex items-center justify-between border rounded-2xl px-5 h-11 bg-white dark:bg-[#121624] border-[#E2E6F2] dark:border-[#2B3553] shadow-2xs transition-colors ${
           isEnded ? "cursor-default" : ""
         }`}>
           <span className={`text-[14px] font-bold truncate pr-4 ${
-            isEnded ? "text-[#1A1D2E] select-none line-through decoration-slate-300" : "text-[#1A1D2E]"
+            isEnded ? "text-[#1A1D2E] dark:text-slate-400 select-none" : "text-[#1A1D2E] dark:text-white"
           }`}>
             {inviteLinkText}
           </span>
@@ -469,7 +502,7 @@ const MeetingDetailPage = () => {
             <button
               type="button"
               onClick={handleCopyLink}
-              className="flex items-center gap-1.5 text-[13px] font-extrabold text-[#4763E4] hover:text-[#3A52C7] transition-colors cursor-pointer flex-shrink-0"
+              className="flex items-center gap-1.5 text-[13px] font-extrabold text-[#3858C7] dark:text-[#7F95E6] hover:text-[#2F4BB8] transition-colors cursor-pointer flex-shrink-0"
             >
               <HugeiconsIcon
                 icon={copiedLink ? Tick02Icon : Copy01Icon}
@@ -479,7 +512,7 @@ const MeetingDetailPage = () => {
               <span>{copiedLink ? "Nusxalandi!" : "Nusxalash"}</span>
             </button>
           ) : (
-            <span className="text-xs font-semibold text-[#8B90A5] flex-shrink-0 select-none">
+            <span className="text-xs font-semibold text-[#8B90A5] dark:text-[#64748B] flex-shrink-0 select-none">
               Muddati tugagan
             </span>
           )}
@@ -490,7 +523,7 @@ const MeetingDetailPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Boshlanish sanasi */}
         <div>
-          <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+          <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
             Boshlanish sanasi
           </label>
           {isScheduled ? (
@@ -505,11 +538,12 @@ const MeetingDetailPage = () => {
                   setStartDateStr(`${day}.${month}.${year}`);
                 }
               }}
+              minDate={new Date()}
               placeholder="01.10.2026"
-              inputClassName="h-11! rounded-xl! border-[#E2E6F2]! text-[13.5px]! font-semibold! text-[#1A1D2E]!"
+              inputClassName="h-11! rounded-xl! border-[#E2E6F2]! dark:border-[#2B3553]! text-[13.5px]! font-semibold! text-[#1A1D2E]! dark:text-white!"
             />
           ) : (
-            <div className="flex items-center justify-between bg-white border border-[#E2E6F2] rounded-xl px-4 h-11 text-[13.5px] font-semibold text-[#1A1D2E] shadow-2xs">
+            <div className="flex items-center justify-between bg-white dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl px-4 h-11 text-[13.5px] font-semibold text-[#1A1D2E] dark:text-white shadow-2xs">
               <span>{startDateStr || ""}</span>
             </div>
           )}
@@ -517,18 +551,19 @@ const MeetingDetailPage = () => {
 
         {/* Vaqti */}
         <div>
-          <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+          <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
             Vaqti
           </label>
           {isScheduled ? (
             <TimePicker
               value={startTimeStr}
               onChange={setStartTimeStr}
+              minTime={minStartTime}
               placeholder="15:00"
-              className="h-11! rounded-xl! border-[#E2E6F2]! text-[13.5px]! font-semibold! text-[#1A1D2E]!"
+              className="h-11! rounded-xl! border-[#E2E6F2]! dark:border-[#2B3553]! text-[13.5px]! font-semibold! text-[#1A1D2E]! dark:text-white!"
             />
           ) : (
-            <div className="flex items-center justify-between bg-white border border-[#E2E6F2] rounded-xl px-4 h-11 text-[13.5px] font-semibold text-[#1A1D2E] shadow-2xs">
+            <div className="flex items-center justify-between bg-white dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl px-4 h-11 text-[13.5px] font-semibold text-[#1A1D2E] dark:text-white shadow-2xs">
               <span>{startTimeStr || ""}</span>
             </div>
           )}
@@ -536,11 +571,11 @@ const MeetingDetailPage = () => {
 
         {/* Davomiyligi */}
         <div>
-          <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+          <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
             Davomiyligi
           </label>
           {isScheduled ? (
-            <div className="flex items-center bg-white border border-[#E2E6F2] rounded-xl px-4 h-11 text-[13.5px] text-[#1A1D2E] focus-within:border-[#3858C7] focus-within:ring-2 focus-within:ring-[#3858C7]/10 transition-all shadow-2xs">
+            <div className="flex items-center bg-white dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl px-4 h-11 text-[13.5px] text-[#1A1D2E] dark:text-white focus-within:border-[#3858C7] focus-within:ring-2 focus-within:ring-[#3858C7]/10 transition-all shadow-2xs">
               <input
                 type="text"
                 inputMode="numeric"
@@ -550,14 +585,14 @@ const MeetingDetailPage = () => {
                   setDurationVal(onlyNums);
                 }}
                 placeholder="30"
-                className="w-full h-11! bg-transparent text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none font-semibold text-[13.5px]"
+                className="w-full h-11! bg-transparent text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none font-semibold text-[13.5px]"
               />
-              <span className="text-[#8B90A5] text-[13px] font-medium ml-1.5 select-none shrink-0">
+              <span className="text-[#8B90A5] dark:text-[#64748B] text-[13px] font-medium ml-1.5 select-none shrink-0">
                 daqiqa
               </span>
             </div>
           ) : (
-            <div className="flex items-center justify-between bg-white border border-[#E2E6F2] rounded-xl px-4 h-11 text-[13.5px] font-semibold text-[#1A1D2E] shadow-2xs">
+            <div className="flex items-center justify-between bg-white dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl px-4 h-11 text-[13.5px] font-semibold text-[#1A1D2E] dark:text-white shadow-2xs">
               <span>{durationVal ? `${durationVal} daqiqa` : ""}</span>
             </div>
           )}
@@ -565,7 +600,7 @@ const MeetingDetailPage = () => {
 
         {/* Tasdiqlash talabi */}
         <div>
-          <label className="block text-[13px] font-medium text-[#5B6078] mb-1.5">
+          <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
             Tasdiqlash talabi
           </label>
           {isScheduled ? (
@@ -578,7 +613,7 @@ const MeetingDetailPage = () => {
               className="h-11! rounded-xl! text-[13.5px]! font-semibold!"
             />
           ) : (
-            <div className="flex items-center justify-between bg-white border border-[#E2E6F2] rounded-xl px-4 h-11 text-[13.5px] font-semibold text-[#1A1D2E] shadow-2xs">
+            <div className="flex items-center justify-between bg-white dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl px-4 h-11 text-[13.5px] font-semibold text-[#1A1D2E] dark:text-white shadow-2xs">
               <span>
                 {requiresApprovalVal === "true"
                   ? "Talab qilinadi"
@@ -592,14 +627,14 @@ const MeetingDetailPage = () => {
       {/* Notice & Save Button (Only if scheduled) */}
       {isScheduled && (
         <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
-          <p className="text-[12.5px] text-[#8B90A5]">
+          <p className="text-[12.5px] text-[#8B90A5] dark:text-[#64748B]">
             Yig'ilish boshlanmaguncha sana, vaqt va davomiylikni o'zgartirish mumkin.
           </p>
           <button
             type="button"
             onClick={handleSaveChanges}
             disabled={!isChanged || isSaving}
-            className="inline-flex items-center gap-2 bg-[#3F57B3] text-white text-[13.5px] font-semibold px-3.5 py-3.5 rounded-xl transition-all shadow-xs active:scale-[0.98] disabled:opacity-50 disabled:cursor-default disabled:active:scale-100 cursor-pointer"
+            className="inline-flex items-center gap-2 bg-[#3858C7] hover:bg-[#2F4BB8] text-white text-[13.5px] font-semibold px-5 py-3 rounded-xl transition-all shadow-xs active:scale-[0.98] disabled:opacity-50 disabled:cursor-default disabled:active:scale-100 cursor-pointer"
           > 
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -613,19 +648,19 @@ const MeetingDetailPage = () => {
 
       {/* Ishtirokchilar Section */}
       <div className="space-y-3">
-        <h2 className="text-[17px] font-bold text-[#1A1D2E]">
+        <h2 className="text-[17px] font-bold text-[#1A1D2E] dark:text-white">
           Ishtirokchilar
         </h2>
 
         {isCancelled ? (
-          <div className="p-6 text-center text-[#8B90A5] text-[13.5px]">
+          <div className="p-6 text-center text-[#8B90A5] dark:text-[#64748B] text-[13.5px]">
             Yig'ilish bekor qilingani haqida ishtirokchilarga xabar yuborildi. Taklif havolasi endi ishlamaydi.
           </div>
         ) : (
-          <div className="overflow-auto h-[calc(100vh-530px)]">
+          <div className="overflow-auto h-[calc(100vh-450px)]">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#E2E6F2] bg-[#F8F9FC] text-[#8B90A5] text-[13px] font-medium">
+                <tr className="border-b border-[#E2E6F2] dark:border-[#2B3553] text-[#8B90A5] dark:text-[#94A3B8] text-[13px] font-medium">
                   <th className="py-3 px-4 font-normal w-12 text-center">№</th>
                   <th className="py-3 px-4 font-normal">Ism Sharif</th>
                   <th className="py-3 px-4 font-normal text-right">Kirgan vaqti</th>
@@ -635,17 +670,17 @@ const MeetingDetailPage = () => {
                   <th className="py-3 px-4 font-normal text-right">Imzo</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E2E6F2]/60 text-[13.5px]">
+              <tbody className="divide-y divide-[#E2E6F2]/60 dark:divide-[#2B3553]/60 text-[13.5px]">
                 {participantsList.length > 0 ? (
                   participantsList.map((p, idx) => (
                     <tr
                       key={p.id || idx}
-                      className="hover:bg-[#F8F9FC]/60 transition-colors"
+                      className="hover:bg-[#F8F9FC]/60 dark:hover:bg-[#1C2438] transition-colors"
                     >
-                      <td className="py-3.5 px-4 text-center font-medium text-[13px] text-[#8B90A5]">
+                      <td className="py-3.5 px-4 text-center font-medium text-[13px] text-[#8B90A5] dark:text-[#64748B]">
                         {idx + 1}
                       </td>
-                      <td onClick={() => navigate(`/users/${p.user_info?.id}`)} className="py-3.5 px-4 font-semibold text-[#1A1D2E] cursor-pointer hover:text-[#4763E4]">
+                      <td onClick={() => navigate(`/users/${p.user_info?.id}`)} className="py-3.5 px-4 font-semibold text-[#1A1D2E] dark:text-white cursor-pointer hover:text-[#3858C7] dark:hover:text-[#7F95E6]">
                         {getAttendeeName(p)}
                       </td>
                       <td className="py-3.5 px-4 text-end">
@@ -653,7 +688,7 @@ const MeetingDetailPage = () => {
                           className={
                             p.is_late
                               ? "text-[#EF4444] font-medium"
-                              : "text-[#1A1D2E]"
+                              : "text-[#1A1D2E] dark:text-slate-300"
                           }
                         >
                           {p.joined_at
@@ -661,20 +696,20 @@ const MeetingDetailPage = () => {
                             : p.joinTime || ""}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-end text-[#1A1D2E]">
+                      <td className="py-3.5 px-4 text-end text-[#1A1D2E] dark:text-slate-300">
                         {p.left_at ? formatDisplayDateTime(p.left_at) : ""}
                       </td>
-                      <td className="py-3.5 px-4 text-end text-[#1A1D2E]">
+                      <td className="py-3.5 px-4 text-end text-[#1A1D2E] dark:text-slate-300">
                         {p.duration != null ? `${p.duration} daqiqa` : ""}
                       </td>
                       <td className="py-3.5 px-4 text-end">
                         {p.is_late ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] bg-[#F1F3F9] dark:bg-[#1E263C]">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]"></span>
                             <span>Kechikdi</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-medium text-[#5B6078] bg-[#F1F3F9]">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] bg-[#F1F3F9] dark:bg-[#1E263C]">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
                             <span>Qatnashdi</span>
                           </span>
@@ -690,17 +725,17 @@ const MeetingDetailPage = () => {
                                 name: getAttendeeName(p),
                               })
                             }
-                            className="border border-[#E2E6F2] hover:border-[#3858C7] hover:bg-[#F8FAFC] rounded-xl px-2.5 py-1 w-24 h-9 flex items-center justify-center bg-white shadow-2xs cursor-pointer group transition-all"
+                            className="border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7] hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438] rounded-xl px-2.5 py-1 w-24 h-9 flex items-center justify-center bg-white dark:bg-[#121624] shadow-2xs cursor-pointer group transition-all"
                             title="Imzoni kattalashtirib ko'rish"
                           >
                             <img
                               src={p.signature}
                               alt="Imzo"
-                              className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform"
+                              className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform dark:invert"
                             />
                           </button>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold text-[#D97706] bg-[#FFFBEB]">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold text-[#D97706] dark:text-[#FBBF24] bg-[#FFFBEB] dark:bg-[#F59E0B]/15">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#D97706]"></span>
                             <span>Imzolanmagan</span>
                           </span>
@@ -712,7 +747,7 @@ const MeetingDetailPage = () => {
                   <tr>
                     <td
                       colSpan={7}
-                      className="py-12 px-6 text-center text-[#8B90A5] text-[13.5px]"
+                      className="py-12 px-6 text-center text-[#8B90A5] dark:text-[#64748B] text-[13.5px]"
                     >
                       Hozircha ishtirokchilar yo'q. Havolani yuboring, qo'shilganlar shu yerda ko'rinadi.
                     </td>
@@ -727,29 +762,29 @@ const MeetingDetailPage = () => {
       {/* ================= MODAL: YIG'ILISHNI BEKOR QILISH ================= */}
       {cancelModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl shadow-2xl border border-[#E2E6F2] w-full max-w-[540px] overflow-hidden p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150 relative">
+          <div className="bg-white dark:bg-[#161C2E] rounded-3xl shadow-2xl border border-[#E2E6F2] dark:border-[#2B3553] w-full max-w-[540px] overflow-hidden p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150 relative">
             {/* Header */}
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-[#1A1D2E] tracking-tight">
+              <h3 className="text-xl font-bold text-[#1A1D2E] dark:text-white tracking-tight">
                 Yig'ilishni bekor qilish
               </h3>
               <button
                 type="button"
                 onClick={() => setCancelModalOpen(false)}
-                className="p-1 rounded-lg text-[#8B90A5] hover:text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white hover:bg-[#F1F3F9] dark:hover:bg-[#232E47] transition-colors cursor-pointer"
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={20} />
               </button>
             </div>
 
             {/* Description */}
-            <p className="text-[13.5px] text-[#5B6078] leading-relaxed">
-              «<span className="font-semibold text-[#1A1D2E]">{meeting.title || meeting.name}</span>» bekor qilinadi. Taklif havolasi ishlamay qoladi, ishtirokchilarga sabab bilan xabar yuboriladi.
+            <p className="text-[13.5px] text-[#5B6078] dark:text-[#94A3B8] leading-relaxed">
+              «<span className="font-semibold text-[#1A1D2E] dark:text-white">{meeting.title || meeting.name}</span>» bekor qilinadi. Taklif havolasi ishlamay qoladi, ishtirokchilarga sabab bilan xabar yuboriladi.
             </p>
 
             {/* Reason Field */}
             <div className="space-y-1.5">
-              <label className="block text-[13px] font-semibold text-[#1A1D2E]">
+              <label className="block text-[13px] font-semibold text-[#1A1D2E] dark:text-white">
                 Sabab *
               </label>
               <textarea
@@ -758,7 +793,7 @@ const MeetingDetailPage = () => {
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder="Tashkilotchi xizmat safarida, yig'ilish keyingi haftaga ko'chiriladi."
-                className="w-full bg-[#FAFAFA] border border-[#E2E6F2] rounded-2xl p-4 text-[13.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#EF4444] focus:bg-white focus:ring-2 focus:ring-[#EF4444]/10 transition-all shadow-2xs resize-none"
+                className="w-full bg-[#FAFAFA] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-4 text-[13.5px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none focus:border-[#EF4444] focus:bg-white dark:focus:bg-[#121624] focus:ring-2 focus:ring-[#EF4444]/10 transition-all shadow-2xs resize-none"
               />
             </div>
 
@@ -767,7 +802,7 @@ const MeetingDetailPage = () => {
               <button
                 type="button"
                 onClick={() => setCancelModalOpen(false)}
-                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-[14px] font-bold text-[#1A1D2E] hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-[14px] font-bold text-[#1A1D2E] dark:text-white hover:bg-[#F1F3F9] dark:hover:bg-[#232E47] transition-colors cursor-pointer"
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={16} />
                 <span>Orqaga</span>
@@ -802,36 +837,36 @@ const MeetingDetailPage = () => {
       {/* ================= MODAL: IMZONI KATTALASHTIRIB KO'RISH ================= */}
       {previewSignature && (
         <div
-          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-[99999] bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-150"
           onClick={() => setPreviewSignature(null)}
         >
           <div
-            className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-150 space-y-4"
+            className="bg-white dark:bg-[#161C2E] border border-slate-200/90 dark:border-[#2B3553] rounded-3xl p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-150 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#F1F3F9]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F1F3F9] dark:border-[#232E47]">
               <div>
-                <h3 className="text-base font-bold text-[#1A1D2E]">Imzo ko'rinishi</h3>
+                <h3 className="text-base font-bold text-[#1A1D2E] dark:text-white">Imzo ko'rinishi</h3>
                 {previewSignature.name && (
-                  <p className="text-xs text-[#8B90A5] font-medium mt-0.5">{previewSignature.name}</p>
+                  <p className="text-xs text-[#8B90A5] dark:text-[#94A3B8] font-medium mt-0.5">{previewSignature.name}</p>
                 )}
               </div>
               <button
                 type="button"
                 onClick={() => setPreviewSignature(null)}
-                className="p-1.5 rounded-xl hover:bg-[#F1F3F9] text-[#8B90A5] hover:text-[#1A1D2E] transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-[#F1F3F9] dark:hover:bg-[#232E47] text-[#8B90A5] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white transition-colors cursor-pointer"
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={18} />
               </button>
             </div>
 
             {/* Enlarged Signature Display */}
-            <div className="bg-[#F8FAFC] border border-[#E2E6F2] rounded-2xl p-6 flex items-center justify-center min-h-[220px] max-h-[360px] overflow-hidden">
+            <div className="bg-[#F8FAFC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-6 flex items-center justify-center min-h-[220px] max-h-[360px] overflow-hidden">
               <img
                 src={previewSignature.url}
                 alt="Imzo"
-                className="max-h-full max-w-full object-contain"
+                className="max-h-full max-w-full object-contain dark:invert"
               />
             </div>
 
@@ -840,7 +875,7 @@ const MeetingDetailPage = () => {
               <button
                 type="button"
                 onClick={() => setPreviewSignature(null)}
-                className="px-5 py-2.5 bg-[#F1F3F9] hover:bg-[#E2E6F2] text-[#1A1D2E] text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer"
+                className="px-5 py-2.5 bg-[#F1F3F9] dark:bg-[#1C2438] hover:bg-[#E2E6F2] dark:hover:bg-[#232E47] text-[#1A1D2E] dark:text-white text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer"
               >
                 Yopish
               </button>
@@ -853,9 +888,9 @@ const MeetingDetailPage = () => {
       {toastMessage && (
         <div className="fixed top-20 right-6 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300">
           <div
-            className={`bg-white border rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${toastMessage.type === "error"
-                ? "border-[#FECDCA]"
-                : "border-[#10B981]/40"
+            className={`bg-white dark:bg-[#161C2E] border rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${toastMessage.type === "error"
+                ? "border-[#FECDCA] dark:border-red-900/50"
+                : "border-[#10B981]/40 dark:border-[#10B981]/30"
               }`}
           >
             <div
@@ -863,7 +898,7 @@ const MeetingDetailPage = () => {
                 }`}
             >
               {toastMessage.type === "error" ? (
-                <div className="w-6 h-6 rounded-full bg-[#FEF3F2] flex items-center justify-center text-[#D92D20]">
+                <div className="w-6 h-6 rounded-full bg-[#FEF3F2] dark:bg-red-950/40 flex items-center justify-center text-[#D92D20]">
                   <HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={2.5} />
                 </div>
               ) : (
@@ -872,19 +907,19 @@ const MeetingDetailPage = () => {
             </div>
             <div className="flex-1 pr-2">
               <h4
-                className={`text-[14px] font-bold leading-tight ${toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#1A1D2E]"
+                className={`text-[14px] font-bold leading-tight ${toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#1A1D2E] dark:text-white"
                   }`}
               >
                 {toastMessage.title}
               </h4>
-              <p className="text-[12.5px] text-[#5E6480] mt-1 leading-snug">
+              <p className="text-[12.5px] text-[#5E6480] dark:text-[#94A3B8] mt-1 leading-snug">
                 {toastMessage.description}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setToastMessage(null)}
-              className="text-[#8B90A5] hover:text-[#1A1D2E] p-1 rounded-lg hover:bg-[#F1F3F9] transition-colors cursor-pointer"
+              className="text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white p-1 rounded-lg hover:bg-[#F1F3F9] dark:hover:bg-[#232E47] transition-colors cursor-pointer"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={16} />
             </button>

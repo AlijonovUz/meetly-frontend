@@ -129,11 +129,11 @@ const CustomSelect = ({
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2.5 bg-white border border-[#E2E6F2] rounded-xl h-11 px-3.5 text-[13.5px] font-medium transition-all shadow-2xs ${className} ${
+        className={`w-full flex items-center justify-between gap-2.5 bg-white dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl h-11 px-3.5 text-[13.5px] font-medium transition-all shadow-2xs ${className} ${
           isOpen
-            ? "border-[#3858C7] ring-2 ring-[#3858C7]/10 text-[#1A1D2E]"
-            : "text-[#1A1D2E] hover:border-[#CBD5E1]"
-        } ${disabled ? "cursor-default bg-[#FFFFFF] hover:border-[#E2E6F2]" : "cursor-pointer"}`}
+            ? "border-[#3858C7] ring-2 ring-[#3858C7]/10 text-[#1A1D2E] dark:text-white"
+            : "text-[#1A1D2E] dark:text-white hover:border-[#CBD5E1] dark:hover:border-[#3858C7]"
+        } ${disabled ? "cursor-default bg-[#FFFFFF] dark:bg-[#121624] hover:border-[#E2E6F2] dark:hover:border-[#2B3553]" : "cursor-pointer"}`}
       >
         <span className="truncate">
           {selectedOption ? selectedOption.label : placeholder}
@@ -141,8 +141,8 @@ const CustomSelect = ({
         <HugeiconsIcon
           icon={ArrowDown01Icon}
           size={16}
-          className={`text-[#5B6078] flex-shrink-0 transition-transform duration-200 ${
-            isOpen ? "rotate-180 text-[#3858C7]" : ""
+          className={`text-[#5B6078] dark:text-[#94A3B8] flex-shrink-0 transition-transform duration-200 ${
+            isOpen ? "rotate-180 text-[#3858C7] dark:text-[#7F95E6]" : ""
           }`}
         />
       </button>
@@ -152,13 +152,13 @@ const CustomSelect = ({
         <div
           className={`absolute left-0 ${
             placement === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5"
-          } w-full min-w-[200px] bg-white border border-[#E2E6F2] rounded-xl shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150 ${menuClassName}`}
+          } w-full min-w-[200px] bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150 ${menuClassName}`}
         >
           {/* Search Input inside Menu */}
           {searchable && (
-            <div className="px-2.5 pb-2 pt-0.5 border-b border-[#E2E6F2]/70">
+            <div className="px-2.5 pb-2 pt-0.5 border-b border-[#E2E6F2]/70 dark:border-[#2B3553]/70">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-[#8B90A5]">
+                <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-[#8B90A5] dark:text-[#64748B]">
                   {loading ? (
                     <HugeiconsIcon icon={Loading03Icon} size={15} className="animate-spin text-[#3858C7]" />
                   ) : (
@@ -171,7 +171,7 @@ const CustomSelect = ({
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={searchPlaceholder}
-                  className="w-full bg-[#F8F9FC] border border-[#E2E6F2] rounded-lg pl-8 pr-3 py-1.5 text-[12.5px] text-[#1A1D2E] placeholder-[#8B90A5] focus:outline-none focus:border-[#4763E4] focus:bg-white transition-all"
+                  className="w-full bg-[#F8F9FC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-lg pl-8 pr-3 py-1.5 text-[12.5px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none focus:border-[#4763E4] focus:bg-white dark:focus:bg-[#121624] transition-all"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
@@ -190,8 +190,8 @@ const CustomSelect = ({
                     onClick={() => handleSelect(opt.value)}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-left transition-colors cursor-pointer ${
                       isSelected
-                        ? "bg-[#EEF2FB] text-[#3858C7] font-semibold"
-                        : "text-[#1A1D2E] hover:bg-[#F8FAFC] hover:text-[#3858C7]"
+                        ? "bg-[#EEF2FB] dark:bg-[#232E47] text-[#3858C7] dark:text-[#7F95E6] font-semibold"
+                        : "text-[#1A1D2E] dark:text-slate-200 hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438] hover:text-[#3858C7] dark:hover:text-[#7F95E6]"
                     }`}
                   >
                     <span className="truncate">{opt.label}</span>
@@ -199,14 +199,14 @@ const CustomSelect = ({
                       <HugeiconsIcon
                         icon={Tick02Icon}
                         size={15}
-                        className="text-[#3858C7] flex-shrink-0 ml-2"
+                        className="text-[#3858C7] dark:text-[#7F95E6] flex-shrink-0 ml-2"
                       />
                     )}
                   </button>
                 );
               })
             ) : (
-              <div className="px-3 py-3 text-center text-[12.5px] text-[#8B90A5]">
+              <div className="px-3 py-3 text-center text-[12.5px] text-[#8B90A5] dark:text-[#64748B]">
                 {loading ? "Yuklanmoqda..." : "Hech narsa topilmadi"}
               </div>
             )}
