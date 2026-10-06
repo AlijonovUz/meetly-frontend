@@ -11,7 +11,7 @@ import {
 import { CustomSelect, DatePicker } from "../../components/UI";
 import { Check, Loader2 } from "lucide-react";
 import { getMeetings, getMeetingCounts } from "../../services/meetingsApi";
-import { getUsers } from "../../services/usersApi";
+import { getOrganizersList } from "../../services/reportsApi";
 
 const MeetingsPage = () => {
   const navigate = useNavigate();
@@ -79,9 +79,9 @@ const MeetingsPage = () => {
     }
 
     try {
-      const params = { page: targetPage, page_size: 20 };
+      const params = { page: targetPage, };
       if (query) params.search = query;
-      const res = await getUsers(params);
+      const res = await getOrganizersList(params);
       const newItems = Array.isArray(res) ? res : (res?.results || []);
 
       setUsersList((prev) => {
@@ -124,11 +124,9 @@ const MeetingsPage = () => {
     return [
       { value: "Barchasi", label: "Tashkilotchini tanlang" },
       ...usersList.map((u) => {
-        const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
-        const display = fullName || u.email || u.phone_number || "Foydalanuvchi";
         return {
           value: u.id,
-          label: display,
+          label: u.name,
         };
       }),
     ];
