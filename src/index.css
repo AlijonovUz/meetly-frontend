@@ -386,3 +386,54 @@ input[type="time"]::-webkit-datetime-edit-minute-field {
 .dark .glass-droplet-btn-danger:hover {
   background: #dc2626 !important;
 }
+
+/* ================= SCROLL & AMBIENT ANIMATIONS ================= */
+@keyframes heroFloat1 {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(0.6deg);
+  }
+}
+
+@keyframes heroFloat2 {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(12px) rotate(-0.6deg);
+  }
+}
+
+@keyframes ambientGlowPulse {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(1.1);
+  }
+}
+
+.animate-float-1 {
+  animation: heroFloat1 5s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: heroFloat2 6s ease-in-out infinite;
+}
+
+.animate-ambient-glow {
+  animation: ambientGlowPulse 7s ease-in-out infinite;
+}
+
+.hover-card-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+}
+
+.hover-card-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 32px -8px rgba(63, 87, 179, 0.12), 0 6px 12px -4px rgba(0, 0, 0, 0.03);
+}

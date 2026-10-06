@@ -59,6 +59,21 @@ const AdminRouteGuard = () => {
   return <Layout />;
 };
 
+/**
+ * Faqat staff (admin) foydalanuvchilar uchun marshrutlarni himoyalovchi komponent.
+ * Oddiy foydalanuvchilar /users sahifalariga kirmoqchi bo'lsa, bosh sahifaga (/) yo'naltiriladi.
+ */
+const StaffRouteGuard = ({ children }) => {
+  const currentUser = getCurrentUser();
+  const isStaff = Boolean(
+    currentUser?.is_staff || currentUser?.is_superuser || currentUser?.role === "admin"
+  );
+  if (!isStaff) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -98,11 +113,19 @@ const router = createBrowserRouter([
       },
       {
         path: "users",
-        element: <Users />,
+        element: (
+          <StaffRouteGuard>
+            <Users />
+          </StaffRouteGuard>
+        ),
       },
       {
         path: "users/:id",
-        element: <UserDetailPage />,
+        element: (
+          <StaffRouteGuard>
+            <UserDetailPage />
+          </StaffRouteGuard>
+        ),
       },
       {
         path: "meetings",

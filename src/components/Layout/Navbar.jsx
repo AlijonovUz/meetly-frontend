@@ -50,7 +50,7 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
     const pathname = location.pathname;
 
     if (pathname === "/") {
-      return [{ label: "Analitika" }];
+      return [{ label: "Dashboard" }];
     }
     if (pathname === "/users") {
       return [{ label: "Foydalanuvchilar" }];
@@ -121,7 +121,7 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   }, []);
 
   return (
-    <header className="h-[60px] bg-[#3858C7] border-b border-white/10 border-l border-white/10 px-6 flex items-center justify-between sticky top-0 z-30 select-none font-['Manrope',sans-serif] text-white">
+    <header className={`h-[60px] ${location.pathname === "/" ? "bg-transparent border-b border-b-[#EEF1F7]" : "bg-[#3858C7]"} border-b border-white/10 border-l border-white/10 px-6 flex items-center justify-between sticky top-0 z-30 select-none font-['Manrope',sans-serif] text-white`}>
       {/* Left side: Breadcrumb & Title */}
       <div className="flex items-center gap-3">
         {/* Mobile toggle button */}
@@ -151,7 +151,7 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                   <span
                     className={
                       isLast
-                        ? "text-white font-semibold"
+                        ? location.pathname === "/" ? "text-[#5B6078]" : "text-white font-semibold"
                         : "text-white/70 font-medium"
                     }
                   >

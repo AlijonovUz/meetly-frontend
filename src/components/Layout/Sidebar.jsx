@@ -19,12 +19,16 @@ import {
 import { mockUserProfile } from "../../data/mockData";
 import { IoMoon } from "react-icons/io5";
 import { LogOut, ChevronDown } from "lucide-react";
-import { logout } from "../../services/auth";
+import { logout, getCurrentUser } from "../../services/auth";
 
 const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const currentUser = useSelector((state) => state.references?.currentUser);
+  const reduxUser = useSelector((state) => state.references?.currentUser);
+  const currentUser = reduxUser || getCurrentUser();
+  const isStaff = Boolean(
+    currentUser?.is_staff || currentUser?.is_superuser || currentUser?.role === "admin"
+  );
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(
@@ -39,11 +43,15 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
       icon: DashboardSquare03Icon,
       end: true,
     },
-    {
-      to: "/users",
-      label: "Foydalanuvchilar",
-      icon: UserGroup02Icon,
-    },
+    ...(isStaff
+      ? [
+          {
+            to: "/users",
+            label: "Foydalanuvchilar",
+            icon: UserGroup02Icon,
+          },
+        ]
+      : []),
     {
       to: "/meetings",
       label: "Yig‘ilishlar",
@@ -120,7 +128,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
               setSidebarCollapsed(false);
             }
           }}
-          className={`h-[64px] flex items-center px-4 border-b border-white/15 flex-shrink-0 ${sidebarCollapsed ? "justify-center" : "justify-between"
+          className={`h-[60px] flex items-center px-4 flex-shrink-0 ${sidebarCollapsed ? "justify-center" : "justify-between"
             }`}
         >
           <div className="flex items-center gap-3 overflow-hidden">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Plus, Loader2 } from "lucide-react";
@@ -133,123 +133,171 @@ const Analytics = () => {
     );
   };
 
-  // Dinamika grafigi uchun silliq Bezier egri chizig'ini hisoblash
-  const dynamicsCurve = useMemo(() => {
-    const weeks = dashboardData?.dynamics?.weeks || [];
-    if (weeks.length === 0) {
-      return {
-        linePath: "M 0 180 L 600 180",
-        areaPath: "M 0 180 L 600 180 L 600 195 L 0 195 Z",
-        lastPoint: { x: 585, y: 180, count: 0 },
-        labels: [],
-      };
+  // ================= INTERACTIVE DYNAMICS CHART CALCULATIONS =================
+  const [activeWeekIndex, setActiveWeekIndex] = useState(null);
+  const [isHoveringDynamics, setIsHoveringDynamics] = useState(false);
+  const dynamicsContainerRef = useRef(null);
+
+  const dynamicsWeeks = useMemo(() => {
+    const weeks = dashboardData?.dynamics?.weeks;
+    if (weeks && Array.isArray(weeks) && weeks.length > 0) {
+      return weeks.map((w, idx) => {
+        const count = w.count ?? 0;
+        const prevCount = idx > 0 ? (weeks[idx - 1].count ?? 0) : count;
+        const diff = count - prevCount;
+        const growthStr = prevCount > 0 
+          ? `${diff >= 0 ? "+" : ""}${((diff / prevCount) * 100).toFixed(1)}%` 
+          : diff > 0 ? `+${diff}` : "+0%";
+
+        return {
+          week: idx + 1,
+          shortLabel: `${idx + 1}`,
+          label: w.week_label || `${idx + 1}-h`,
+          fullLabel: w.week_label || `${idx + 1}-hafta`,
+          date: w.date_range || w.date || (w.start_date && w.end_date ? `${dayjs(w.start_date).format("D MMM")} - ${dayjs(w.end_date).format("D MMM")}` : ""),
+          count,
+          growth: w.growth || growthStr,
+          isCurrent: idx === weeks.length - 1,
+        };
+      });
     }
 
-    const counts = weeks.map((w) => w.count ?? 0);
-    const maxVal = Math.max(...counts, 1);
-    const width = 600;
-    const baseHeight = 185;
-    const topPadding = 30;
-    const usableHeight = baseHeight - topPadding;
-
-    const points = weeks.map((w, idx) => {
-      const x = (idx / (weeks.length - 1 || 1)) * (width - 30) + 15;
-      const count = w.count ?? 0;
-      const y = baseHeight - (count / maxVal) * usableHeight;
-      return { x, y, count, label: w.week_label };
-    });
-
-    if (points.length === 1) {
-      const p = points[0];
-      return {
-        linePath: `M 0 ${p.y} L 600 ${p.y}`,
-        areaPath: `M 0 ${p.y} L 600 ${p.y} L 600 195 L 0 195 Z`,
-        lastPoint: p,
-        labels: [p.label],
-      };
-    }
-
-    let linePath = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[i === 0 ? i : i - 1];
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const p3 = points[i + 2] || p2;
-
-      const cp1x = p1.x + (p2.x - p0.x) / 5;
-      const cp1y = p1.y + (p2.y - p0.y) / 5;
-      const cp2x = p2.x - (p3.x - p1.x) / 5;
-      const cp2y = p2.y - (p3.y - p1.y) / 5;
-
-      linePath += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(
-        1
-      )} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
-    }
-
-    const last = points[points.length - 1];
-    const first = points[0];
-    const areaPath = `${linePath} L ${last.x.toFixed(1)} 195 L ${first.x.toFixed(
-      1
-    )} 195 Z`;
-
-    return {
-      linePath,
-      areaPath,
-      lastPoint: last,
-      labels: points.map((p) => p.label),
-    };
+    // Default 12 weeks fallback if empty
+    return [
+      { week: 1, shortLabel: "1", label: "1-h", fullLabel: "1-hafta", date: "1-hafta", count: 0, growth: "+0%" },
+      { week: 2, shortLabel: "2", label: "2-h", fullLabel: "2-hafta", date: "2-hafta", count: 0, growth: "+0%" },
+      { week: 3, shortLabel: "3", label: "3-h", fullLabel: "3-hafta", date: "3-hafta", count: 0, growth: "+0%" },
+      { week: 4, shortLabel: "4", label: "4-h", fullLabel: "4-hafta", date: "4-hafta", count: 0, growth: "+0%" },
+      { week: 5, shortLabel: "5", label: "5-h", fullLabel: "5-hafta", date: "5-hafta", count: 0, growth: "+0%" },
+      { week: 6, shortLabel: "6", label: "6-h", fullLabel: "6-hafta", date: "6-hafta", count: 0, growth: "+0%" },
+      { week: 7, shortLabel: "7", label: "7-h", fullLabel: "7-hafta", date: "7-hafta", count: 0, growth: "+0%" },
+      { week: 8, shortLabel: "8", label: "8-h", fullLabel: "8-hafta", date: "8-hafta", count: 0, growth: "+0%" },
+      { week: 9, shortLabel: "9", label: "9-h", fullLabel: "9-hafta", date: "9-hafta", count: 0, growth: "+0%" },
+      { week: 10, shortLabel: "10", label: "10-h", fullLabel: "10-hafta", date: "10-hafta", count: 0, growth: "+0%" },
+      { week: 11, shortLabel: "11", label: "11-h", fullLabel: "11-hafta", date: "11-hafta", count: 0, growth: "+0%" },
+      { week: 12, shortLabel: "12", label: "12-h", fullLabel: "12-hafta", date: "12-hafta", count: 0, growth: "+0%", isCurrent: true },
+    ];
   }, [dashboardData]);
 
-  // Holat bo'yicha (Donut chart) hisob-kitoblari
+  const dynamicsPoints = useMemo(() => {
+    const list = dynamicsWeeks;
+    const counts = list.map((d) => d.count);
+    const maxVal = Math.max(...counts, 4);
+    const minVal = 0;
+    const width = 596;
+    const startX = 24;
+    const usableW = width - 48;
+    const topY = 24;
+    const bottomY = 170;
+    const usableH = bottomY - topY;
+
+    return list.map((d, i) => {
+      const x = startX + (i / Math.max(list.length - 1, 1)) * usableW;
+      const y = bottomY - ((d.count - minVal) / (maxVal - minVal || 1)) * usableH;
+      return { ...d, x, y };
+    });
+  }, [dynamicsWeeks]);
+
+  const currentActiveWeekIndex = activeWeekIndex !== null && activeWeekIndex < dynamicsPoints.length
+    ? activeWeekIndex
+    : dynamicsPoints.length - 1;
+  const activeDynamicsData = dynamicsPoints[currentActiveWeekIndex] || dynamicsPoints[0];
+
+  const dynamicsPathD = useMemo(() => {
+    if (dynamicsPoints.length === 0) return "";
+    if (dynamicsPoints.length === 1) return `M 0 ${dynamicsPoints[0].y} L 596 ${dynamicsPoints[0].y}`;
+    return dynamicsPoints.reduce((acc, p, i, arr) => {
+      if (i === 0) return `M ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+      const prev = arr[i - 1];
+      const cx1 = prev.x + (p.x - prev.x) / 2;
+      const cx2 = cx1;
+      return `${acc} C ${cx1.toFixed(1)} ${prev.y.toFixed(1)}, ${cx2.toFixed(1)} ${p.y.toFixed(1)}, ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+    }, "");
+  }, [dynamicsPoints]);
+
+  const dynamicsAreaD = useMemo(() => {
+    if (!dynamicsPathD || dynamicsPoints.length === 0) return "";
+    const last = dynamicsPoints[dynamicsPoints.length - 1];
+    const first = dynamicsPoints[0];
+    return `${dynamicsPathD} L ${last.x.toFixed(1)} 195 L ${first.x.toFixed(1)} 195 Z`;
+  }, [dynamicsPathD, dynamicsPoints]);
+
+  const handleDynamicsMouseMove = (e) => {
+    if (!dynamicsContainerRef.current || dynamicsPoints.length === 0) return;
+    setIsHoveringDynamics(true);
+    const rect = dynamicsContainerRef.current.getBoundingClientRect();
+    const relativeX = e.clientX - rect.left;
+    const width = rect.width;
+    const ratio = Math.max(0, Math.min(1, (relativeX - 16) / (width - 32)));
+    const index = Math.round(ratio * (dynamicsPoints.length - 1));
+    if (index >= 0 && index < dynamicsPoints.length) {
+      setActiveWeekIndex(index);
+    }
+  };
+
+  // ================= INTERACTIVE DONUT CHART CALCULATIONS =================
+  const [hoveredStatusIndex, setHoveredStatusIndex] = useState(null);
+
   const statusChartData = useMemo(() => {
     const statusObj = dashboardData?.status_breakdown || dashboardData?.user_status_breakdown;
     const total = statusObj?.total ?? (Array.isArray(statusObj?.by_status) ? statusObj.by_status.reduce((acc, curr) => acc + (curr.count || 0), 0) : 0);
-    const byStatus = statusObj?.by_status || (Array.isArray(statusObj) ? statusObj : []);
+    const rawByStatus = statusObj?.by_status || (Array.isArray(statusObj) ? statusObj : []);
 
-    const circumference = 376.99; // 2 * PI * 60
+    const defaultItems = [
+      { id: "completed", key: "completed", label: "Oʻtkazilgan", count: 0, color: "#10B981" },
+      { id: "scheduled", key: "scheduled", label: "Rejalashtirilgan", count: 0, color: "#3858C7" },
+      { id: "ongoing", key: "ongoing", label: "Joriy", count: 0, color: "#F97316" },
+      { id: "cancelled", key: "cancelled", label: "Bekor qilingan", count: 0, color: "#98A2B3" },
+    ];
 
-    if (total === 0 || byStatus.length === 0) {
-      return {
-        total: 0,
-        items: byStatus.length > 0 ? byStatus : [
-          { key: "completed", label: "O'tkazilgan", count: 0, percentage: 0 },
-          { key: "scheduled", label: "Rejalashtirilgan", count: 0, percentage: 0 },
-          { key: "ongoing", label: "Joriy", count: 0, percentage: 0 },
-          { key: "cancelled", label: "Bekor qilingan", count: 0, percentage: 0 },
-        ],
-        slices: [],
-      };
-    }
-
-    let currentOffset = 0;
-    const slices = byStatus.map((st) => {
-      const pct = (st.count ?? 0) / total;
-      const dashLength = pct * circumference;
+    const items = rawByStatus.length > 0 ? rawByStatus.map((st) => {
+      const key = st.key || st.status || "other";
       const color =
         st.color ||
-        (st.key === "completed" || st.key === "attended"
+        (key === "completed" || key === "attended" || key === "o'tkazilgan"
           ? "#10B981"
-          : st.key === "scheduled"
+          : key === "scheduled" || key === "rejalashtirilgan"
           ? "#3858C7"
-          : st.key === "ongoing" || st.key === "late"
+          : key === "ongoing" || key === "late" || key === "joriy"
           ? "#F97316"
           : "#98A2B3");
-
-      const slice = {
-        key: st.key,
+      const count = st.count ?? 0;
+      const percentage = total > 0 ? Math.round((count / total) * 100) : (st.percentage ?? 0);
+      return {
+        id: key,
+        key,
+        label: st.label || key,
+        count,
+        percent: `${percentage}%`,
+        percentage,
         color,
-        strokeDasharray: `${dashLength.toFixed(1)} ${circumference.toFixed(1)}`,
-        strokeDashoffset: -currentOffset,
       };
+    }) : defaultItems.map((item) => ({ ...item, percent: "0%", percentage: 0 }));
 
+    const circumference = 226.2; // 2 * PI * 36
+    let currentOffset = 0;
+
+    const slices = items.map((item) => {
+      const ratio = total > 0 ? item.count / total : 0;
+      const dashLength = ratio * circumference;
+      const dashArray = `${dashLength.toFixed(1)} ${circumference.toFixed(1)}`;
+      const dashOffset = (-currentOffset).toFixed(1);
       currentOffset += dashLength;
-      return slice;
+      return {
+        ...item,
+        dashArray,
+        dashOffset,
+      };
     });
 
-    return { total, items: byStatus, slices };
+    return { total, items: slices };
   }, [dashboardData]);
 
-  // Hafta kunlari qatnashishi
+  const activeStatusItem = hoveredStatusIndex !== null ? statusChartData.items[hoveredStatusIndex] : null;
+
+  // ================= INTERACTIVE WEEKLY ATTENDANCE CALCULATIONS =================
+  const [hoveredDayIndex, setHoveredDayIndex] = useState(null);
+
   const weekdayAttendance = useMemo(() => {
     const items = dashboardData?.weekday_attendance;
     if (items && Array.isArray(items) && items.length > 0) {
@@ -258,20 +306,23 @@ const Analytics = () => {
         day: item.day_key || item.day_name?.slice(0, 3) || "",
         fullName: item.day_name || "",
         value: item.rate ?? 0,
+        count: item.count ?? item.attendees_count ?? 0,
         isPeak: maxRate > 0 && item.rate === maxRate,
       }));
     }
 
     // Default 6 days
     return [
-      { day: "Du", fullName: "Dushanba", value: 0, isPeak: false },
-      { day: "Se", fullName: "Seshanba", value: 0, isPeak: false },
-      { day: "Cho", fullName: "Chorshanba", value: 0, isPeak: false },
-      { day: "Pa", fullName: "Payshanba", value: 0, isPeak: false },
-      { day: "Ju", fullName: "Juma", value: 0, isPeak: false },
-      { day: "Sha", fullName: "Shanba", value: 0, isPeak: false },
+      { day: "Du", fullName: "Dushanba", value: 0, count: 0, isPeak: false },
+      { day: "Se", fullName: "Seshanba", value: 0, count: 0, isPeak: false },
+      { day: "Cho", fullName: "Chorshanba", value: 0, count: 0, isPeak: false },
+      { day: "Pa", fullName: "Payshanba", value: 0, count: 0, isPeak: false },
+      { day: "Ju", fullName: "Juma", value: 0, count: 0, isPeak: false },
+      { day: "Sha", fullName: "Shanba", value: 0, count: 0, isPeak: false },
     ];
   }, [dashboardData]);
+
+  const activeWeekday = hoveredDayIndex !== null ? weekdayAttendance[hoveredDayIndex] : null;
 
   // Faol tashkilotchilar (Staff)
   const topOrganizers = useMemo(() => {
@@ -309,11 +360,11 @@ const Analytics = () => {
   // Format Helper: Status badge
   const renderMeetingStatusBadge = (status, statusDisplay) => {
     const st = (status || "").toLowerCase();
-    if (st === "completed" || st === "o'tkazilgan") {
+    if (st === "completed" || st === "o'tkazilgan" || st === "oʻtkazilgan") {
       return (
         <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#10B981] bg-[#ECFDF5] px-2.5 py-1 rounded-full whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
-          {statusDisplay || "O'tkazilgan"}
+          {statusDisplay || "Oʻtkazilgan"}
         </span>
       );
     }
@@ -374,7 +425,7 @@ const Analytics = () => {
   }, [dashboardData, selectedPeriod, isStaff]);
 
   return (
-    <div className="p-6 py-5 font-['Manrope',sans-serif] min-h-screen">
+    <div className="p-4 sm:p-6 py-5 font-['Manrope',sans-serif] min-h-screen">
       {/* Top Header Row */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div>
@@ -404,7 +455,7 @@ const Analytics = () => {
                   key={p.id}
                   type="button"
                   onClick={() => setSelectedPeriod(p.label)}
-                  className={`px-3.5 py-1.5 text-[12.5px] font-semibold rounded-lg transition-all cursor-pointer shrink-0 ${
+                  className={`px-3 sm:px-3.5 py-1.5 text-[12px] sm:text-[12.5px] font-semibold rounded-lg transition-all cursor-pointer shrink-0 ${
                     isActive
                       ? "bg-white text-[#1A1D2E] shadow-sm font-extrabold"
                       : "text-[#5E6480] hover:text-[#1A1D2E]"
@@ -420,10 +471,10 @@ const Analytics = () => {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("open-create-meeting-modal"))}
-            className="inline-flex items-center gap-2 bg-[#3858C7] hover:bg-[#2C48B0] active:scale-[0.98] text-white font-bold text-[13px] h-9 px-4 rounded-xl transition-all shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-2 bg-[#3858C7] hover:bg-[#2C48B0] active:scale-[0.98] text-white font-bold text-[13px] h-9 px-4 rounded-xl transition-all shadow-xs cursor-pointer shrink-0"
           >
             <Plus size={16} strokeWidth={3.5} />
-            <span>Yangi yigʻilish</span>
+            <span className="hidden sm:inline">Yangi yigʻilish</span>
           </button>
         </div>
       </div>
@@ -444,7 +495,7 @@ const Analytics = () => {
       {/* 4 KPI Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {/* Card 1: Foydalanuvchilar / Qatnashgan yig'ilishlarim */}
-        <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 flex items-center justify-between shadow-2xs">
+        <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
               {card1?.label || (isStaff ? "FOYDALANUVCHILAR" : "QATNASHGAN YIG'ILISHLARIM")}
@@ -481,7 +532,7 @@ const Analytics = () => {
         </div>
 
         {/* Card 2: Jami yig'ilishlar / Qatnashish foizim */}
-        <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 flex items-center justify-between shadow-2xs">
+        <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
               {card2?.label || (isStaff ? "JAMI YIG'ILISHLAR" : "QATNASHISH FOIZIM")}
@@ -513,7 +564,7 @@ const Analytics = () => {
         </div>
 
         {/* Card 3: Joriy yig'ilishlar / Imzo kutilmoqda */}
-        <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 flex items-center justify-between shadow-2xs">
+        <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
               {card3?.label || (isStaff ? "JORIY YIGʻILISHLAR" : "IMZO KUTILMOQDA")}
@@ -541,7 +592,7 @@ const Analytics = () => {
         </div>
 
         {/* Card 4: O'rtacha qatnashish / Sarflangan vaqt */}
-        <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 flex items-center justify-between shadow-2xs">
+        <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] tracking-wider uppercase block">
               {card4?.label || (isStaff ? "O'RTACHA QATNASHISH" : "SARFLANGAN VAQT")}
@@ -585,196 +636,301 @@ const Analytics = () => {
       {/* Middle Section: Dynamics Area Chart & Status Donut Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
         {/* Left: Meeting Dynamics 12 Weeks (2 cols) */}
-        <div className="lg:col-span-2 bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
-              {isStaff
-                ? `YIG'ILISHLAR DINAMIKASI, ${dashboardData?.dynamics?.weeks?.length || 12} HAFTA`
-                : `MENING QATNASHISHIM, ${dashboardData?.dynamics?.weeks?.length || 12} HAFTA`}
-            </span>
-            <div className="flex items-center gap-2 text-[12px] font-medium text-[#5E6480]">
-              <span className="w-2 h-2 rounded-full bg-[#3858C7]"></span>
-              <span>{isStaff ? "O'tkazilgan yig'ilishlar" : "Qatnashgan yig'ilishlarim"}</span>
+        <div
+          ref={dynamicsContainerRef}
+          onMouseEnter={() => setIsHoveringDynamics(true)}
+          onMouseMove={handleDynamicsMouseMove}
+          onMouseLeave={() => {
+            setIsHoveringDynamics(false);
+            setActiveWeekIndex(null);
+          }}
+          className="lg:col-span-2 bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-4 sm:p-5 shadow-2xs hover-card-lift flex flex-col justify-between select-none relative group transition-all"
+        >
+          {/* Header Info */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+            <div>
+              <span className="text-[11px] sm:text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase block">
+                {isStaff
+                  ? `YIGʻILISHLAR DINAMIKASI, ${dynamicsWeeks.length} HAFTA`
+                  : `MENING QATNASHISHIM, ${dynamicsWeeks.length} HAFTA`}
+              </span>
+              <div className="flex items-center gap-2.5 mt-1">
+                <span className="text-[24px] sm:text-[28px] font-['Unbounded',sans-serif] font-semibold text-[#1A1D2E] leading-none">
+                  {dashboardData?.dynamics?.total ?? dynamicsWeeks.reduce((acc, curr) => acc + curr.count, 0)}
+                </span>
+                <span className="h-[22px] px-2 rounded-full bg-[#E8F7F0] text-[#16A34A] text-[11px] font-extrabold inline-flex items-center gap-1">
+                  <span>↑</span>
+                  <span>{activeDynamicsData.growth}</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Dynamic Active Week Badge */}
+            <div className="h-[32px] px-3.5 rounded-xl bg-[#1A1D2E] text-white text-[11.5px] font-extrabold flex items-center gap-2 shadow-md transition-all">
+              <span className={`w-2 h-2 rounded-full bg-[#38C98D] ${isHoveringDynamics ? "animate-ping" : ""}`}></span>
+              <span>
+                {isHoveringDynamics
+                  ? `${activeDynamicsData.count} ta, ${activeDynamicsData.isCurrent ? "shu hafta" : activeDynamicsData.fullLabel}`
+                  : `${dashboardData?.dynamics?.current_week_count ?? dynamicsWeeks[dynamicsWeeks.length - 1]?.count ?? 0} ta, shu hafta`}
+              </span>
             </div>
           </div>
 
-          {/* Smooth Area Curve SVG with Tooltip */}
-          <div className="relative w-full h-56 pt-2 flex items-stretch">
-            {/* Y Axis for non-staff */}
-            {!isStaff && (
-              <div className="flex flex-col justify-between text-[11px] font-medium text-[#8B90A5] pr-3 select-none pb-1">
-                <span>4</span>
-                <span>3</span>
-                <span>2</span>
-                <span>1</span>
-                <span>0</span>
-              </div>
-            )}
+          {/* Smooth Area Curve SVG with Interactive Hover Tracker */}
+          <div className="relative w-full h-48 sm:h-56 pt-2 cursor-crosshair">
+            <svg
+              viewBox="0 0 596 200"
+              className="w-full h-full overflow-visible"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="analyticsCurveGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3858C7" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="#3858C7" stopOpacity="0.01" />
+                </linearGradient>
+                <filter id="analyticsPointGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#3858C7" floodOpacity="0.45" />
+                </filter>
+              </defs>
 
-            <div className="relative flex-1 w-full h-full">
-              <svg
-                viewBox="0 0 600 200"
-                className="w-full h-full overflow-visible"
-                preserveAspectRatio="none"
-              >
-                <defs>
-                  <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3858C7" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#3858C7" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
+              {/* Grid Horizontal Lines */}
+              <line x1="10" y1="25" x2="586" y2="25" stroke="#F1F3F9" strokeWidth="1" />
+              <line x1="10" y1="65" x2="586" y2="65" stroke="#F1F3F9" strokeWidth="1" />
+              <line x1="10" y1="105" x2="586" y2="105" stroke="#F1F3F9" strokeWidth="1" />
+              <line x1="10" y1="145" x2="586" y2="145" stroke="#F1F3F9" strokeWidth="1" />
+              <line x1="10" y1="175" x2="586" y2="175" stroke="#E2E6F2" strokeWidth="1" />
 
-                {/* Grid Horizontal Lines */}
-                <line x1="0" y1="20" x2="600" y2="20" stroke="#F1F3F9" strokeWidth="1" />
-                <line x1="0" y1="65" x2="600" y2="65" stroke="#F1F3F9" strokeWidth="1" />
-                <line x1="0" y1="110" x2="600" y2="110" stroke="#F1F3F9" strokeWidth="1" />
-                <line x1="0" y1="155" x2="600" y2="155" stroke="#F1F3F9" strokeWidth="1" />
-                <line x1="0" y1="195" x2="600" y2="195" stroke="#E2E6F2" strokeWidth="1" />
+              {/* Area Fill */}
+              <path
+                d={dynamicsAreaD}
+                fill="url(#analyticsCurveGradient)"
+                className="transition-all duration-300"
+              />
 
-                {/* Area Fill */}
-                <path
-                  d={dynamicsCurve.areaPath}
-                  fill="url(#curveGradient)"
-                  className="transition-all duration-500"
-                />
+              {/* Smooth Stroke Line */}
+              <path
+                d={dynamicsPathD}
+                fill="none"
+                stroke="#3858C7"
+                strokeWidth="3"
+                strokeLinecap="round"
+                className="transition-all duration-300"
+              />
 
-                {/* Smooth Stroke Line */}
-                <path
-                  d={dynamicsCurve.linePath}
-                  fill="none"
+              {/* Active Vertical Guideline (only when hovering) */}
+              {isHoveringDynamics && (
+                <line
+                  x1={activeDynamicsData.x}
+                  y1="16"
+                  x2={activeDynamicsData.x}
+                  y2="175"
                   stroke="#3858C7"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  className="transition-all duration-500"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 3"
+                  opacity="0.85"
+                  className="transition-all duration-150"
                 />
+              )}
 
-                {/* Active Point at the end */}
-                <circle
-                  cx={dynamicsCurve.lastPoint.x}
-                  cy={dynamicsCurve.lastPoint.y}
-                  r="4.5"
-                  fill="#3858C7"
-                  stroke="#FFFFFF"
-                  strokeWidth="2"
-                  className="transition-all duration-500"
-                />
-              </svg>
+              {/* All Data Points (only visible when hovering card) */}
+              {isHoveringDynamics && dynamicsPoints.map((p, idx) => {
+                const isActive = idx === currentActiveWeekIndex;
+                return (
+                  <g key={idx} className="cursor-pointer" onClick={() => setActiveWeekIndex(idx)}>
+                    {isActive && (
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r="12"
+                        fill="#3858C7"
+                        fillOpacity="0.18"
+                        className="animate-pulse"
+                      />
+                    )}
+                    <circle
+                      cx={p.x}
+                      cy={p.y}
+                      r={isActive ? "6" : "3.5"}
+                      fill={isActive ? "#FFFFFF" : "#3858C7"}
+                      stroke="#3858C7"
+                      strokeWidth={isActive ? "3.5" : "1.5"}
+                      filter={isActive ? "url(#analyticsPointGlow)" : undefined}
+                      className="transition-all duration-200"
+                    />
+                  </g>
+                );
+              })}
+            </svg>
 
-              {/* Custom Tooltip on Active Point */}
-              <div className="absolute right-4 top-16 bg-[#1A1D2E] text-white text-[11.5px] font-semibold px-2.5 py-1 rounded-lg shadow-lg pointer-events-none">
-                {dashboardData?.dynamics?.current_week_count ??
-                  dynamicsCurve.lastPoint.count ??
-                  0}{" "}
-                ta, shu hafta
+            {/* Floating Dynamic Tooltip (only when hovering) */}
+            {isHoveringDynamics && (
+              <div
+                className="absolute pointer-events-none -translate-x-1/2 -translate-y-full mb-2 transition-all duration-150 ease-out z-30"
+                style={{
+                  left: `${(activeDynamicsData.x / 596) * 100}%`,
+                  top: `${(activeDynamicsData.y / 200) * 100}%`,
+                }}
+              >
+                <div className="bg-[#1A1D2E] text-white text-[10.5px] sm:text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-xl whitespace-nowrap border border-white/10 flex flex-col items-center">
+                  <span className="text-[#38C98D] text-[9.5px] sm:text-[10px] font-extrabold">
+                    {activeDynamicsData.fullLabel} {activeDynamicsData.date ? `(${activeDynamicsData.date})` : ""}
+                  </span>
+                  <span className="text-white text-[11px] sm:text-[12px] font-black">
+                    {activeDynamicsData.count} ta yigʻilish
+                  </span>
+                  <div className="w-2 h-2 bg-[#1A1D2E] rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2 border-r border-b border-white/10"></div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* X Axis Labels */}
-          <div className={`flex items-center justify-between text-[11px] text-[#8B90A5] mt-3 px-1 overflow-x-auto ${!isStaff ? "pl-7" : ""}`}>
-            {dynamicsCurve.labels.length > 0 ? (
-              dynamicsCurve.labels
-                .filter((_, idx, arr) => {
-                  if (arr.length <= 6) return true;
-                  return (
-                    idx === 0 ||
-                    idx === Math.floor(arr.length * 0.2) ||
-                    idx === Math.floor(arr.length * 0.4) ||
-                    idx === Math.floor(arr.length * 0.6) ||
-                    idx === Math.floor(arr.length * 0.8) ||
-                    idx === arr.length - 1
-                  );
-                })
-                .map((lbl, i) => <span key={i}>{lbl}</span>)
-            ) : (
-              <>
-                <span>1-hafta</span>
-                <span>3-hafta</span>
-                <span>5-hafta</span>
-                <span>7-hafta</span>
-                <span>9-hafta</span>
-                <span>12-hafta</span>
-              </>
-            )}
+          {/* X Axis Week Buttons Grid - 100% full width, no scrollbar */}
+          <div className="w-full grid grid-cols-12 gap-0.5 sm:gap-1 pt-2.5 border-t border-[#EEF1F7] text-[10px] sm:text-[11px] font-semibold text-[#8F95A8] select-none">
+            {dynamicsWeeks.map((d, idx) => {
+              const isActive = idx === currentActiveWeekIndex;
+              const isHighlight = isHoveringDynamics && isActive;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setIsHoveringDynamics(true);
+                    setActiveWeekIndex(idx);
+                  }}
+                  onMouseEnter={() => {
+                    setIsHoveringDynamics(true);
+                    setActiveWeekIndex(idx);
+                  }}
+                  className={`w-full py-1 text-center rounded-md transition-all truncate cursor-pointer ${
+                    isHighlight
+                      ? "bg-[#3858C7] text-white font-extrabold shadow-xs"
+                      : "hover:text-[#1A1D2E] hover:bg-[#F1F3F9]"
+                  }`}
+                  title={`${d.fullLabel}: ${d.count} ta`}
+                >
+                  <span className="hidden xl:inline">{d.label}</span>
+                  <span className="xl:hidden">{d.shortLabel}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Right: Status Donut Chart (1 col) */}
-        <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
-          <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase mb-3">
-            {isStaff ? "HOLAT BO'YICHA" : "MENING YIG'ILISHLARIM"}
-          </span>
+        <div
+          onMouseLeave={() => setHoveredStatusIndex(null)}
+          className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-4 sm:p-5 shadow-2xs hover-card-lift flex flex-col justify-between transition-all"
+        >
+          <div className="flex items-center justify-between h-5 mb-2">
+            <span className="text-[11px] sm:text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase block">
+              {isStaff ? "HOLAT BO'YICHA" : "MENING YIG'ILISHLARIM"}
+            </span>
+            <span
+              style={{ color: activeStatusItem ? activeStatusItem.color : "#8F95A8" }}
+              className="text-[11.5px] font-extrabold transition-colors duration-150"
+            >
+              {activeStatusItem ? `${activeStatusItem.label}: ${activeStatusItem.percent}` : "100%"}
+            </span>
+          </div>
 
-          {/* Donut Chart */}
+          {/* Interactive Donut Chart */}
           <div className="relative flex items-center justify-center py-2">
-            <svg viewBox="0 0 160 160" className="w-36 h-36">
-              {/* Background empty track if total is 0 */}
-              <circle
-                cx="80"
-                cy="80"
-                r="60"
-                fill="transparent"
-                stroke="#F1F3F9"
-                strokeWidth="18"
-              />
+            <div className="relative w-36 h-36 flex items-center justify-center">
+              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90 overflow-visible">
+                {/* Background empty track if total is 0 */}
+                {statusChartData.total === 0 && (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="36"
+                    fill="none"
+                    stroke="#F1F3F9"
+                    strokeWidth="13"
+                  />
+                )}
 
-              {/* Dynamic Slices */}
-              {statusChartData.slices.map((slice) => (
-                <circle
-                  key={slice.key}
-                  cx="80"
-                  cy="80"
-                  r="60"
-                  fill="transparent"
-                  stroke={slice.color}
-                  strokeWidth="18"
-                  strokeDasharray={slice.strokeDasharray}
-                  strokeDashoffset={slice.strokeDashoffset}
-                  className="transition-all duration-500"
-                />
-              ))}
-            </svg>
+                {/* Base Slices */}
+                {statusChartData.items.map((item, idx) => {
+                  const isHovered = hoveredStatusIndex === idx;
+                  return (
+                    <circle
+                      key={item.id}
+                      cx="50"
+                      cy="50"
+                      r="36"
+                      fill="none"
+                      stroke={item.color}
+                      strokeWidth="13"
+                      strokeDasharray={item.dashArray}
+                      strokeDashoffset={item.dashOffset}
+                      strokeLinecap="round"
+                      onMouseEnter={() => setHoveredStatusIndex(idx)}
+                      className="transition-all duration-200 cursor-pointer"
+                      opacity={hoveredStatusIndex !== null && !isHovered ? 0.4 : 1}
+                    />
+                  );
+                })}
 
-            {/* Centered Total Count */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-[24px] font-extrabold text-[#1A1D2E] leading-none">
-                {statusChartData.total.toLocaleString("uz-UZ")}
-              </span>
-              <span className="text-[10px] font-bold text-[#8B90A5] tracking-wider mt-0.5">
-                JAMI
-              </span>
+                {/* Active Highlighted Slice rendered on top */}
+                {activeStatusItem && (
+                  <circle
+                    key={`active-${activeStatusItem.id}`}
+                    cx="50"
+                    cy="50"
+                    r="36"
+                    fill="none"
+                    stroke={activeStatusItem.color}
+                    strokeWidth="16.5"
+                    strokeDasharray={activeStatusItem.dashArray}
+                    strokeDashoffset={activeStatusItem.dashOffset}
+                    strokeLinecap="round"
+                    className="transition-all duration-150 cursor-pointer pointer-events-none drop-shadow-sm"
+                  />
+                )}
+              </svg>
+
+              {/* Centered Dynamic Total & Label */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+                <span className="text-[22px] font-['Unbounded',sans-serif] font-bold text-[#1A1D2E] leading-none">
+                  {activeStatusItem ? activeStatusItem.count : statusChartData.total.toLocaleString("uz-UZ")}
+                </span>
+                <span
+                  style={{ color: activeStatusItem ? activeStatusItem.color : "#8F95A8" }}
+                  className="text-[10px] font-extrabold tracking-wider mt-0.5"
+                >
+                  {activeStatusItem ? activeStatusItem.percent : "JAMI"}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Status Breakdown Legend */}
-          <div className="space-y-2 mt-3 pt-3 border-t border-[#F1F3F9]">
-            {statusChartData.items.map((st) => {
-              const colorClass =
-                st.color ? "" :
-                st.key === "completed" || st.key === "attended"
-                  ? "bg-[#10B981]"
-                  : st.key === "scheduled"
-                  ? "bg-[#3858C7]"
-                  : st.key === "ongoing" || st.key === "late"
-                  ? "bg-[#F97316]"
-                  : "bg-[#98A2B3]";
-
+          {/* Status Breakdown Legend with Hover Highlight */}
+          <div className="space-y-1.5 mt-2 pt-2.5 border-t border-[#F1F3F9]">
+            {statusChartData.items.map((st, idx) => {
+              const isHovered = hoveredStatusIndex === idx;
               return (
                 <div
                   key={st.key}
-                  className="flex items-center justify-between text-[12.5px]"
+                  onMouseEnter={() => setHoveredStatusIndex(idx)}
+                  className={`flex items-center justify-between py-1 px-2 rounded-xl transition-colors cursor-pointer ${
+                    isHovered ? "bg-[#F1F3F9]" : "hover:bg-[#F8FAFC]"
+                  }`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0 pr-2">
                     <span
-                      className={`w-2.5 h-2.5 rounded-full ${colorClass}`}
-                      style={st.color ? { backgroundColor: st.color } : {}}
+                      style={{ backgroundColor: st.color }}
+                      className={`w-2.5 h-2.5 rounded-full shrink-0 transition-transform duration-150 ${
+                        isHovered ? "scale-125" : ""
+                      }`}
                     ></span>
-                    <span className="text-[#5E6480] font-medium">{st.label}</span>
+                    <span className={`text-[12.5px] truncate ${isHovered ? "font-bold text-[#1A1D2E]" : "font-medium text-[#5E6480]"}`}>
+                      {st.label}
+                    </span>
                   </div>
-                  <div className="font-semibold text-[#1A1D2E]">
+                  <div className="font-semibold text-[#1A1D2E] text-[12.5px] shrink-0">
                     {st.count ?? 0}{" "}
-                    <span className="text-[#8B90A5] font-normal text-[11px] ml-1.5">
-                      {st.percentage ?? 0}%
+                    <span className="text-[#8B90A5] font-normal text-[11px] ml-1">
+                      {st.percent}
                     </span>
                   </div>
                 </div>
@@ -787,7 +943,7 @@ const Analytics = () => {
       {/* Bottom Section: 3 Columns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Col 1: Bugungi yig'ilishlar */}
-        <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 shadow-2xs hover-card-lift flex flex-col justify-between transition-all">
           <div className="flex items-center justify-between mb-4">
             <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
               {isStaff ? "BUGUNGI YIG'ILISHLAR" : "BUGUNGI YIG'ILISHLARIM"}
@@ -802,7 +958,7 @@ const Analytics = () => {
             )}
           </div>
 
-          <div className="space-y-3 flex-1">
+          <div className="space-y-2 flex-1">
             {todayMeetings.length === 0 ? (
               <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5]">
                 <p className="text-[13px] font-medium">
@@ -822,9 +978,7 @@ const Analytics = () => {
                 return (
                   <div
                     key={m.id || idx}
-                    className={`flex items-center justify-between py-1.5 ${
-                      idx < todayMeetings.length - 1 ? "border-b border-[#F8FAFC]" : ""
-                    }`}
+                    className="flex items-center justify-between p-2 rounded-xl hover:bg-[#F8FAFC] transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0 pr-2">
                       <span className="text-[12.5px] font-bold text-[#1A1D2E] min-w-[42px] shrink-0">
@@ -848,52 +1002,73 @@ const Analytics = () => {
         </div>
 
         {/* Col 2: Qatnashish, hafta kunlari */}
-        <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 px-6 shadow-2xs flex flex-col">
-          <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase mb-4">
-            {isStaff ? "QATNASHISH, HAFTA KUNLARI" : "QATNASHISHIM, HAFTA KUNLARI"}
-          </span>
+        <div
+          onMouseLeave={() => setHoveredDayIndex(null)}
+          className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 px-6 shadow-2xs hover-card-lift flex flex-col justify-between transition-all"
+        >
+          <div className="flex items-center justify-between h-5 mb-4">
+            <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase block">
+              {isStaff ? "QATNASHISH, HAFTA KUNLARI" : "QATNASHISHIM, HAFTA KUNLARI"}
+            </span>
+            <span
+              className={`text-[11.5px] font-extrabold text-[#3858C7] transition-opacity duration-150 ${
+                activeWeekday ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {activeWeekday ? `${activeWeekday.fullName}: ${activeWeekday.value}%` : ""}
+            </span>
+          </div>
 
           <div className="flex-1 flex items-end justify-between gap-2 pb-1 min-h-[180px]">
-            {weekdayAttendance.map((item) => (
-              <div
-                key={item.day}
-                className="w-[35px] h-full flex flex-col items-center justify-end gap-1.5"
-                title={`${item.fullName}: ${item.value}%`}
-              >
-                <span
-                  className={`text-[11px] font-bold ${
-                    item.isPeak ? "text-[#3858C7]" : "text-[#1A1D2E]"
-                  }`}
+            {weekdayAttendance.map((item, idx) => {
+              const isHovered = hoveredDayIndex === idx;
+              return (
+                <div
+                  key={item.day}
+                  onMouseEnter={() => setHoveredDayIndex(idx)}
+                  className="flex-1 max-w-[42px] h-full flex flex-col items-center justify-end gap-1.5 cursor-pointer group"
                 >
-                  {item.value}%
-                </span>
-                <div className="w-full flex-1 flex items-end">
-                  <div
-                    className={`w-full rounded-t-lg transition-all duration-300 ${
-                      item.isPeak ? "bg-[#3858C7] shadow-xs" : "bg-[#B7C7F3]"
+                  <span
+                    className={`text-[11px] font-bold transition-colors duration-150 ${
+                      isHovered ? "text-[#3858C7]" : "text-[#1A1D2E]"
                     }`}
-                    style={{
-                      height: `${Math.max(item.value, item.value === 0 ? 6 : item.value)}%`,
-                    }}
-                  />
+                  >
+                    {item.value}%
+                  </span>
+                  <div className="w-full flex-1 flex items-end">
+                    <div
+                      className={`w-full rounded-t-lg transition-all duration-200 ${
+                        isHovered
+                          ? "bg-[#3858C7] shadow-md shadow-[#3858C7]/30"
+                          : item.isPeak
+                          ? "bg-[#3858C7]"
+                          : "bg-[#B7C7F3] group-hover:bg-[#A3B8EE]"
+                      }`}
+                      style={{
+                        height: `${Math.max(item.value, item.value === 0 ? 6 : item.value)}%`,
+                      }}
+                    />
+                  </div>
+                  <span
+                    className={`text-[11px] transition-colors duration-150 ${
+                      isHovered
+                        ? "font-extrabold text-[#3858C7]"
+                        : item.isPeak
+                        ? "font-bold text-[#3858C7]"
+                        : "font-semibold text-[#8B90A5]"
+                    }`}
+                  >
+                    {item.day}
+                  </span>
                 </div>
-                <span
-                  className={`text-[11px] ${
-                    item.isPeak
-                      ? "font-bold text-[#3858C7]"
-                      : "font-semibold text-[#8B90A5]"
-                  }`}
-                >
-                  {item.day}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         {/* Col 3: Faol tashkilotchilar (Staff) / Imzolarim (User) */}
         {isStaff ? (
-          <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-start">
+          <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 shadow-2xs hover-card-lift flex flex-col justify-start transition-all">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
                 FAOL TASHKILOTCHILAR
@@ -915,10 +1090,10 @@ const Analytics = () => {
                 </div>
               ) : (
                 topOrganizers.slice(0, 5).map((org, idx) => (
-                  <div key={idx}>
+                  <div key={idx} className="p-1.5 rounded-xl hover:bg-[#F8FAFC] transition-colors">
                     <div className="flex items-center justify-between text-[12.5px] font-semibold text-[#1A1D2E] mb-1">
                       <span className="truncate pr-2">{org.name}</span>
-                      <span className="shrink-0">{org.count} ta</span>
+                      <span className="shrink-0 font-bold">{org.count} ta</span>
                     </div>
                     <div className="w-full bg-[#F1F3F9] h-2 rounded-full overflow-hidden">
                       <div
@@ -935,7 +1110,7 @@ const Analytics = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-white border border-[#E2E6F2] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+          <div className="bg-white border border-[#E2E6F2] hover:border-[#3858C7]/30 rounded-2xl p-5 shadow-2xs hover-card-lift flex flex-col justify-between transition-all">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[11.5px] font-bold text-[#8B90A5] tracking-wider uppercase">
                 IMZOLARIM
@@ -948,7 +1123,7 @@ const Analytics = () => {
               </Link>
             </div>
 
-            <div className="space-y-3.5 flex-1">
+            <div className="space-y-2 flex-1">
               {userSignatures.length === 0 ? (
                 <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5]">
                   <p className="text-[13px] font-medium">
@@ -969,7 +1144,7 @@ const Analytics = () => {
                   return (
                     <div
                       key={sig.id || idx}
-                      className="flex items-center justify-between text-[13px] py-1 border-b border-[#F8FAFC] last:border-0"
+                      className="flex items-center justify-between text-[13px] p-2 rounded-xl hover:bg-[#F8FAFC] transition-colors"
                     >
                       <div className="min-w-0 pr-2">
                         <span className="font-semibold text-[#1A1D2E] truncate block leading-tight">
