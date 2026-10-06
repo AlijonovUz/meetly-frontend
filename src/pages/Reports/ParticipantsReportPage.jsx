@@ -23,9 +23,21 @@ const ParticipantsReportPage = () => {
 
   // Data state
   const [organizationsList, setOrganizationsList] = useState([]);
-  const [participantsList, setParticipantsList] = useState([]);
+  const [organizationsPage, setOrganizationsPage] = useState(1);
+  const [organizationsHasMore, setOrganizationsHasMore] = useState(false);
   const [orgsLoading, setOrgsLoading] = useState(false);
+  const [orgsLoadingMore, setOrgsLoadingMore] = useState(false);
+  const [organizationsSearch, setOrganizationsSearch] = useState("");
+  const isFetchingOrgsRef = useRef(false);
+
+  const [participantsList, setParticipantsList] = useState([]);
+  const [participantsPage, setParticipantsPage] = useState(1);
+  const [participantsHasMore, setParticipantsHasMore] = useState(false);
   const [partsLoading, setPartsLoading] = useState(false);
+  const [partsLoadingMore, setPartsLoadingMore] = useState(false);
+  const [participantsSearch, setParticipantsSearch] = useState("");
+  const isFetchingPartsRef = useRef(false);
+
   const [reportsData, setReportsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -38,55 +50,92 @@ const ParticipantsReportPage = () => {
   const tableContainerRef = useRef(null);
   const isFetchingRef = useRef(false);
 
-  // Load dropdown references only on mount
-  useEffect(() => {
-    const loadReferences = async () => {
-      try {
-        setOrgsLoading(true);
-        setPartsLoading(true);
-        const [orgs, parts] = await Promise.all([
-          getOrganizationsList(),
-          getParticipantsList(),
-        ]);
-        setOrganizationsList(orgs || []);
-        setParticipantsList(parts || []);
-      } catch (err) {
-        console.error("Filtr ma'lumotlarini yuklashda xatolik:", err);
-      } finally {
-        setOrgsLoading(false);
-        setPartsLoading(false);
-      }
-    };
-    loadReferences();
-  }, []);
+  // Fetch Organizations with pagination
+  const fetchOrganizations = useCallback(async (targetPage = 1, isNext = false, search = "") => {
+    if (isFetchingOrgsRef.current) return;
+    isFetchingOrgsRef.current = true;
+    if (isNext) setOrgsLoadingMore(true);
+    else setOrgsLoading(true);
 
-  // Search organizations via API
-  const handleSearchOrganizations = useCallback(async (query) => {
     try {
-      setOrgsLoading(true);
-      const params = query ? { search: query } : {};
-      const orgs = await getOrganizationsList(params);
-      setOrganizationsList(orgs || []);
+      const params = { page: targetPage };
+      if (search) params.search = search;
+      const data = await getOrganizationsList(params);
+      const newItems = Array.isArray(data) ? data : (data.results || []);
+
+      setOrganizationsList((prev) => {
+        if (targetPage === 1) return newItems;
+        const existingIds = new Set(prev.map((item) => item.id || item.value));
+        const filtered = newItems.filter((item) => !existingIds.has(item.id || item.value));
+        return [...prev, ...filtered];
+      });
+
+      setOrganizationsPage(targetPage);
+      setOrganizationsHasMore(Boolean(data.next || (data.total_pages && targetPage < data.total_pages)));
     } catch (err) {
-      console.error("Tashkilotlarni qidirishda xatolik:", err);
+      console.error("Tashkilotlarni yuklashda xatolik:", err);
     } finally {
       setOrgsLoading(false);
+      setOrgsLoadingMore(false);
+      isFetchingOrgsRef.current = false;
     }
   }, []);
 
-  // Search participants via API
-  const handleSearchParticipants = useCallback(async (query) => {
+  const handleSearchOrganizations = (query) => {
+    setOrganizationsSearch(query);
+    fetchOrganizations(1, false, query);
+  };
+
+  const handleLoadMoreOrganizations = () => {
+    if (!organizationsHasMore || orgsLoadingMore || orgsLoading) return;
+    fetchOrganizations(organizationsPage + 1, true, organizationsSearch);
+  };
+
+  // Fetch Participants with pagination
+  const fetchParticipants = useCallback(async (targetPage = 1, isNext = false, search = "") => {
+    if (isFetchingPartsRef.current) return;
+    isFetchingPartsRef.current = true;
+    if (isNext) setPartsLoadingMore(true);
+    else setPartsLoading(true);
+
     try {
-      setPartsLoading(true);
-      const params = query ? { search: query } : {};
-      const parts = await getParticipantsList(params);
-      setParticipantsList(parts || []);
+      const params = { page: targetPage };
+      if (search) params.search = search;
+      const data = await getParticipantsList(params);
+      const newItems = Array.isArray(data) ? data : (data.results || []);
+
+      setParticipantsList((prev) => {
+        if (targetPage === 1) return newItems;
+        const existingIds = new Set(prev.map((item) => item.id || item.value));
+        const filtered = newItems.filter((item) => !existingIds.has(item.id || item.value));
+        return [...prev, ...filtered];
+      });
+
+      setParticipantsPage(targetPage);
+      setParticipantsHasMore(Boolean(data.next || (data.total_pages && targetPage < data.total_pages)));
     } catch (err) {
-      console.error("Ishtirokchilarni qidirishda xatolik:", err);
+      console.error("Ishtirokchilarni yuklashda xatolik:", err);
     } finally {
       setPartsLoading(false);
+      setPartsLoadingMore(false);
+      isFetchingPartsRef.current = false;
     }
   }, []);
+
+  const handleSearchParticipants = (query) => {
+    setParticipantsSearch(query);
+    fetchParticipants(1, false, query);
+  };
+
+  const handleLoadMoreParticipants = () => {
+    if (!participantsHasMore || partsLoadingMore || partsLoading) return;
+    fetchParticipants(participantsPage + 1, true, participantsSearch);
+  };
+
+  useEffect(() => {
+    fetchOrganizations(1, false, "");
+    fetchParticipants(1, false, "");
+  }, [fetchOrganizations, fetchParticipants]);
 
   // Toast auto-hide
   useEffect(() => {
@@ -440,6 +489,9 @@ const ParticipantsReportPage = () => {
                 placeholder="Tashkilotni tanlang"
                 searchable={true}
                 onSearch={handleSearchOrganizations}
+                onLoadMore={handleLoadMoreOrganizations}
+                hasMore={orgsHasMore}
+                loadingMore={orgsLoadingMore}
                 loading={orgsLoading}
               />
             </div>
@@ -456,6 +508,9 @@ const ParticipantsReportPage = () => {
                 placeholder="Ishtirokchini tanlang"
                 searchable={true}
                 onSearch={handleSearchParticipants}
+                onLoadMore={handleLoadMoreParticipants}
+                hasMore={participantsHasMore}
+                loadingMore={partsLoadingMore}
                 loading={partsLoading}
               />
             </div>

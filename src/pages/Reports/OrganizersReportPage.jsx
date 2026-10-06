@@ -23,9 +23,21 @@ const OrganizersReportPage = () => {
 
   // Data state
   const [organizationsList, setOrganizationsList] = useState([]);
-  const [organizersList, setOrganizersList] = useState([]);
+  const [organizationsPage, setOrganizationsPage] = useState(1);
+  const [organizationsHasMore, setOrganizationsHasMore] = useState(false);
   const [orgsLoading, setOrgsLoading] = useState(false);
+  const [orgsLoadingMore, setOrgsLoadingMore] = useState(false);
+  const [organizationsSearch, setOrganizationsSearch] = useState("");
+  const isFetchingOrgsRef = useRef(false);
+
+  const [organizersList, setOrganizersList] = useState([]);
+  const [organizersPage, setOrganizersPage] = useState(1);
+  const [organizersHasMore, setOrganizersHasMore] = useState(false);
   const [organizersLoading, setOrganizersLoading] = useState(false);
+  const [organizersLoadingMore, setOrganizersLoadingMore] = useState(false);
+  const [organizersSearch, setOrganizersSearch] = useState("");
+  const isFetchingOrganizersRef = useRef(false);
+
   const [reportsData, setReportsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -38,55 +50,92 @@ const OrganizersReportPage = () => {
   const tableContainerRef = useRef(null);
   const isFetchingRef = useRef(false);
 
-  // Load dropdown references only on mount
-  useEffect(() => {
-    const loadReferences = async () => {
-      try {
-        setOrgsLoading(true);
-        setOrganizersLoading(true);
-        const [orgs, organizers] = await Promise.all([
-          getOrganizationsList(),
-          getOrganizersList(),
-        ]);
-        setOrganizationsList(orgs || []);
-        setOrganizersList(organizers || []);
-      } catch (err) {
-        console.error("Filtr ma'lumotlarini yuklashda xatolik:", err);
-      } finally {
-        setOrgsLoading(false);
-        setOrganizersLoading(false);
-      }
-    };
-    loadReferences();
-  }, []);
+  // Fetch Organizations with pagination
+  const fetchOrganizations = useCallback(async (targetPage = 1, isNext = false, search = "") => {
+    if (isFetchingOrgsRef.current) return;
+    isFetchingOrgsRef.current = true;
+    if (isNext) setOrgsLoadingMore(true);
+    else setOrgsLoading(true);
 
-  // Search organizations via API
-  const handleSearchOrganizations = useCallback(async (query) => {
     try {
-      setOrgsLoading(true);
-      const params = query ? { search: query } : {};
-      const orgs = await getOrganizationsList(params);
-      setOrganizationsList(orgs || []);
+      const params = { page: targetPage };
+      if (search) params.search = search;
+      const data = await getOrganizationsList(params);
+      const newItems = Array.isArray(data) ? data : (data.results || []);
+
+      setOrganizationsList((prev) => {
+        if (targetPage === 1) return newItems;
+        const existingIds = new Set(prev.map((item) => item.id || item.value));
+        const filtered = newItems.filter((item) => !existingIds.has(item.id || item.value));
+        return [...prev, ...filtered];
+      });
+
+      setOrganizationsPage(targetPage);
+      setOrganizationsHasMore(Boolean(data.next || (data.total_pages && targetPage < data.total_pages)));
     } catch (err) {
-      console.error("Tashkilotlarni qidirishda xatolik:", err);
+      console.error("Tashkilotlarni yuklashda xatolik:", err);
     } finally {
       setOrgsLoading(false);
+      setOrgsLoadingMore(false);
+      isFetchingOrgsRef.current = false;
     }
   }, []);
 
-  // Search organizers via API
-  const handleSearchOrganizers = useCallback(async (query) => {
+  const handleSearchOrganizations = (query) => {
+    setOrganizationsSearch(query);
+    fetchOrganizations(1, false, query);
+  };
+
+  const handleLoadMoreOrganizations = () => {
+    if (!organizationsHasMore || orgsLoadingMore || orgsLoading) return;
+    fetchOrganizations(organizationsPage + 1, true, organizationsSearch);
+  };
+
+  // Fetch Organizers with pagination
+  const fetchOrganizers = useCallback(async (targetPage = 1, isNext = false, search = "") => {
+    if (isFetchingOrganizersRef.current) return;
+    isFetchingOrganizersRef.current = true;
+    if (isNext) setOrganizersLoadingMore(true);
+    else setOrganizersLoading(true);
+
     try {
-      setOrganizersLoading(true);
-      const params = query ? { search: query } : {};
-      const orgs = await getOrganizersList(params);
-      setOrganizersList(orgs || []);
+      const params = { page: targetPage };
+      if (search) params.search = search;
+      const data = await getOrganizersList(params);
+      const newItems = Array.isArray(data) ? data : (data.results || []);
+
+      setOrganizersList((prev) => {
+        if (targetPage === 1) return newItems;
+        const existingIds = new Set(prev.map((item) => item.id || item.value));
+        const filtered = newItems.filter((item) => !existingIds.has(item.id || item.value));
+        return [...prev, ...filtered];
+      });
+
+      setOrganizersPage(targetPage);
+      setOrganizersHasMore(Boolean(data.next || (data.total_pages && targetPage < data.total_pages)));
     } catch (err) {
-      console.error("Tashkilotchilarni qidirishda xatolik:", err);
+      console.error("Tashkilotchilarni yuklashda xatolik:", err);
     } finally {
       setOrganizersLoading(false);
+      setOrganizersLoadingMore(false);
+      isFetchingOrganizersRef.current = false;
     }
   }, []);
+
+  const handleSearchOrganizers = (query) => {
+    setOrganizersSearch(query);
+    fetchOrganizers(1, false, query);
+  };
+
+  const handleLoadMoreOrganizers = () => {
+    if (!organizersHasMore || organizersLoadingMore || organizersLoading) return;
+    fetchOrganizers(organizersPage + 1, true, organizersSearch);
+  };
+
+  useEffect(() => {
+    fetchOrganizations(1, false, "");
+    fetchOrganizers(1, false, "");
+  }, [fetchOrganizations, fetchOrganizers]);
 
   // Toast auto-hide
   useEffect(() => {
@@ -420,6 +469,9 @@ const OrganizersReportPage = () => {
                 placeholder="Tashkilotni tanlang"
                 searchable={true}
                 onSearch={handleSearchOrganizations}
+                onLoadMore={handleLoadMoreOrganizations}
+                hasMore={organizationsHasMore}
+                loadingMore={orgsLoadingMore}
                 loading={orgsLoading}
               />
             </div>
@@ -436,6 +488,9 @@ const OrganizersReportPage = () => {
                 placeholder="Tashkilotchini tanlang"
                 searchable={true}
                 onSearch={handleSearchOrganizers}
+                onLoadMore={handleLoadMoreOrganizers}
+                hasMore={organizersHasMore}
+                loadingMore={organizersLoadingMore}
                 loading={organizersLoading}
               />
             </div>

@@ -23,7 +23,13 @@ const MeetingsReportPage = () => {
 
   // Data state
   const [organizersList, setOrganizersList] = useState([]);
+  const [organizersPage, setOrganizersPage] = useState(1);
+  const [organizersHasMore, setOrganizersHasMore] = useState(false);
   const [organizersLoading, setOrganizersLoading] = useState(false);
+  const [organizersLoadingMore, setOrganizersLoadingMore] = useState(false);
+  const [organizersSearch, setOrganizersSearch] = useState("");
+  const isFetchingOrganizersRef = useRef(false);
+
   const [reportsData, setReportsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -36,35 +42,50 @@ const MeetingsReportPage = () => {
   const tableContainerRef = useRef(null);
   const isFetchingRef = useRef(false);
 
-  // Load organizers dropdown only on mount
-  useEffect(() => {
-    const loadOrganizers = async () => {
-      try {
-        setOrganizersLoading(true);
-        const orgs = await getOrganizersList();
-        setOrganizersList(orgs || []);
-      } catch (err) {
-        console.error("Tashkilotchilarni yuklashda xatolik:", err);
-      } finally {
-        setOrganizersLoading(false);
-      }
-    };
-    loadOrganizers();
-  }, []);
+  // Load organizers with pagination & search
+  const fetchOrganizers = useCallback(async (targetPage = 1, isNext = false, search = "") => {
+    if (isFetchingOrganizersRef.current) return;
+    isFetchingOrganizersRef.current = true;
+    if (isNext) setOrganizersLoadingMore(true);
+    else setOrganizersLoading(true);
 
-  // Search organizers via API
-  const handleSearchOrganizers = useCallback(async (query) => {
     try {
-      setOrganizersLoading(true);
-      const params = query ? { search: query } : {};
-      const orgs = await getOrganizersList(params);
-      setOrganizersList(orgs || []);
+      const params = { page: targetPage };
+      if (search) params.search = search;
+      const data = await getOrganizersList(params);
+      const newItems = Array.isArray(data) ? data : (data.results || []);
+
+      setOrganizersList((prev) => {
+        if (targetPage === 1) return newItems;
+        const existingIds = new Set(prev.map((item) => item.id || item.value));
+        const filtered = newItems.filter((item) => !existingIds.has(item.id || item.value));
+        return [...prev, ...filtered];
+      });
+
+      setOrganizersPage(targetPage);
+      setOrganizersHasMore(Boolean(data.next || (data.total_pages && targetPage < data.total_pages)));
     } catch (err) {
-      console.error("Tashkilotchilarni qidirishda xatolik:", err);
+      console.error("Tashkilotchilarni yuklashda xatolik:", err);
     } finally {
       setOrganizersLoading(false);
+      setOrganizersLoadingMore(false);
+      isFetchingOrganizersRef.current = false;
     }
   }, []);
+
+  const handleSearchOrganizers = (query) => {
+    setOrganizersSearch(query);
+    fetchOrganizers(1, false, query);
+  };
+
+  const handleLoadMoreOrganizers = () => {
+    if (!organizersHasMore || organizersLoadingMore || organizersLoading) return;
+    fetchOrganizers(organizersPage + 1, true, organizersSearch);
+  };
+
+  useEffect(() => {
+    fetchOrganizers(1, false, "");
+  }, [fetchOrganizers]);
 
   // Toast auto-hide
   useEffect(() => {
@@ -439,6 +460,9 @@ const MeetingsReportPage = () => {
                 placeholder="Tashkilotchini tanlang"
                 searchable={true}
                 onSearch={handleSearchOrganizers}
+                onLoadMore={handleLoadMoreOrganizers}
+                hasMore={organizersHasMore}
+                loadingMore={organizersLoadingMore}
                 loading={organizersLoading}
               />
             </div>

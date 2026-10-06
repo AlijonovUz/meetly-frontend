@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -31,6 +31,13 @@ const MeetingsPage = () => {
   // State
   const [meetings, setMeetings] = useState([]);
   const [usersList, setUsersList] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersLoadingMore, setUsersLoadingMore] = useState(false);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersHasMore, setUsersHasMore] = useState(false);
+  const [usersSearch, setUsersSearch] = useState("");
+  const isFetchingUsersRef = useRef(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("all"); // "all" | "ongoing" | "scheduled" | "completed"
@@ -62,17 +69,54 @@ const MeetingsPage = () => {
   });
 
   // Fetch users if is_staff is true
+  const fetchUsersList = useCallback(async (targetPage = 1, append = false, query = "") => {
+    if (isFetchingUsersRef.current) return;
+    isFetchingUsersRef.current = true;
+    if (append) {
+      setUsersLoadingMore(true);
+    } else {
+      setUsersLoading(true);
+    }
+
+    try {
+      const params = { page: targetPage, page_size: 20 };
+      if (query) params.search = query;
+      const res = await getUsers(params);
+      const newItems = Array.isArray(res) ? res : (res?.results || []);
+
+      setUsersList((prev) => {
+        if (targetPage === 1) return newItems;
+        const existingIds = new Set(prev.map((item) => item.id));
+        const filtered = newItems.filter((item) => !existingIds.has(item.id));
+        return [...prev, ...filtered];
+      });
+
+      setUsersPage(targetPage);
+      setUsersHasMore(Boolean(res?.next || (res?.total_pages && targetPage < res.total_pages)));
+    } catch (err) {
+      console.error("Foydalanuvchilarni yuklashda xatolik:", err);
+    } finally {
+      setUsersLoading(false);
+      setUsersLoadingMore(false);
+      isFetchingUsersRef.current = false;
+    }
+  }, []);
+
+  const handleSearchUsers = (query) => {
+    setUsersSearch(query);
+    fetchUsersList(1, false, query);
+  };
+
+  const handleLoadMoreUsers = () => {
+    if (!usersHasMore || usersLoadingMore || usersLoading) return;
+    fetchUsersList(usersPage + 1, true, usersSearch);
+  };
+
   useEffect(() => {
     if (isStaff) {
-      getUsers({ page_size: 100 })
-        .then((res) => {
-          setUsersList(res.results || []);
-        })
-        .catch((err) => {
-          console.error("Foydalanuvchilarni yuklashda xatolik:", err);
-        });
+      fetchUsersList(1, false, "");
     }
-  }, [isStaff]);
+  }, [isStaff, fetchUsersList]);
 
   // Organizer options (uses user id as value)
   const organizerOptions = useMemo(() => {
@@ -519,6 +563,12 @@ const MeetingsPage = () => {
                     options={organizerOptions}
                     placeholder="Tashkilotchini tanlang"
                     searchPlaceholder="Tashkilotchi izlash..."
+                    searchable={true}
+                    onSearch={handleSearchUsers}
+                    onLoadMore={handleLoadMoreUsers}
+                    hasMore={usersHasMore}
+                    loadingMore={usersLoadingMore}
+                    loading={usersLoading}
                     className="h-11!"
                     containerClassName="relative z-30"
                     menuClassName="z-50 shadow-2xl"

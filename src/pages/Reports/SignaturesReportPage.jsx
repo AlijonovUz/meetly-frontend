@@ -25,9 +25,28 @@ const SignaturesReportPage = () => {
   const [meetingsList, setMeetingsList] = useState([]);
   const [participantsList, setParticipantsList] = useState([]);
   const [organizersList, setOrganizersList] = useState([]);
+  
   const [meetsLoading, setMeetsLoading] = useState(false);
+  const [meetsLoadingMore, setMeetsLoadingMore] = useState(false);
+  const [meetsPage, setMeetsPage] = useState(1);
+  const [meetsHasMore, setMeetsHasMore] = useState(false);
+  const [meetsSearch, setMeetsSearch] = useState("");
+  const isFetchingMeetsRef = useRef(false);
+
   const [partsLoading, setPartsLoading] = useState(false);
+  const [partsLoadingMore, setPartsLoadingMore] = useState(false);
+  const [partsPage, setPartsPage] = useState(1);
+  const [partsHasMore, setPartsHasMore] = useState(false);
+  const [partsSearch, setPartsSearch] = useState("");
+  const isFetchingPartsRef = useRef(false);
+
   const [organizersLoading, setOrganizersLoading] = useState(false);
+  const [organizersLoadingMore, setOrganizersLoadingMore] = useState(false);
+  const [organizersPage, setOrganizersPage] = useState(1);
+  const [organizersHasMore, setOrganizersHasMore] = useState(false);
+  const [organizersSearch, setOrganizersSearch] = useState("");
+  const isFetchingOrganizersRef = useRef(false);
+
   const [reportsData, setReportsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -43,73 +62,145 @@ const SignaturesReportPage = () => {
   const tableContainerRef = useRef(null);
   const isFetchingRef = useRef(false);
 
-  // Load dropdown references only on mount
-  useEffect(() => {
-    const loadReferences = async () => {
-      try {
-        setPartsLoading(true);
-        setOrganizersLoading(true);
-        setMeetsLoading(true);
-        const [parts, orgs, meets] = await Promise.all([
-          getParticipantsList(),
-          getOrganizersList(),
-          getMeetingsList(),
-        ]);
-        setParticipantsList(parts || []);
-        setOrganizersList(orgs || []);
-        setMeetingsList(meets || []);
-      } catch (err) {
-        console.error("Filtr ma'lumotlarini yuklashda xatolik:", err);
-      } finally {
-        setPartsLoading(false);
-        setOrganizersLoading(false);
-        setMeetsLoading(false);
-      }
-    };
-    loadReferences();
-  }, []);
-
-  // Search meetings via API
-  const handleSearchMeetings = useCallback(async (query) => {
-    try {
+  // Fetch Meetings with pagination
+  const fetchMeetings = useCallback(async (targetPage = 1, append = false, search = "") => {
+    if (isFetchingMeetsRef.current) return;
+    isFetchingMeetsRef.current = true;
+    if (append) {
+      setMeetsLoadingMore(true);
+    } else {
       setMeetsLoading(true);
-      const params = query ? { search: query } : {};
-      const meets = await getMeetingsList(params);
-      setMeetingsList(meets || []);
+    }
+
+    try {
+      const params = { page: targetPage };
+      if (search) params.search = search;
+      const data = await getMeetingsList(params);
+      const newItems = Array.isArray(data) ? data : (data.results || []);
+
+      setMeetingsList((prev) => {
+        if (targetPage === 1) return newItems;
+        const existingIds = new Set(prev.map((item) => item.id || item.value));
+        const filtered = newItems.filter((item) => !existingIds.has(item.id || item.value));
+        return [...prev, ...filtered];
+      });
+
+      setMeetsPage(targetPage);
+      setMeetsHasMore(Boolean(data.next || (data.total_pages && targetPage < data.total_pages)));
     } catch (err) {
-      console.error("Yig'ilishlarni qidirishda xatolik:", err);
+      console.error("Yig'ilishlarni yuklashda xatolik:", err);
     } finally {
       setMeetsLoading(false);
+      setMeetsLoadingMore(false);
+      isFetchingMeetsRef.current = false;
     }
   }, []);
 
-  // Search participants via API
-  const handleSearchParticipants = useCallback(async (query) => {
-    try {
+  // Fetch Participants with pagination
+  const fetchParticipants = useCallback(async (targetPage = 1, append = false, search = "") => {
+    if (isFetchingPartsRef.current) return;
+    isFetchingPartsRef.current = true;
+    if (append) {
+      setPartsLoadingMore(true);
+    } else {
       setPartsLoading(true);
-      const params = query ? { search: query } : {};
-      const parts = await getParticipantsList(params);
-      setParticipantsList(parts || []);
+    }
+
+    try {
+      const params = { page: targetPage };
+      if (search) params.search = search;
+      const data = await getParticipantsList(params);
+      const newItems = Array.isArray(data) ? data : (data.results || []);
+
+      setParticipantsList((prev) => {
+        if (targetPage === 1) return newItems;
+        const existingIds = new Set(prev.map((item) => item.id || item.value));
+        const filtered = newItems.filter((item) => !existingIds.has(item.id || item.value));
+        return [...prev, ...filtered];
+      });
+
+      setPartsPage(targetPage);
+      setPartsHasMore(Boolean(data.next || (data.total_pages && targetPage < data.total_pages)));
     } catch (err) {
-      console.error("Ishtirokchilarni qidirishda xatolik:", err);
+      console.error("Ishtirokchilarni yuklashda xatolik:", err);
     } finally {
       setPartsLoading(false);
+      setPartsLoadingMore(false);
+      isFetchingPartsRef.current = false;
     }
   }, []);
 
-  // Search organizers via API
-  const handleSearchOrganizers = useCallback(async (query) => {
-    try {
+  // Fetch Organizers with pagination
+  const fetchOrganizers = useCallback(async (targetPage = 1, append = false, search = "") => {
+    if (isFetchingOrganizersRef.current) return;
+    isFetchingOrganizersRef.current = true;
+    if (append) {
+      setOrganizersLoadingMore(true);
+    } else {
       setOrganizersLoading(true);
-      const params = query ? { search: query } : {};
-      const orgs = await getOrganizersList(params);
-      setOrganizersList(orgs || []);
+    }
+
+    try {
+      const params = { page: targetPage };
+      if (search) params.search = search;
+      const data = await getOrganizersList(params);
+      const newItems = Array.isArray(data) ? data : (data.results || []);
+
+      setOrganizersList((prev) => {
+        if (targetPage === 1) return newItems;
+        const existingIds = new Set(prev.map((item) => item.id || item.value));
+        const filtered = newItems.filter((item) => !existingIds.has(item.id || item.value));
+        return [...prev, ...filtered];
+      });
+
+      setOrganizersPage(targetPage);
+      setOrganizersHasMore(Boolean(data.next || (data.total_pages && targetPage < data.total_pages)));
     } catch (err) {
-      console.error("Tashkilotchilarni qidirishda xatolik:", err);
+      console.error("Tashkilotchilarni yuklashda xatolik:", err);
     } finally {
       setOrganizersLoading(false);
+      setOrganizersLoadingMore(false);
+      isFetchingOrganizersRef.current = false;
     }
   }, []);
+
+  // Search handlers
+  const handleSearchMeetings = (query) => {
+    setMeetsSearch(query);
+    fetchMeetings(1, false, query);
+  };
+
+  const handleLoadMoreMeetings = () => {
+    if (!meetsHasMore || meetsLoadingMore || meetsLoading) return;
+    fetchMeetings(meetsPage + 1, true, meetsSearch);
+  };
+
+  const handleSearchParticipants = (query) => {
+    setPartsSearch(query);
+    fetchParticipants(1, false, query);
+  };
+
+  const handleLoadMoreParticipants = () => {
+    if (!partsHasMore || partsLoadingMore || partsLoading) return;
+    fetchParticipants(partsPage + 1, true, partsSearch);
+  };
+
+  const handleSearchOrganizers = (query) => {
+    setOrganizersSearch(query);
+    fetchOrganizers(1, false, query);
+  };
+
+  const handleLoadMoreOrganizers = () => {
+    if (!organizersHasMore || organizersLoadingMore || organizersLoading) return;
+    fetchOrganizers(organizersPage + 1, true, organizersSearch);
+  };
+
+  // Load dropdown references on mount
+  useEffect(() => {
+    fetchMeetings(1, false, "");
+    fetchParticipants(1, false, "");
+    fetchOrganizers(1, false, "");
+  }, [fetchMeetings, fetchParticipants, fetchOrganizers]);
 
   // Toast auto-hide
   useEffect(() => {
@@ -468,6 +559,9 @@ const SignaturesReportPage = () => {
                 placeholder="Yig'ilishni tanlang"
                 searchable={true}
                 onSearch={handleSearchMeetings}
+                onLoadMore={handleLoadMoreMeetings}
+                hasMore={meetsHasMore}
+                loadingMore={meetsLoadingMore}
                 loading={meetsLoading}
               />
             </div>
@@ -484,6 +578,9 @@ const SignaturesReportPage = () => {
                 placeholder="Ishtirokchini tanlang"
                 searchable={true}
                 onSearch={handleSearchParticipants}
+                onLoadMore={handleLoadMoreParticipants}
+                hasMore={partsHasMore}
+                loadingMore={partsLoadingMore}
                 loading={partsLoading}
               />
             </div>
@@ -499,6 +596,9 @@ const SignaturesReportPage = () => {
                 placeholder="Tashkilotchini tanlang"
                 searchable={true}
                 onSearch={handleSearchOrganizers}
+                onLoadMore={handleLoadMoreOrganizers}
+                hasMore={organizersHasMore}
+                loadingMore={organizersLoadingMore}
                 loading={organizersLoading}
               />
             </div>

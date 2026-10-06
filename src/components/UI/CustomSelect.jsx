@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowDown01Icon,
@@ -20,13 +20,21 @@ const CustomSelect = ({
   containerClassName = "",
   onSearch,
   loading = false,
+  onLoadMore,
+  hasMore = false,
+  loadingMore = false,
+  onScroll,
+  showSearch,
 }) => {
+  const isSearchable = showSearch !== undefined ? showSearch : searchable;
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [placement, setPlacement] = useState("bottom");
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const listRef = useRef(null);
   const isFirstRender = useRef(true);
+  const isTriggeringLoadMoreRef = useRef(false);
 
   // Auto detect best placement (top or bottom) based on available screen space
   const updatePlacement = () => {
@@ -84,7 +92,7 @@ const CustomSelect = ({
     return () => clearTimeout(timer);
   }, [searchTerm, onSearch]);
 
-  // Filter options based on search query
+  // Filter options locally only when onSearch is not provided
   const filteredOptions = useMemo(() => {
     if (onSearch) {
       return normalizedOptions;
@@ -94,6 +102,27 @@ const CustomSelect = ({
       opt.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [normalizedOptions, searchTerm, onSearch]);
+
+  // Scroll handler for pagination
+  const handleListScroll = useCallback(
+    (e) => {
+      onScroll?.(e);
+      if (!onLoadMore || !hasMore || loadingMore || loading) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+      // Trigger when user is within 35px of the bottom
+      if (scrollTop + clientHeight >= scrollHeight - 35) {
+        if (!isTriggeringLoadMoreRef.current) {
+          isTriggeringLoadMoreRef.current = true;
+          onLoadMore();
+          setTimeout(() => {
+            isTriggeringLoadMoreRef.current = false;
+          }, 350);
+        }
+      }
+    },
+    [onScroll, onLoadMore, hasMore, loadingMore, loading]
+  );
 
   // Close on outside click
   useEffect(() => {
@@ -109,12 +138,12 @@ const CustomSelect = ({
 
   // Focus search input when dropdown opens
   useEffect(() => {
-    if (isOpen && searchable && searchInputRef.current) {
+    if (isOpen && isSearchable && searchInputRef.current) {
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 50);
     }
-  }, [isOpen, searchable]);
+  }, [isOpen, isSearchable]);
 
   const handleSelect = (optValue) => {
     onChange?.(optValue);
@@ -155,11 +184,11 @@ const CustomSelect = ({
           } w-full min-w-[200px] bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] rounded-xl shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150 ${menuClassName}`}
         >
           {/* Search Input inside Menu */}
-          {searchable && (
+          {isSearchable && (
             <div className="px-2.5 pb-2 pt-0.5 border-b border-[#E2E6F2]/70 dark:border-[#2B3553]/70">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-[#8B90A5] dark:text-[#64748B]">
-                  {loading ? (
+                  {loading && !loadingMore ? (
                     <HugeiconsIcon icon={Loading03Icon} size={15} className="animate-spin text-[#3858C7]" />
                   ) : (
                     <HugeiconsIcon icon={Search01Icon} size={15} />
@@ -178,33 +207,47 @@ const CustomSelect = ({
             </div>
           )}
 
-          {/* Options List */}
-          <div className="max-h-56 overflow-y-auto px-1.5 py-1 space-y-0.5">
+          {/* Options List with Scroll Pagination */}
+          <div
+            ref={listRef}
+            onScroll={handleListScroll}
+            className="max-h-56 overflow-y-auto px-1.5 py-1 space-y-0.5"
+          >
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((opt) => {
-                const isSelected = opt.value === value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleSelect(opt.value)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-left transition-colors cursor-pointer ${
-                      isSelected
-                        ? "bg-[#EEF2FB] dark:bg-[#232E47] text-[#3858C7] dark:text-[#7F95E6] font-semibold"
-                        : "text-[#1A1D2E] dark:text-slate-200 hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438] hover:text-[#3858C7] dark:hover:text-[#7F95E6]"
-                    }`}
-                  >
-                    <span className="truncate">{opt.label}</span>
-                    {isSelected && (
-                      <HugeiconsIcon
-                        icon={Tick02Icon}
-                        size={15}
-                        className="text-[#3858C7] dark:text-[#7F95E6] flex-shrink-0 ml-2"
-                      />
-                    )}
-                  </button>
-                );
-              })
+              <>
+                {filteredOptions.map((opt) => {
+                  const isSelected = opt.value === value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleSelect(opt.value)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-left transition-colors cursor-pointer ${
+                        isSelected
+                          ? "bg-[#EEF2FB] dark:bg-[#232E47] text-[#3858C7] dark:text-[#7F95E6] font-semibold"
+                          : "text-[#1A1D2E] dark:text-slate-200 hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438] hover:text-[#3858C7] dark:hover:text-[#7F95E6]"
+                      }`}
+                    >
+                      <span className="truncate">{opt.label}</span>
+                      {isSelected && (
+                        <HugeiconsIcon
+                          icon={Tick02Icon}
+                          size={15}
+                          className="text-[#3858C7] dark:text-[#7F95E6] flex-shrink-0 ml-2"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+
+                {/* Loading indicator when scrolling next page */}
+                {loadingMore && (
+                  <div className="py-2 px-3 flex items-center justify-center gap-1.5 text-[12px] font-medium text-[#8B90A5] dark:text-[#94A3B8]">
+                    <HugeiconsIcon icon={Loading03Icon} size={14} className="animate-spin text-[#3858C7]" />
+                    <span>Yuklanmoqda...</span>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="px-3 py-3 text-center text-[12.5px] text-[#8B90A5] dark:text-[#64748B]">
                 {loading ? "Yuklanmoqda..." : "Hech narsa topilmadi"}

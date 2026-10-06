@@ -25,9 +25,23 @@ const Users = () => {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [sortOrder, setSortOrder] = useState("az");
 
-  // Options states
+  // Regions pagination state
   const [regionOptions, setRegionOptions] = useState([{ value: "", label: "Barcha viloyatlar" }]);
+  const [regionPage, setRegionPage] = useState(1);
+  const [regionHasMore, setRegionHasMore] = useState(false);
+  const [regionLoading, setRegionLoading] = useState(false);
+  const [regionLoadingMore, setRegionLoadingMore] = useState(false);
+  const [regionSearch, setRegionSearch] = useState("");
+  const isFetchingRegionRef = useRef(false);
+
+  // Districts pagination state
   const [districtOptions, setDistrictOptions] = useState([{ value: "", label: "Barcha tumanlar" }]);
+  const [districtPage, setDistrictPage] = useState(1);
+  const [districtHasMore, setDistrictHasMore] = useState(false);
+  const [districtLoading, setDistrictLoading] = useState(false);
+  const [districtLoadingMore, setDistrictLoadingMore] = useState(false);
+  const [districtSearch, setDistrictSearch] = useState("");
+  const isFetchingDistrictRef = useRef(false);
 
   // Data & Pagination states
   const [users, setUsers] = useState([]);
@@ -50,53 +64,107 @@ const Users = () => {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // 2. Load regions list on mount
-  useEffect(() => {
-    let isMounted = true;
-    getRegions()
-      .then((data) => {
-        if (!isMounted) return;
-        const options = [
-          { value: "", label: "Barcha viloyatlar" },
-          ...(data.results || []).map((r) => ({
-            value: r.id,
-            label: r.name,
-          })),
-        ];
-        setRegionOptions(options);
-      })
-      .catch((err) => console.error("Viloyatlar yuklashda xatolik:", err));
+  // 2. Fetch Regions with pagination
+  const fetchRegions = useCallback(async (targetPage = 1, isNext = false, search = "") => {
+    if (isFetchingRegionRef.current) return;
+    isFetchingRegionRef.current = true;
+    if (isNext) setRegionLoadingMore(true);
+    else setRegionLoading(true);
 
-    return () => {
-      isMounted = false;
-    };
+    try {
+      const params = { page: targetPage };
+      if (search) params.search = search;
+      const data = await getRegions(params);
+      const newItems = (data.results || []).map((r) => ({
+        value: r.id,
+        label: r.name,
+      }));
+
+      setRegionOptions((prev) => {
+        if (targetPage === 1) {
+          return [{ value: "", label: "Barcha viloyatlar" }, ...newItems];
+        }
+        const existingValues = new Set(prev.map((o) => o.value));
+        const filteredNew = newItems.filter((item) => !existingValues.has(item.value));
+        return [...prev, ...filteredNew];
+      });
+
+      setRegionPage(targetPage);
+      setRegionHasMore(Boolean(data.next));
+    } catch (err) {
+      console.error("Viloyatlar yuklashda xatolik:", err);
+    } finally {
+      setRegionLoading(false);
+      setRegionLoadingMore(false);
+      isFetchingRegionRef.current = false;
+    }
   }, []);
 
-  // 3. Load districts when selected region changes
+  const handleSearchRegions = (query) => {
+    setRegionSearch(query);
+    fetchRegions(1, false, query);
+  };
+
+  const handleLoadMoreRegions = () => {
+    if (!regionHasMore || regionLoadingMore || regionLoading) return;
+    fetchRegions(regionPage + 1, true, regionSearch);
+  };
+
   useEffect(() => {
-    let isMounted = true;
-    const params = selectedRegion ? { region: selectedRegion } : {};
-    getDistricts(params)
-      .then((data) => {
-        if (!isMounted) return;
-        const options = [
-          { value: "", label: "Barcha tumanlar" },
-          ...(data.results || []).map((d) => ({
-            value: d.id,
-            label: d.name,
-          })),
-        ];
-        setDistrictOptions(options);
-      })
-      .catch((err) => console.error("Tumanlar yuklashda xatolik:", err));
+    fetchRegions(1, false, "");
+  }, [fetchRegions]);
 
-    // Reset selected district when region changes
-    setSelectedDistrict("");
+  // 3. Fetch Districts with pagination when region changes
+  const fetchDistricts = useCallback(async (targetPage = 1, isNext = false, search = "", region = selectedRegion) => {
+    if (isFetchingDistrictRef.current) return;
+    isFetchingDistrictRef.current = true;
+    if (isNext) setDistrictLoadingMore(true);
+    else setDistrictLoading(true);
 
-    return () => {
-      isMounted = false;
-    };
+    try {
+      const params = { page: targetPage };
+      if (region) params.region = region;
+      if (search) params.search = search;
+      const data = await getDistricts(params);
+      const newItems = (data.results || []).map((d) => ({
+        value: d.id,
+        label: d.name,
+      }));
+
+      setDistrictOptions((prev) => {
+        if (targetPage === 1) {
+          return [{ value: "", label: "Barcha tumanlar" }, ...newItems];
+        }
+        const existingValues = new Set(prev.map((o) => o.value));
+        const filteredNew = newItems.filter((item) => !existingValues.has(item.value));
+        return [...prev, ...filteredNew];
+      });
+
+      setDistrictPage(targetPage);
+      setDistrictHasMore(Boolean(data.next));
+    } catch (err) {
+      console.error("Tumanlar yuklashda xatolik:", err);
+    } finally {
+      setDistrictLoading(false);
+      setDistrictLoadingMore(false);
+      isFetchingDistrictRef.current = false;
+    }
   }, [selectedRegion]);
+
+  const handleSearchDistricts = (query) => {
+    setDistrictSearch(query);
+    fetchDistricts(1, false, query, selectedRegion);
+  };
+
+  const handleLoadMoreDistricts = () => {
+    if (!districtHasMore || districtLoadingMore || districtLoading) return;
+    fetchDistricts(districtPage + 1, true, districtSearch, selectedRegion);
+  };
+
+  useEffect(() => {
+    setSelectedDistrict("");
+    fetchDistricts(1, false, "", selectedRegion);
+  }, [selectedRegion, fetchDistricts]);
 
   // 4. Fetch Users function (handles page 1 reset vs next page append)
   const fetchUsersData = useCallback(
@@ -195,6 +263,11 @@ const Users = () => {
               options={regionOptions}
               placeholder="Viloyat"
               searchPlaceholder="Viloyat izlash..."
+              onSearch={handleSearchRegions}
+              onLoadMore={handleLoadMoreRegions}
+              hasMore={regionHasMore}
+              loadingMore={regionLoadingMore}
+              loading={regionLoading}
               className="h-8! rounded-xl"
             />
           </div>
@@ -207,6 +280,11 @@ const Users = () => {
               options={districtOptions}
               placeholder="Tuman"
               searchPlaceholder="Tuman izlash..."
+              onSearch={handleSearchDistricts}
+              onLoadMore={handleLoadMoreDistricts}
+              hasMore={districtHasMore}
+              loadingMore={districtLoadingMore}
+              loading={districtLoading}
               disabled={districtOptions.length <= 1 && !selectedRegion}
               className="h-8! rounded-xl"
             />

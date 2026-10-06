@@ -122,12 +122,17 @@ export const getOrganizationsList = async (params = {}) => {
   try {
     const response = await axiosAPI.get("users/organizations/", { params });
     const data = response.data?.data || response.data;
-    if (Array.isArray(data)) return data;
-    if (data?.results && Array.isArray(data.results)) return data.results;
-    return [];
+    if (Array.isArray(data)) return { results: data, count: data.length, next: null };
+    return {
+      results: data?.results || [],
+      count: data?.count ?? 0,
+      next: data?.next ?? null,
+      page: data?.page ?? 1,
+      total_pages: data?.total_pages ?? 1,
+    };
   } catch (error) {
     console.error("Tashkilotlar ro'yxatini olishda xatolik:", error);
-    return [];
+    return { results: [], count: 0, next: null, page: 1, total_pages: 1 };
   }
 };
 
@@ -139,12 +144,17 @@ export const getOrganizersList = async (params = {}) => {
   try {
     const response = await axiosAPI.get("meetings/organizers/", { params });
     const data = response.data?.data || response.data;
-    if (Array.isArray(data)) return data;
-    if (data?.results && Array.isArray(data.results)) return data.results;
-    return [];
+    if (Array.isArray(data)) return { results: data, count: data.length, next: null };
+    return {
+      results: data?.results || [],
+      count: data?.count ?? 0,
+      next: data?.next ?? null,
+      page: data?.page ?? 1,
+      total_pages: data?.total_pages ?? 1,
+    };
   } catch (error) {
     console.error("Tashkilotchilar ro'yxatini olishda xatolik:", error);
-    return [];
+    return { results: [], count: 0, next: null, page: 1, total_pages: 1 };
   }
 };
 
@@ -156,12 +166,17 @@ export const getParticipantsList = async (params = {}) => {
   try {
     const response = await axiosAPI.get("meetings/participants/", { params });
     const data = response.data?.data || response.data;
-    if (Array.isArray(data)) return data;
-    if (data?.results && Array.isArray(data.results)) return data.results;
-    return [];
+    if (Array.isArray(data)) return { results: data, count: data.length, next: null };
+    return {
+      results: data?.results || [],
+      count: data?.count ?? 0,
+      next: data?.next ?? null,
+      page: data?.page ?? 1,
+      total_pages: data?.total_pages ?? 1,
+    };
   } catch (error) {
     console.error("Ishtirokchilar ro'yxatini olishda xatolik:", error);
-    return [];
+    return { results: [], count: 0, next: null, page: 1, total_pages: 1 };
   }
 };
 
@@ -173,12 +188,17 @@ export const getMeetingsList = async (params = {}) => {
   try {
     const response = await axiosAPI.get("meetings/", { params });
     const data = response.data?.data || response.data;
-    if (Array.isArray(data)) return data;
-    if (data?.results && Array.isArray(data.results)) return data.results;
-    return [];
+    if (Array.isArray(data)) return { results: data, count: data.length, next: null };
+    return {
+      results: data?.results || [],
+      count: data?.count ?? 0,
+      next: data?.next ?? null,
+      page: data?.page ?? 1,
+      total_pages: data?.total_pages ?? 1,
+    };
   } catch (error) {
     console.error("Yig'ilishlar ro'yxatini olishda xatolik:", error);
-    return [];
+    return { results: [], count: 0, next: null, page: 1, total_pages: 1 };
   }
 };
 
