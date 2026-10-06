@@ -7,7 +7,7 @@ import {
   Cancel01Icon,
 } from "@hugeicons/core-free-icons";
 import { PiArrowSquareOutBold } from "react-icons/pi";
-import { Check, Lock, RefreshCw } from "lucide-react";
+import { Check, Lock, RefreshCw, X } from "lucide-react";
 import { getMyProfile, updateOrganization, syncPassportProfile } from "../../services/auth";
 import { setCurrentUser } from "../../store/slice/referencesSlice";
 
@@ -23,6 +23,7 @@ const Setting = () => {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+  const [previewAvatarUrl, setPreviewAvatarUrl] = useState(null);
 
   useEffect(() => {
     if (reduxUser) {
@@ -210,7 +211,10 @@ const Setting = () => {
               <img
                 src={user.avatar}
                 alt={user.name}
-                className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] object-cover shadow-xs border border-[#E2E6F2] dark:border-[#2B3553]"
+                draggable={false}
+                onClick={() => setPreviewAvatarUrl(user.avatar)}
+                className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] object-cover shadow-xs border border-[#E2E6F2] dark:border-[#2B3553] cursor-pointer hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all"
+                title="Rasmni kattalashtirib ko'rish"
               />
             ) : (
               <div className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] bg-[#EEF2FF] dark:bg-[#1C2438] text-[#3858C7] dark:text-[#7C9BFF] font-bold text-xl md:text-2xl flex items-center justify-center shadow-xs border border-[#D0DCFF] dark:border-[#2B3553]">
@@ -351,6 +355,39 @@ const Setting = () => {
           </button>
         </div>
       </form>
+
+      {/* Avatar Image Preview Modal */}
+      {previewAvatarUrl && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setPreviewAvatarUrl(null)}
+        >
+          <div
+            className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F3F9] dark:border-[#1E263C]">
+              <h3 className="text-[16px] font-bold text-[#1A1D2E] dark:text-white">Profil rasmi</h3>
+              <button
+                type="button"
+                onClick={() => setPreviewAvatarUrl(null)}
+                className="p-1.5 rounded-xl hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="bg-[#F8FAFC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-2 flex items-center justify-center overflow-hidden">
+              <img
+                src={previewAvatarUrl}
+                alt={user.name}
+                className="max-h-[70vh] w-full object-contain rounded-xl"
+                draggable={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -115,13 +115,13 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   return (
     <aside
       onClick={handleSidebarClick}
-      className={`h-screen bg-[#3858C7] dark:bg-[#2B3553] dark:border-r dark:border-[#21262D] text-white flex flex-col justify-between transition-[width] duration-300 ease-in-out select-none flex-shrink-0 relative overflow-hidden ${
+      className={`h-screen bg-[#3858C7] dark:bg-[#2B3553] dark:border-r dark:border-[#21262D] text-white flex flex-col justify-between transition-[width] duration-300 ease-in-out select-none flex-shrink-0 relative z-40 ${
         sidebarCollapsed ? "w-[72px] cursor-pointer" : "w-[260px]"
       }`}
       title={sidebarCollapsed ? "Yon panelni ochish uchun bosing" : undefined}
     >
       {/* Top Header & Main Navigation */}
-      <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Brand / Logo */}
         <div
           onClick={(e) => {

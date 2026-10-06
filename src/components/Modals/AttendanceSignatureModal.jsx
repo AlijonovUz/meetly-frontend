@@ -79,8 +79,7 @@ export default function AttendanceSignatureModal({
           ctx.lineCap = "round";
           ctx.lineJoin = "round";
           ctx.lineWidth = 2.5;
-          const isDark = document.documentElement.classList.contains("dark");
-          ctx.strokeStyle = isDark ? "#FFFFFF" : "#1E293B";
+          ctx.strokeStyle = "#1E293B";
         }
         clearCanvas();
       }, 50);
@@ -234,21 +233,21 @@ export default function AttendanceSignatureModal({
             Imzo *
           </label>
           <div
-            className={`relative w-full h-44 rounded-2xl bg-white dark:bg-[#121624] overflow-hidden transition-all select-none touch-none ${
+            className={`relative w-full h-44 rounded-2xl bg-white overflow-hidden transition-all select-none touch-none ${
               hasSignature
                 ? "border-2 border-[#3858C7] shadow-xs"
-                : "border-2 border-dashed border-slate-300 dark:border-[#2B3553] hover:border-slate-400"
+                : "border-2 border-dashed border-slate-300 dark:border-[#3E4C6D] hover:border-slate-400"
             }`}
           >
             {/* Placeholder before user starts drawing */}
             {!hasSignature && (
-              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center text-slate-400 dark:text-[#64748B] p-4">
-                <HugeiconsIcon icon={Edit02Icon} size={22} className="text-slate-400 dark:text-[#64748B] mb-1" />
-                <span className="text-xs sm:text-sm font-normal text-slate-400 dark:text-[#64748B] text-center">
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center text-slate-400 p-4">
+                <HugeiconsIcon icon={Edit02Icon} size={22} className="text-slate-400 mb-1" />
+                <span className="text-xs sm:text-sm font-medium text-slate-500 text-center">
                   Sichqoncha bilan shu yerga imzo chizing
                 </span>
-                <div className="w-48 border-b border-slate-200 dark:border-[#2B3553] mt-4 relative flex items-center justify-start">
-                  <span className="text-[11px] text-slate-300 dark:text-[#475569] absolute -top-2 left-0">✕</span>
+                <div className="w-48 border-b border-slate-200 mt-4 relative flex items-center justify-start">
+                  <span className="text-[11px] text-slate-400 absolute -top-2 left-0">✕</span>
                 </div>
               </div>
             )}

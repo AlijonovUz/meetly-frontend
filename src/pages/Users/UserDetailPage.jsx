@@ -59,6 +59,7 @@ const UserDetailPage = () => {
     completed: 0,
   });
   const [textareaHeight, setTextareaHeight] = useState(90);
+  const [previewAvatarUrl, setPreviewAvatarUrl] = useState(null);
 
   // Fetch meetings with organizer filter & status
   const fetchUserMeetings = useCallback(async () => {
@@ -389,9 +390,15 @@ const UserDetailPage = () => {
       {/* Top Profile Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-[#E2E6F2] dark:bg-[#1C2438] shadow-xs flex-shrink-0 border-2 border-white dark:border-[#2B3553] flex items-center justify-center font-bold text-lg text-[#3858C7] dark:text-[#7C9BFF]">
+          <div
+            onClick={() => avatar && setPreviewAvatarUrl(avatar)}
+            className={`w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-[#E2E6F2] dark:bg-[#1C2438] shadow-xs flex-shrink-0 border-2 border-white dark:border-[#2B3553] flex items-center justify-center font-bold text-lg text-[#3858C7] dark:text-[#7C9BFF] ${
+              avatar ? "cursor-pointer hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all" : ""
+            }`}
+            title={avatar ? "Rasmni kattalashtirish" : undefined}
+          >
             {avatar ? (
-              <img src={avatar} alt={fullName} className="w-full h-full object-cover" />
+              <img src={avatar} alt={fullName} draggable={false} className="w-full h-full object-cover" />
             ) : (
               (user.first_name?.[0] + "" + user.last_name?.[0] || "U").toUpperCase()
             )}
@@ -896,6 +903,39 @@ const UserDetailPage = () => {
             >
               <HugeiconsIcon icon={Cancel01Icon} size={16} />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Avatar Preview Modal */}
+      {previewAvatarUrl && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setPreviewAvatarUrl(null)}
+        >
+          <div
+            className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F3F9] dark:border-[#1E263C]">
+              <h3 className="text-[16px] font-bold text-[#1A1D2E] dark:text-white">Foydalanuvchi rasmi</h3>
+              <button
+                type="button"
+                onClick={() => setPreviewAvatarUrl(null)}
+                className="p-1.5 rounded-xl hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438] text-[#8B90A5] hover:text-[#1A1D2E] dark:hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="bg-[#F8FAFC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-2 flex items-center justify-center overflow-hidden">
+              <img
+                src={previewAvatarUrl}
+                alt={fullName}
+                className="max-h-[70vh] w-full object-contain rounded-xl"
+                draggable={false}
+              />
+            </div>
           </div>
         </div>
       )}

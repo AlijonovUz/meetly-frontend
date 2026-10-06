@@ -333,6 +333,7 @@ const SignaturesReportPage = () => {
 
   const handleGenerate = () => {
     setHasMore(true);
+    setIsFilterVisible(false);
     if (tableContainerRef.current) {
       tableContainerRef.current.scrollTop = 0;
     }
@@ -743,17 +744,17 @@ const SignaturesReportPage = () => {
                               <button
                                 type="button"
                                 onClick={() => setPreviewSignatureUrl(row.signature)}
-                                className="inline-flex items-center justify-center p-1 rounded-md border border-[#E2E6F2] dark:border-[#2B3553] bg-white dark:bg-[#1C2438] hover:bg-[#F8FAFC] dark:hover:bg-[#252E46] hover:border-[#3858C7] transition-all cursor-pointer group shadow-2xs"
+                                className="inline-flex items-center justify-center p-1 rounded-md border border-[#E2E6F2] dark:border-[#2B3553] bg-white hover:bg-[#F8FAFC] hover:border-[#3858C7] transition-all cursor-pointer group shadow-2xs"
                                 title="Imzoni kattalashtirib ko'rish"
                               >
                                 <img
                                   src={row.signature}
                                   alt="Imzo"
-                                  className="h-6 max-w-[72px] object-contain group-hover:scale-105 transition-transform dark:invert"
+                                  className="h-6 max-w-[72px] object-contain group-hover:scale-105 transition-transform"
                                 />
                               </button>
                             ) : (
-                              <span className="text-[#8B90A5] dark:text-[#64748B] text-xs">—</span>
+                              <span className="text-[#8B90A5] dark:text-[#64748B] text-xs"></span>
                             )}
                           </td>
                           <td className="py-3.5 px-3 text-right pr-4">
@@ -807,11 +808,12 @@ const SignaturesReportPage = () => {
               </button>
             </div>
 
-            <div className="bg-[#F8FAFC] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-6 flex items-center justify-center min-h-[180px]">
+            <div className="bg-white border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-6 flex items-center justify-center min-h-[180px]">
               <img
                 src={previewSignatureUrl}
                 alt="Imzo"
-                className="max-h-48 max-w-full object-contain dark:invert"
+                className="max-h-48 max-w-full object-contain"
+                draggable={false}
               />
             </div>
 

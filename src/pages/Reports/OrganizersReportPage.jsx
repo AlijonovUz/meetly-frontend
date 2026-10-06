@@ -265,6 +265,7 @@ const OrganizersReportPage = () => {
 
   const handleGenerate = () => {
     setHasMore(true);
+    setIsFilterVisible(false);
     if (tableContainerRef.current) {
       tableContainerRef.current.scrollTop = 0;
     }
