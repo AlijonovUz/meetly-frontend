@@ -244,7 +244,7 @@ export function DatePicker({
                     mode="single"
                     captionLayout="dropdown"
                     startMonth={new Date(new Date().getFullYear() - 5, 0)}
-                    endMonth={new Date(new Date().getFullYear() + 5, 11)}
+                    endMonth={maxDateObj ? new Date(maxDateObj.getFullYear(), maxDateObj.getMonth(), 1) : new Date(new Date().getFullYear() + 5, 11)}
                     selected={date}
                     month={month}
                     onMonthChange={setMonth}

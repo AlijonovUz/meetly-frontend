@@ -167,7 +167,7 @@ const UserDetailPage = () => {
                 try {
                   const stored = localStorage.getItem(`user_appeal_${id}`);
                   if (stored) storedAppeal = JSON.parse(stored);
-                } catch (e) {}
+                } catch (e) { }
                 setAppealData(storedAppeal);
               }
             } catch (err) {
@@ -176,7 +176,7 @@ const UserDetailPage = () => {
               try {
                 const stored = localStorage.getItem(`user_appeal_${id}`);
                 if (stored) storedAppeal = JSON.parse(stored);
-              } catch (e) {}
+              } catch (e) { }
               if (isMounted) setAppealData(storedAppeal);
             }
           } else {
@@ -402,9 +402,8 @@ const UserDetailPage = () => {
             </h1>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#F1F3F9] dark:bg-[#1C2438] text-xs font-semibold text-[#5B6078] dark:text-[#94A3B8]">
               <span
-                className={`w-2 h-2 rounded-full ${
-                  isBlocked ? "bg-[#DD4C1E]" : "bg-[#4AC99B]"
-                }`}
+                className={`w-2 h-2 rounded-full ${isBlocked ? "bg-[#DD4C1E]" : "bg-[#4AC99B]"
+                  }`}
               />
               <span>{isBlocked ? "Bloklangan" : "Faol"}</span>
             </div>
@@ -561,23 +560,21 @@ const UserDetailPage = () => {
                 key={tab.id}
                 type="button"
                 onClick={() => setMeetingFilter(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
-                  isActive
-                    ? "bg-white dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white shadow-xs"
-                    : "text-[#5B6078] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white"
-                }`}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${isActive
+                  ? "bg-white dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white shadow-xs"
+                  : "text-[#5B6078] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white"
+                  }`}
               >
                 <span>{tab.label}</span>
                 <span
-                  className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold transition-colors ${
-                    tab.isRed && !isActive
-                      ? "bg-[#F8D7DA] dark:bg-red-950/60 text-[#DC2626] dark:text-red-400"
-                      : tab.isRed
+                  className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold transition-colors ${tab.isRed && !isActive
+                    ? "bg-[#F8D7DA] dark:bg-red-950/60 text-[#DC2626] dark:text-red-400"
+                    : tab.isRed
                       ? "bg-[#EF4444] text-white font-bold"
                       : isActive
-                      ? "bg-[#F1F3F9] dark:bg-[#121624] text-[#1A1D2E] dark:text-white"
-                      : "bg-white dark:bg-[#161C2E] text-[#8B90A5] dark:text-[#94A3B8]"
-                  }`}
+                        ? "bg-[#F1F3F9] dark:bg-[#121624] text-[#1A1D2E] dark:text-white"
+                        : "bg-white dark:bg-[#161C2E] text-[#8B90A5] dark:text-[#94A3B8]"
+                    }`}
                 >
                   {count}
                 </span>
@@ -589,7 +586,7 @@ const UserDetailPage = () => {
         {/* Meetings Table */}
         <div className="bg-transparent overflow-auto h-[calc(100vh-510px)]">
           <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 z-10">
+            <thead className="sticky top-0 z-10 bg-[#F8F9FC] dark:bg-[#161B22]">
               <tr className="border-b border-[#E2E6F2] dark:border-[#1E263C] text-[#8B90A5] dark:text-[#94A3B8] text-[13px] font-medium">
                 <th className="py-3 px-4 font-normal w-12 text-center">#</th>
                 <th className="py-3 px-4 font-normal">Nomi</th>
@@ -720,11 +717,10 @@ const UserDetailPage = () => {
                 <button
                   type="submit"
                   disabled={!reasonInput.trim() || actionLoading}
-                  className={`h-11 px-6 rounded-xl font-semibold text-[14px] text-white transition-all shadow-xs flex items-center gap-2 ${
-                    reasonInput.trim() && !actionLoading
-                      ? "bg-[#D92D20] hover:bg-[#B42318] cursor-pointer active:scale-95"
-                      : "bg-[#D92D20]/50 cursor-not-allowed"
-                  }`}
+                  className={`h-11 px-6 rounded-xl font-semibold text-[14px] text-white transition-all shadow-xs flex items-center gap-2 ${reasonInput.trim() && !actionLoading
+                    ? "bg-[#D92D20] hover:bg-[#B42318] cursor-pointer active:scale-95"
+                    : "bg-[#D92D20]/50 cursor-not-allowed"
+                    }`}
                 >
                   {actionLoading ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -843,11 +839,10 @@ const UserDetailPage = () => {
                 <button
                   type="submit"
                   disabled={!rejectReasonInput.trim() || actionLoading}
-                  className={`h-11 px-6 rounded-xl font-semibold text-[14px] text-white transition-all shadow-xs flex items-center gap-2 ${
-                    rejectReasonInput.trim() && !actionLoading
-                      ? "bg-[#D92D20] hover:bg-[#B42318] cursor-pointer active:scale-95"
-                      : "bg-[#D92D20]/50 cursor-not-allowed"
-                  }`}
+                  className={`h-11 px-6 rounded-xl font-semibold text-[14px] text-white transition-all shadow-xs flex items-center gap-2 ${rejectReasonInput.trim() && !actionLoading
+                    ? "bg-[#D92D20] hover:bg-[#B42318] cursor-pointer active:scale-95"
+                    : "bg-[#D92D20]/50 cursor-not-allowed"
+                    }`}
                 >
                   {actionLoading ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -866,16 +861,14 @@ const UserDetailPage = () => {
       {toastMessage && (
         <div className="fixed top-20 right-6 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300">
           <div
-            className={`bg-white dark:bg-[#161C2E] border dark:border-[#2B3553] rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${
-              toastMessage.type === "error"
-                ? "border-[#FECDCA] dark:border-red-900/50"
-                : "border-[#10B981]/40"
-            }`}
+            className={`bg-white dark:bg-[#161C2E] border dark:border-[#2B3553] rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${toastMessage.type === "error"
+              ? "border-[#FECDCA] dark:border-red-900/50"
+              : "border-[#10B981]/40"
+              }`}
           >
             <div
-              className={`flex-shrink-0 mt-0.5 ${
-                toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#10B981]"
-              }`}
+              className={`flex-shrink-0 mt-0.5 ${toastMessage.type === "error" ? "text-[#D92D20]" : "text-[#10B981]"
+                }`}
             >
               {toastMessage.type === "error" ? (
                 <div className="w-6 h-6 rounded-full bg-[#FEF3F2] dark:bg-red-950/40 flex items-center justify-center text-[#D92D20] dark:text-red-400">
@@ -887,9 +880,8 @@ const UserDetailPage = () => {
             </div>
             <div className="flex-1 pr-2">
               <h4
-                className={`text-[14px] font-bold leading-tight ${
-                  toastMessage.type === "error" ? "text-[#D92D20] dark:text-red-400" : "text-[#1A1D2E] dark:text-white"
-                }`}
+                className={`text-[14px] font-bold leading-tight ${toastMessage.type === "error" ? "text-[#D92D20] dark:text-red-400" : "text-[#1A1D2E] dark:text-white"
+                  }`}
               >
                 {toastMessage.title}
               </h4>

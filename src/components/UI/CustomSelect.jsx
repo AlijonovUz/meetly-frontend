@@ -79,18 +79,28 @@ const CustomSelect = ({
   // Find currently selected option
   const selectedOption = normalizedOptions.find((opt) => opt.value === value);
 
-  // Debounced API search when onSearch is provided
+  const onSearchRef = useRef(onSearch);
   useEffect(() => {
-    if (!onSearch) return;
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  const prevSearchTermRef = useRef(searchTerm);
+
+  // Debounced API search when searchTerm changes
+  useEffect(() => {
+    if (!onSearchRef.current) return;
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
+    if (prevSearchTermRef.current === searchTerm) return;
+    prevSearchTermRef.current = searchTerm;
+
     const timer = setTimeout(() => {
-      onSearch(searchTerm);
+      onSearchRef.current?.(searchTerm);
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchTerm, onSearch]);
+  }, [searchTerm]);
 
   // Filter options locally only when onSearch is not provided
   const filteredOptions = useMemo(() => {

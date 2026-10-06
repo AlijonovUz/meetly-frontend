@@ -100,15 +100,15 @@ const Users = () => {
     }
   }, []);
 
-  const handleSearchRegions = (query) => {
+  const handleSearchRegions = useCallback((query) => {
     setRegionSearch(query);
     fetchRegions(1, false, query);
-  };
+  }, [fetchRegions]);
 
-  const handleLoadMoreRegions = () => {
+  const handleLoadMoreRegions = useCallback(() => {
     if (!regionHasMore || regionLoadingMore || regionLoading) return;
     fetchRegions(regionPage + 1, true, regionSearch);
-  };
+  }, [regionHasMore, regionLoadingMore, regionLoading, fetchRegions, regionPage, regionSearch]);
 
   useEffect(() => {
     fetchRegions(1, false, "");
@@ -151,15 +151,15 @@ const Users = () => {
     }
   }, [selectedRegion]);
 
-  const handleSearchDistricts = (query) => {
+  const handleSearchDistricts = useCallback((query) => {
     setDistrictSearch(query);
     fetchDistricts(1, false, query, selectedRegion);
-  };
+  }, [fetchDistricts, selectedRegion]);
 
-  const handleLoadMoreDistricts = () => {
+  const handleLoadMoreDistricts = useCallback(() => {
     if (!districtHasMore || districtLoadingMore || districtLoading) return;
     fetchDistricts(districtPage + 1, true, districtSearch, selectedRegion);
-  };
+  }, [districtHasMore, districtLoadingMore, districtLoading, fetchDistricts, districtPage, districtSearch, selectedRegion]);
 
   useEffect(() => {
     setSelectedDistrict("");
@@ -325,7 +325,7 @@ const Users = () => {
         className="bg-transparent overflow-auto h-[calc(100vh-150px)] relative"
       >
         <table className="w-full text-left border-collapse">
-          <thead className="sticky top-0 z-10">
+          <thead className="sticky top-0 z-10 bg-[#F8F9FC] dark:bg-[#161B22]">
             <tr className="border-b border-[#E2E6F2] dark:border-[#1E263C] text-[#8B90A5] dark:text-[#94A3B8] text-[13px] font-medium">
               <th className="py-3 px-4 font-normal w-12 text-center">#</th>
               <th className="py-3 px-4 font-normal">F.I.SH</th>

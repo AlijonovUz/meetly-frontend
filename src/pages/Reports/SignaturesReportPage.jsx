@@ -25,7 +25,7 @@ const SignaturesReportPage = () => {
   const [meetingsList, setMeetingsList] = useState([]);
   const [participantsList, setParticipantsList] = useState([]);
   const [organizersList, setOrganizersList] = useState([]);
-  
+
   const [meetsLoading, setMeetsLoading] = useState(false);
   const [meetsLoadingMore, setMeetsLoadingMore] = useState(false);
   const [meetsPage, setMeetsPage] = useState(1);
@@ -165,35 +165,35 @@ const SignaturesReportPage = () => {
   }, []);
 
   // Search handlers
-  const handleSearchMeetings = (query) => {
+  const handleSearchMeetings = useCallback((query) => {
     setMeetsSearch(query);
     fetchMeetings(1, false, query);
-  };
+  }, [fetchMeetings]);
 
-  const handleLoadMoreMeetings = () => {
+  const handleLoadMoreMeetings = useCallback(() => {
     if (!meetsHasMore || meetsLoadingMore || meetsLoading) return;
     fetchMeetings(meetsPage + 1, true, meetsSearch);
-  };
+  }, [meetsHasMore, meetsLoadingMore, meetsLoading, fetchMeetings, meetsPage, meetsSearch]);
 
-  const handleSearchParticipants = (query) => {
+  const handleSearchParticipants = useCallback((query) => {
     setPartsSearch(query);
     fetchParticipants(1, false, query);
-  };
+  }, [fetchParticipants]);
 
-  const handleLoadMoreParticipants = () => {
+  const handleLoadMoreParticipants = useCallback(() => {
     if (!partsHasMore || partsLoadingMore || partsLoading) return;
     fetchParticipants(partsPage + 1, true, partsSearch);
-  };
+  }, [partsHasMore, partsLoadingMore, partsLoading, fetchParticipants, partsPage, partsSearch]);
 
-  const handleSearchOrganizers = (query) => {
+  const handleSearchOrganizers = useCallback((query) => {
     setOrganizersSearch(query);
     fetchOrganizers(1, false, query);
-  };
+  }, [fetchOrganizers]);
 
-  const handleLoadMoreOrganizers = () => {
+  const handleLoadMoreOrganizers = useCallback(() => {
     if (!organizersHasMore || organizersLoadingMore || organizersLoading) return;
     fetchOrganizers(organizersPage + 1, true, organizersSearch);
-  };
+  }, [organizersHasMore, organizersLoadingMore, organizersLoading, fetchOrganizers, organizersPage, organizersSearch]);
 
   // Load dropdown references on mount
   useEffect(() => {
@@ -464,11 +464,10 @@ const SignaturesReportPage = () => {
         <button
           type="button"
           onClick={() => setIsFilterVisible(!isFilterVisible)}
-          className={`inline-flex items-center gap-2 h-9 px-4 rounded-lg border text-[13.5px] font-semibold transition-all cursor-pointer ${
-            isFilterVisible || activeFiltersCount > 0
-              ? "border-[#E2E6F2] dark:border-[#2B3553] bg-[#F4F6FB] dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white"
-              : "border-[#E2E6F2] dark:border-[#2B3553] bg-white dark:bg-[#161C2E] text-[#1A1D2E] dark:text-white hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438]"
-          }`}
+          className={`inline-flex items-center gap-2 h-9 px-4 rounded-lg border text-[13.5px] font-semibold transition-all cursor-pointer ${isFilterVisible || activeFiltersCount > 0
+            ? "border-[#E2E6F2] dark:border-[#2B3553] bg-[#F4F6FB] dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white"
+            : "border-[#E2E6F2] dark:border-[#2B3553] bg-white dark:bg-[#161C2E] text-[#1A1D2E] dark:text-white hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438]"
+            }`}
         >
           <Filter size={16} strokeWidth={2.5} className="text-[#5E6480] dark:text-[#94A3B8]" />
           <span>
@@ -476,9 +475,8 @@ const SignaturesReportPage = () => {
           </span>
           <ChevronDown
             size={14}
-            className={`transition-transform duration-200 text-[#8B90A5] dark:text-[#94A3B8] ${
-              isFilterVisible ? "rotate-180" : ""
-            }`}
+            className={`transition-transform duration-200 text-[#8B90A5] dark:text-[#94A3B8] ${isFilterVisible ? "rotate-180" : ""
+              }`}
           />
         </button>
 
@@ -517,11 +515,10 @@ const SignaturesReportPage = () => {
 
       {/* Collapsible Filters: 3 columns layout matching Figma (6 filters total) */}
       <div
-        className={`transition-all duration-300 ease-in-out ${
-          isFilterVisible
-            ? "max-h-[600px] opacity-100 mb-6 overflow-visible"
-            : "max-h-0 opacity-0 mb-0 overflow-hidden pointer-events-none"
-        }`}
+        className={`transition-all duration-300 ease-in-out ${isFilterVisible
+          ? "max-h-[600px] opacity-100 mb-6 overflow-visible"
+          : "max-h-0 opacity-0 mb-0 overflow-hidden pointer-events-none"
+          }`}
       >
         <div className="pt-0.5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-1">
@@ -533,6 +530,7 @@ const SignaturesReportPage = () => {
               <DatePicker
                 value={startDate}
                 onChange={(d) => setStartDate(d)}
+                maxDate={endDate || new Date()}
                 placeholder="kun.oy.yil"
               />
             </div>
@@ -544,6 +542,8 @@ const SignaturesReportPage = () => {
               <DatePicker
                 value={endDate}
                 onChange={(d) => setEndDate(d)}
+                minDate={startDate || undefined}
+                maxDate={new Date()}
                 placeholder="kun.oy.yil"
               />
             </div>
@@ -655,7 +655,7 @@ const SignaturesReportPage = () => {
             className="overflow-auto max-h-[calc(100vh-230px)]"
           >
             <table className="w-full border-collapse text-left">
-              <thead className="sticky top-0 z-10">
+              <thead className="sticky top-0 z-10 bg-[#F8F9FC] dark:bg-[#161B22]">
                 <tr className="border-b border-[#F1F3F9] dark:border-[#1E263C] text-[#5B6078] dark:text-[#94A3B8] text-[13px] font-medium">
                   <th className="py-3 px-3 w-12 font-medium">№</th>
                   <th className="py-3 px-3 font-medium">Ishtirokchi</th>
@@ -759,9 +759,8 @@ const SignaturesReportPage = () => {
                           <td className="py-3.5 px-3 text-right pr-4">
                             <span className="inline-flex bg-[#F1F3F9] dark:bg-[#1C2438] py-0.5 px-2 rounded-md items-center gap-1.5 text-xs font-medium text-[#5B6078] dark:text-[#94A3B8]">
                               <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  isSigned ? "bg-[#10B981]" : "bg-[#F59E0B]"
-                                }`}
+                                className={`w-1.5 h-1.5 rounded-full ${isSigned ? "bg-[#10B981]" : "bg-[#F59E0B]"
+                                  }`}
                               ></span>
                               {isSigned ? "Imzolangan" : "Kutilmoqda"}
                             </span>
@@ -832,12 +831,10 @@ const SignaturesReportPage = () => {
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className={`bg-white dark:bg-[#161C2E] border dark:border-[#2B3553] rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${
-            toastMessage.type === "warning" ? "border-[#F59E0B]/40" : "border-[#10B981]/40"
-          }`}>
-            <div className={`flex-shrink-0 mt-0.5 ${
-              toastMessage.type === "warning" ? "text-[#F59E0B]" : "text-[#10B981]"
+          <div className={`bg-white dark:bg-[#161C2E] border dark:border-[#2B3553] rounded-2xl shadow-xl p-4 flex items-start gap-3.5 max-w-md ${toastMessage.type === "warning" ? "border-[#F59E0B]/40" : "border-[#10B981]/40"
             }`}>
+            <div className={`flex-shrink-0 mt-0.5 ${toastMessage.type === "warning" ? "text-[#F59E0B]" : "text-[#10B981]"
+              }`}>
               <HugeiconsIcon icon={toastMessage.type === "warning" ? Alert02Icon : CheckmarkCircle02Icon} size={22} />
             </div>
             <div className="flex-1 pr-2">

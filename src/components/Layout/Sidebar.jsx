@@ -115,8 +115,9 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   return (
     <aside
       onClick={handleSidebarClick}
-      className={`h-screen bg-[#3858C7] dark:bg-[#2B3553] dark:border-r dark:border-[#21262D] text-white flex flex-col justify-between transition-all duration-300 ease-in-out select-none flex-shrink-0 relative ${sidebarCollapsed ? "w-[76px] cursor-pointer" : "w-[260px]"
-        }`}
+      className={`h-screen bg-[#3858C7] dark:bg-[#2B3553] dark:border-r dark:border-[#21262D] text-white flex flex-col justify-between transition-[width] duration-300 ease-in-out select-none flex-shrink-0 relative overflow-hidden ${
+        sidebarCollapsed ? "w-[72px] cursor-pointer" : "w-[260px]"
+      }`}
       title={sidebarCollapsed ? "Yon panelni ochish uchun bosing" : undefined}
     >
       {/* Top Header & Main Navigation */}
@@ -129,11 +130,31 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
               setSidebarCollapsed(false);
             }
           }}
-          className={`h-[60px] flex items-center px-4 flex-shrink-0 ${sidebarCollapsed ? "justify-center" : "justify-between"
-            }`}
+          className={`h-[60px] flex items-center flex-shrink-0 relative overflow-hidden ${
+            sidebarCollapsed ? "justify-center px-0" : "justify-between px-3"
+          }`}
         >
-          <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={() => navigate("/")}>
-            <img src={sidebarCollapsed ? "/logo2.svg" : "/logo.svg"} alt="logo" className="pointer-events-none object-contain" />
+          <div
+            className="flex items-center cursor-pointer select-none"
+            onClick={() => navigate("/")}
+          >
+            {sidebarCollapsed ? (
+              <div className="w-[72px] flex items-center justify-center">
+                <img
+                  src="/logo2.svg"
+                  alt="logo"
+                  className="h-8 w-8 object-contain"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center pl-1">
+                <img
+                  src="/logo.svg"
+                  alt="logo"
+                  className="h-8 w-auto object-contain"
+                />
+              </div>
+            )}
           </div>
 
           {/* Toggle Collapse Button */}
@@ -144,7 +165,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 e.stopPropagation();
                 setSidebarCollapsed(true);
               }}
-              className="p-1.5 rounded-lg text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
               title="Yig'ish"
             >
               <HugeiconsIcon icon={SidebarLeftIcon} size={20} />
@@ -153,7 +174,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
         </div>
 
         {/* Main Nav Items */}
-        <div className="px-3 py-4 overflow-y-auto flex-1">
+        <div className="px-2.5 py-4 overflow-y-auto flex-1 space-y-1">
           <nav className="space-y-1">
             {mainNavItems.map((item) => (
               <NavLink
@@ -161,25 +182,35 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 group ${isActive
-                    ? "bg-[#2844A8] dark:bg-[#283D91] text-white font-bold shadow-2xs"
-                    : "text-white/80 hover:bg-white/10 dark:hover:bg-white/5 hover:text-white"
-                  } ${sidebarCollapsed ? "justify-center px-0" : ""}`
+                  `flex items-center h-11 px-3 rounded-xl text-[13.5px] font-medium transition-colors duration-200 group relative overflow-hidden ${
+                    isActive
+                      ? "bg-[#2844A8] dark:bg-[#283D91] text-white font-bold shadow-2xs"
+                      : "text-white/80 hover:bg-white/10 dark:hover:bg-white/5 hover:text-white"
+                  } ${sidebarCollapsed ? "justify-center px-0" : "gap-3"}`
                 }
                 title={sidebarCollapsed ? item.label : undefined}
               >
                 {({ isActive }) => (
                   <>
-                    <HugeiconsIcon
-                      icon={item.icon}
-                      size={20}
-                      className={`flex-shrink-0 transition-colors duration-200 ${isActive ? "text-white" : "text-white/80 group-hover:text-white"
+                    <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                      <HugeiconsIcon
+                        icon={item.icon}
+                        size={20}
+                        className={`transition-colors duration-200 ${
+                          isActive ? "text-white" : "text-white/80 group-hover:text-white"
                         }`}
-                      strokeWidth={2}
-                    />
-                    {!sidebarCollapsed && (
-                      <span className="truncate">{item.label}</span>
-                    )}
+                        strokeWidth={2}
+                      />
+                    </div>
+                    <span
+                      className={`truncate whitespace-nowrap transition-all duration-300 ease-in-out ${
+                        sidebarCollapsed
+                          ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none overflow-hidden"
+                          : "max-w-[180px] opacity-100 translate-x-0"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
                   </>
                 )}
               </NavLink>
@@ -197,64 +228,83 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                     setReportsOpen(!reportsOpen);
                   }
                 }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 cursor-pointer ${location.pathname.startsWith("/reports")
-                  ? "text-white font-bold"
-                  : "text-white/80 hover:bg-white/10 dark:hover:bg-white/5 hover:text-white"
-                  } ${sidebarCollapsed ? "justify-center px-0" : ""}`}
+                className={`w-full flex items-center h-11 px-3 rounded-xl text-[13.5px] font-medium transition-colors duration-200 cursor-pointer overflow-hidden ${
+                  location.pathname.startsWith("/reports")
+                    ? "text-white font-bold"
+                    : "text-white/80 hover:bg-white/10 dark:hover:bg-white/5 hover:text-white"
+                } ${sidebarCollapsed ? "justify-center px-0" : "justify-between"}`}
                 title={sidebarCollapsed ? "Hisobotlar" : undefined}
               >
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <HugeiconsIcon
-                    icon={Analytics01Icon}
-                    size={20}
-                    className={`flex-shrink-0 transition-colors duration-200 ${location.pathname.startsWith("/reports")
-                      ? "text-white"
-                      : "text-white/80"
+                <div className="flex items-center gap-3 overflow-hidden min-w-0">
+                  <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                    <HugeiconsIcon
+                      icon={Analytics01Icon}
+                      size={20}
+                      className={`transition-colors duration-200 ${
+                        location.pathname.startsWith("/reports") ? "text-white" : "text-white/80"
                       }`}
-                    strokeWidth={2}
-                  />
-                  {!sidebarCollapsed && (
-                    <span className="truncate">Hisobotlar</span>
-                  )}
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <span
+                    className={`truncate whitespace-nowrap transition-all duration-300 ease-in-out ${
+                      sidebarCollapsed
+                        ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none overflow-hidden"
+                        : "max-w-[180px] opacity-100 translate-x-0"
+                    }`}
+                  >
+                    Hisobotlar
+                  </span>
                 </div>
-                {!sidebarCollapsed && (
+
+                <div
+                  className={`shrink-0 transition-all duration-300 ease-in-out ${
+                    sidebarCollapsed ? "opacity-0 scale-50 w-0 overflow-hidden" : "opacity-100 scale-100"
+                  }`}
+                >
                   <ChevronDown
                     size={16}
-                    className={`text-white/80 transition-transform duration-200 ${reportsOpen ? "rotate-180" : ""
-                      }`}
+                    className={`text-white/80 transition-transform duration-200 ${
+                      reportsOpen ? "rotate-180" : ""
+                    }`}
                   />
-                )}
+                </div>
               </button>
 
               {/* Sub-items (Yig'ilishlar, Ishtirokchilar, Tashkilotchilar) */}
-              {!sidebarCollapsed && reportsOpen && (
-                <div className="mt-1 space-y-1 pl-4 pr-1">
-                  {reportSubItems.map((sub) => {
-                    const isSubActive =
-                      location.pathname === sub.to ||
-                      (sub.altTo && location.pathname === sub.altTo);
-                    return (
-                      <NavLink
-                        key={sub.to}
-                        to={sub.to}
-                        className={`block px-4 py-2.5 rounded-xl text-[13px] transition-colors ${isSubActive
+              <div
+                className={`space-y-1 pl-4 pr-1 overflow-hidden transition-all duration-300 ease-in-out ${
+                  !sidebarCollapsed && reportsOpen
+                    ? "max-h-60 opacity-100 mt-1"
+                    : "max-h-0 opacity-0 mt-0 pointer-events-none"
+                }`}
+              >
+                {reportSubItems.map((sub) => {
+                  const isSubActive =
+                    location.pathname === sub.to ||
+                    (sub.altTo && location.pathname === sub.altTo);
+                  return (
+                    <NavLink
+                      key={sub.to}
+                      to={sub.to}
+                      className={`block px-4 py-2 rounded-xl text-[13px] whitespace-nowrap truncate transition-colors ${
+                        isSubActive
                           ? "bg-[#2844A8] dark:bg-[#283D91] text-white font-medium"
                           : "text-white/80 hover:text-white hover:bg-white/5"
-                          }`}
-                      >
-                        {sub.label}
-                      </NavLink>
-                    );
-                  })}
-                </div>
-              )}
+                      }`}
+                    >
+                      {sub.label}
+                    </NavLink>
+                  );
+                })}
+              </div>
             </div>
           </nav>
         </div>
       </div>
 
       {/* Bottom Area: Secondary Nav & Profile */}
-      <div className="p-3 border-t border-white/15 dark:border-white/10 space-y-2 flex-shrink-0 relative" ref={profileMenuRef}>
+      <div className="p-2.5 border-t border-white/15 dark:border-white/10 space-y-2 flex-shrink-0 relative" ref={profileMenuRef}>
         {/* Bottom Nav Items (Logs, Settings) */}
         <nav className="space-y-1">
           {bottomNavItems.map((item) => (
@@ -262,25 +312,35 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 group ${isActive
-                  ? "bg-[#2844A8] dark:bg-[#283D91] text-white font-bold shadow-2xs"
-                  : "text-white/80 hover:bg-white/10 dark:hover:bg-white/5 hover:text-white"
-                } ${sidebarCollapsed ? "justify-center px-0" : ""}`
+                `flex items-center h-11 px-3 rounded-xl text-[13.5px] font-medium transition-colors duration-200 group relative overflow-hidden ${
+                  isActive
+                    ? "bg-[#2844A8] dark:bg-[#283D91] text-white font-bold shadow-2xs"
+                    : "text-white/80 hover:bg-white/10 dark:hover:bg-white/5 hover:text-white"
+                } ${sidebarCollapsed ? "justify-center px-0" : "gap-3"}`
               }
               title={sidebarCollapsed ? item.label : undefined}
             >
               {({ isActive }) => (
                 <>
-                  <HugeiconsIcon
-                    icon={item.icon}
-                    size={20}
-                    className={`flex-shrink-0 transition-colors duration-200 ${isActive ? "text-white" : "text-white/80 group-hover:text-white"
+                  <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                    <HugeiconsIcon
+                      icon={item.icon}
+                      size={20}
+                      className={`transition-colors duration-200 ${
+                        isActive ? "text-white" : "text-white/80 group-hover:text-white"
                       }`}
-                    strokeWidth={2}
-                  />
-                  {!sidebarCollapsed && (
-                    <span className="truncate">{item.label}</span>
-                  )}
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <span
+                    className={`truncate whitespace-nowrap transition-all duration-300 ease-in-out ${
+                      sidebarCollapsed
+                        ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none overflow-hidden"
+                        : "max-w-[180px] opacity-100 translate-x-0"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
                 </>
               )}
             </NavLink>
@@ -310,12 +370,13 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
               <button
                 type="button"
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all duration-200 cursor-pointer text-left ${profileMenuOpen ? "bg-[#2844A8] dark:bg-[#1C2438]" : "hover:bg-white/10 dark:hover:bg-white/5"
-                  } ${sidebarCollapsed ? "justify-center p-1" : ""}`}
+                className={`w-full flex items-center h-12 rounded-xl transition-colors duration-200 cursor-pointer text-left overflow-hidden ${
+                  profileMenuOpen ? "bg-[#2844A8] dark:bg-[#1C2438]" : "hover:bg-white/10 dark:hover:bg-white/5"
+                } ${sidebarCollapsed ? "justify-center px-0" : "px-2.5 gap-3"}`}
                 title={`${displayName} (${displayRole})`}
               >
                 {/* Avatar */}
-                <div className="w-9 h-9 rounded-xl bg-white/20 dark:bg-white/10 text-white font-bold flex items-center justify-center text-xs shadow-inner flex-shrink-0 backdrop-blur-xs">
+                <div className="w-9 h-9 rounded-xl bg-white/20 dark:bg-white/10 text-white font-bold flex items-center justify-center text-xs shadow-inner shrink-0 backdrop-blur-xs">
                   {currentUser?.avatar ? (
                     <img
                       src={currentUser.avatar}
@@ -328,18 +389,22 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 </div>
 
                 {/* User Details */}
-                {!sidebarCollapsed && (
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13.5px] font-semibold text-white truncate leading-tight">
-                      {displayName}
-                    </div>
-                    <div className="mt-0.5">
-                      <span className="text-[11px] font-medium text-white/70 truncate block">
-                        {displayRole}
-                      </span>
-                    </div>
+                <div
+                  className={`flex-1 min-w-0 transition-all duration-300 ease-in-out ${
+                    sidebarCollapsed
+                      ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none overflow-hidden"
+                      : "max-w-[170px] opacity-100 translate-x-0"
+                  }`}
+                >
+                  <div className="text-[13.5px] font-semibold text-white truncate whitespace-nowrap leading-tight">
+                    {displayName}
                   </div>
-                )}
+                  <div className="mt-0.5">
+                    <span className="text-[11px] font-medium text-white/70 truncate whitespace-nowrap block">
+                      {displayRole}
+                    </span>
+                  </div>
+                </div>
               </button>
             );
           })()}

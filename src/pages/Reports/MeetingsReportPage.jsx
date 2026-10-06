@@ -73,15 +73,15 @@ const MeetingsReportPage = () => {
     }
   }, []);
 
-  const handleSearchOrganizers = (query) => {
+  const handleSearchOrganizers = useCallback((query) => {
     setOrganizersSearch(query);
     fetchOrganizers(1, false, query);
-  };
+  }, [fetchOrganizers]);
 
-  const handleLoadMoreOrganizers = () => {
+  const handleLoadMoreOrganizers = useCallback(() => {
     if (!organizersHasMore || organizersLoadingMore || organizersLoading) return;
     fetchOrganizers(organizersPage + 1, true, organizersSearch);
-  };
+  }, [organizersHasMore, organizersLoadingMore, organizersLoading, fetchOrganizers, organizersPage, organizersSearch]);
 
   useEffect(() => {
     fetchOrganizers(1, false, "");
@@ -365,11 +365,10 @@ const MeetingsReportPage = () => {
         <button
           type="button"
           onClick={() => setIsFilterVisible(!isFilterVisible)}
-          className={`inline-flex items-center gap-2 h-9 px-4 rounded-lg border text-[13.5px] font-semibold transition-all cursor-pointer ${
-            isFilterVisible || activeFiltersCount > 0
-              ? "border-[#E2E6F2] dark:border-[#2B3553] bg-[#F4F6FB] dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white"
-              : "border-[#E2E6F2] dark:border-[#2B3553] bg-white dark:bg-[#161C2E] text-[#1A1D2E] dark:text-white hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438]"
-          }`}
+          className={`inline-flex items-center gap-2 h-9 px-4 rounded-lg border text-[13.5px] font-semibold transition-all cursor-pointer ${isFilterVisible || activeFiltersCount > 0
+            ? "border-[#E2E6F2] dark:border-[#2B3553] bg-[#F4F6FB] dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white"
+            : "border-[#E2E6F2] dark:border-[#2B3553] bg-white dark:bg-[#161C2E] text-[#1A1D2E] dark:text-white hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438]"
+            }`}
         >
           <Filter size={16} strokeWidth={2.5} className="text-[#5E6480] dark:text-[#94A3B8]" />
           <span>
@@ -377,9 +376,8 @@ const MeetingsReportPage = () => {
           </span>
           <ChevronDown
             size={14}
-            className={`transition-transform duration-200 text-[#8B90A5] dark:text-[#94A3B8] ${
-              isFilterVisible ? "rotate-180" : ""
-            }`}
+            className={`transition-transform duration-200 text-[#8B90A5] dark:text-[#94A3B8] ${isFilterVisible ? "rotate-180" : ""
+              }`}
           />
         </button>
 
@@ -418,11 +416,10 @@ const MeetingsReportPage = () => {
 
       {/* Collapsible Filters: 3 columns layout matching Figma */}
       <div
-        className={`transition-all duration-300 ease-in-out ${
-          isFilterVisible
-            ? "max-h-[600px] opacity-100 mb-6 overflow-visible"
-            : "max-h-0 opacity-0 mb-0 overflow-hidden pointer-events-none"
-        }`}
+        className={`transition-all duration-300 ease-in-out ${isFilterVisible
+          ? "max-h-[600px] opacity-100 mb-6 overflow-visible"
+          : "max-h-0 opacity-0 mb-0 overflow-hidden pointer-events-none"
+          }`}
       >
         <div className="pt-0.5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-1">
@@ -434,6 +431,7 @@ const MeetingsReportPage = () => {
               <DatePicker
                 value={startDate}
                 onChange={(d) => setStartDate(d)}
+                maxDate={endDate || new Date()}
                 placeholder="kun.oy.yil"
               />
             </div>
@@ -445,6 +443,8 @@ const MeetingsReportPage = () => {
               <DatePicker
                 value={endDate}
                 onChange={(d) => setEndDate(d)}
+                minDate={startDate || undefined}
+                maxDate={new Date()}
                 placeholder="kun.oy.yil"
               />
             </div>
@@ -557,7 +557,7 @@ const MeetingsReportPage = () => {
             className="overflow-auto max-h-[calc(100vh-230px)]"
           >
             <table className="w-full border-collapse text-left">
-              <thead className="sticky top-0 z-10">
+              <thead className="sticky top-0 z-10 bg-[#F8F9FC] dark:bg-[#161B22]">
                 <tr className="border-b border-[#F1F3F9] dark:border-[#1E263C] text-[#5B6078] dark:text-[#94A3B8] text-[13px] font-medium">
                   <th className="py-3 px-3 w-12 font-medium">№</th>
                   <th className="py-3 px-3 font-medium">Yig'ilish</th>

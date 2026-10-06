@@ -102,15 +102,15 @@ const MeetingsPage = () => {
     }
   }, []);
 
-  const handleSearchUsers = (query) => {
+  const handleSearchUsers = useCallback((query) => {
     setUsersSearch(query);
     fetchUsersList(1, false, query);
-  };
+  }, [fetchUsersList]);
 
-  const handleLoadMoreUsers = () => {
+  const handleLoadMoreUsers = useCallback(() => {
     if (!usersHasMore || usersLoadingMore || usersLoading) return;
     fetchUsersList(usersPage + 1, true, usersSearch);
-  };
+  }, [usersHasMore, usersLoadingMore, usersLoading, fetchUsersList, usersPage, usersSearch]);
 
   useEffect(() => {
     if (isStaff) {
@@ -353,19 +353,19 @@ const MeetingsPage = () => {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${isActive
-                    ? "bg-white dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white shadow-2xs font-semibold"
-                    : "text-[#5B6078] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white"
+                  ? "bg-white dark:bg-[#1C2438] text-[#1A1D2E] dark:text-white shadow-2xs font-semibold"
+                  : "text-[#5B6078] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white"
                   }`}
               >
                 <span className="leading-tight">{tab.label}</span>
                 <span
                   className={`min-w-[20px] h-[18px] px-1.5 inline-flex items-center justify-center rounded-full text-[11px] font-medium leading-none transition-colors ${tab.isRed && !isActive
                     ? "bg-[#F8D7DA]! dark:bg-[#EF4444]/20! text-[#DC2626] dark:text-[#F87171]"
-                      : tab.isRed
-                        ? "bg-[#EF4444] text-white font-bold"
-                        : isActive
-                          ? "bg-[#F1F3F9] dark:bg-[#121624] text-[#1A1D2E] dark:text-white"
-                          : "bg-white dark:bg-[#1C2438] text-[#8B90A5] dark:text-[#94A3B8]"
+                    : tab.isRed
+                      ? "bg-[#EF4444] text-white font-bold"
+                      : isActive
+                        ? "bg-[#F1F3F9] dark:bg-[#121624] text-[#1A1D2E] dark:text-white"
+                        : "bg-white dark:bg-[#1C2438] text-[#8B90A5] dark:text-[#94A3B8]"
                     }`}
                 >
                   {tab.count}
@@ -382,8 +382,8 @@ const MeetingsPage = () => {
             type="button"
             onClick={() => setFilterModalOpen(true)}
             className={`flex items-center gap-2 px-3.5 h-9 rounded-xl border text-[13px] font-semibold transition-all cursor-pointer ${activeFilterCount > 0
-                ? "bg-[#EEF2FF] dark:bg-[#3858C7]/20 border-[#4763E4]/30 dark:border-[#3858C7] text-[#3858C7] dark:text-[#7F95E6]"
-                : "bg-[#F1F3F9] dark:bg-[#1C2438] border-[#E2E6F2] dark:border-[#2B3553] text-[#5B6078] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white hover:bg-[#E8ECF6] dark:hover:bg-[#232E47]"
+              ? "bg-[#EEF2FF] dark:bg-[#3858C7]/20 border-[#4763E4]/30 dark:border-[#3858C7] text-[#3858C7] dark:text-[#7F95E6]"
+              : "bg-[#F1F3F9] dark:bg-[#1C2438] border-[#E2E6F2] dark:border-[#2B3553] text-[#5B6078] dark:text-[#94A3B8] hover:text-[#1A1D2E] dark:hover:text-white hover:bg-[#E8ECF6] dark:hover:bg-[#232E47]"
               }`}
           >
             <HugeiconsIcon icon={FilterVerticalIcon} size={16} />
@@ -429,8 +429,8 @@ const MeetingsPage = () => {
       {/* Meetings Table */}
       <div className="overflow-auto h-[calc(100vh-160px)]">
         <table className="w-full text-left border-collapse table-fixed">
-          <thead className="sticky top-0 z-10">
-            <tr className="border-b border-[#E2E6F2] dark:border-[#2B3553] text-[#8B90A5] dark:text-[#94A3B8] text-[13px] font-medium">
+          <thead className="sticky top-0 z-10 bg-[#F8F9FC] dark:bg-[#161B22]">
+            <tr className=" border-b border-[#E2E6F2] dark:border-[#2B3553] text-[#8B90A5] dark:text-[#94A3B8] text-[13px] font-medium">
               <th className="py-3 px-4 font-normal w-[52px] text-center">№</th>
               <th className="py-3 px-4 font-normal w-[26%]">Nomi</th>
               <th className="py-3 px-4 font-normal w-[18%]">

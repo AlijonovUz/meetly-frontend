@@ -234,11 +234,10 @@ const Logs = () => {
         <button
           type="button"
           onClick={() => setIsFilterOpen(true)}
-          className={`inline-flex items-center gap-2 h-10 px-4 rounded-xl border text-[13.5px] font-semibold transition-all cursor-pointer ${
-            hasActiveFilters
-              ? "border-[#3858C7] bg-[#EEF2FB] dark:bg-[#1C2438] text-[#3858C7] dark:text-[#7C9BFF]"
-              : "border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#161C2E] text-[#1A1D2E] dark:text-white hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438]"
-          }`}
+          className={`inline-flex items-center gap-2 h-10 px-4 rounded-xl border text-[13.5px] font-semibold transition-all cursor-pointer ${hasActiveFilters
+            ? "border-[#3858C7] bg-[#EEF2FB] dark:bg-[#1C2438] text-[#3858C7] dark:text-[#7C9BFF]"
+            : "border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#161C2E] text-[#1A1D2E] dark:text-white hover:bg-[#F1F3F9] dark:hover:bg-[#1C2438]"
+            }`}
         >
           <Filter size={16} className={hasActiveFilters ? "text-[#3858C7] dark:text-[#7C9BFF]" : "text-[#5E6480] dark:text-[#94A3B8]"} />
           <span>Filtrlash</span>
@@ -270,7 +269,7 @@ const Logs = () => {
         className="overflow-auto h-[calc(100vh-165px)] rounded-xl relative"
       >
         <table className="w-full border-collapse text-left">
-          <thead className="sticky top-0 z-10">
+          <thead className="sticky top-0 z-10 bg-[#F8F9FC] dark:bg-[#161B22]">
             <tr className="border-b border-[#E2E6F2] dark:border-[#1E263C] text-[#8B90A5] dark:text-[#94A3B8] text-[12.5px] font-medium">
               <th className="py-3 px-3 w-12 font-medium">№</th>
               <th className="py-3 px-3 font-medium">Foydalanuvchi</th>
@@ -480,8 +479,8 @@ const Logs = () => {
                       ? JSON.stringify(selectedLog.changes, null, 2)
                       : String(selectedLog.changes)
                     : selectedLog.additional_data
-                    ? JSON.stringify(selectedLog.additional_data, null, 2)
-                    : "O'zgarish ma'lumotlari mavjud emas"}
+                      ? JSON.stringify(selectedLog.additional_data, null, 2)
+                      : "O'zgarish ma'lumotlari mavjud emas"}
                 </div>
               </div>
             </div>
@@ -548,6 +547,7 @@ const Logs = () => {
                   <DatePicker
                     value={startDate}
                     onChange={(d) => setStartDate(d)}
+                    maxDate={endDate || new Date()}
                     placeholder="Boshlanish sanasi"
                     className="w-full"
                   />
@@ -560,6 +560,8 @@ const Logs = () => {
                   <DatePicker
                     value={endDate}
                     onChange={(d) => setEndDate(d)}
+                    minDate={startDate || undefined}
+                    maxDate={new Date()}
                     placeholder="Tugash sanasi"
                     className="w-full"
                   />
