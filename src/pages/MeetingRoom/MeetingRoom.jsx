@@ -891,7 +891,7 @@ export default function MeetingRoom() {
       }
       if (d.status === 'completed' || d.status === 'cancelled' || d.is_active === false || d.status === 'closed' || d.is_closed === true) {
         setWaitingState('ended')
-        setEndedReason(d.cancellation_reason || (d.status === 'cancelled' ? "Yig'ilish tashkilotchi tomonidan bekor qilindi." : "Yig'ilish tashkilotchi tomonidan yakunlangan."))
+        setEndedReason(d.cancellation_reason || (d.status === 'cancelled' ? "Yig'ilish tashkilotchi tomonidan bekor qilindi." : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!"))
       }
     }
 
@@ -1412,7 +1412,7 @@ export default function MeetingRoom() {
         clearStoredChatMessages(meetingId)
         setChatMessages([])
         setWaitingState('ended')
-        setEndedReason(msg.message || (msg.type === 'meeting_cancelled' ? "Yig'ilish tashkilotchi tomonidan bekor qilindi." : "Yig'ilish tashkilotchi tomonidan yakunlandi."))
+        setEndedReason(msg.message || (msg.type === 'meeting_cancelled' ? "Yig'ilish tashkilotchi tomonidan bekor qilindi." : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!"))
         leaveLiveKit()
         if (wsRef.current) {
           try { wsRef.current.close() } catch {}
@@ -2634,7 +2634,7 @@ export default function MeetingRoom() {
         } else if (decoded.type === 'meeting_ended' || decoded.type === 'meeting_cancelled') {
           clearStoredChatMessages(meetingId)
           setChatMessages([])
-          setEndedReason(decoded.message || (decoded.type === 'meeting_cancelled' ? "Yig'ilish tashkilotchi tomonidan bekor qilindi." : "Yig'ilish tashkilotchi tomonidan yakunlandi."))
+          setEndedReason(decoded.message || (decoded.type === 'meeting_cancelled' ? "Yig'ilish tashkilotchi tomonidan bekor qilindi." : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!"))
           setWaitingState('ended')
           leaveLiveKit()
           if (wsRef.current) {
@@ -2687,7 +2687,7 @@ export default function MeetingRoom() {
       if (isRoomEnded) {
         clearStoredChatMessages(meetingId)
         setChatMessages([])
-        setEndedReason("Yig'ilish tashkilotchi tomonidan yakunlandi.")
+        setEndedReason("Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!")
         setWaitingState('ended')
         return
       }
@@ -3309,7 +3309,7 @@ export default function MeetingRoom() {
       try {
         const payload = new TextEncoder().encode(JSON.stringify({
           type: 'meeting_ended',
-          message: "Yig'ilish tashkilotchi tomonidan yakunlandi."
+          message: "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!"
         }))
         await roomRef.current?.localParticipant?.publishData(payload, { reliable: true })
       } catch (e) { }
@@ -3759,7 +3759,7 @@ export default function MeetingRoom() {
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 mb-7 text-center">
             {isMeetingEnded
-              ? (endedReason && endedReason !== "Yig'ilish yakunlandi"
+              ? (endedReason && !["Yig'ilish yakunlandi", "Yig'ilish tashkilotchi tomonidan yakunlandi.", "Yig'ilish tashkilotchi tomonidan yakunlangan."].includes(endedReason)
                   ? endedReason
                   : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!")
               : "Havola hali ham amal qiladi — istagan vaqtda qaytishingiz mumkin."}
