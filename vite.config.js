@@ -22,12 +22,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://backend-muloqot.raqamlinazorat.uz',
+        target: 'https://api.meetly.uz',
         changeOrigin: true,
         secure: false,
       },
       '/ws': {
-        target: 'https://backend-muloqot.raqamlinazorat.uz',
+        target: 'https://api.meetly.uz',
         changeOrigin: true,
         ws: true,
         secure: false,
