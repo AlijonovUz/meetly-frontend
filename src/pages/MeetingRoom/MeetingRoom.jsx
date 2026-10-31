@@ -4026,7 +4026,17 @@ export default function MeetingRoom() {
           )}
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Top Right: Participants Badge pill */}
+            {(isLocalHost || isAdminOrSuperadmin) && (
+              <button
+                type="button"
+                onClick={() => setShowEndModal(true)}
+                title="Yig'ilishni yakunlash"
+                className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/15 hover:bg-[#EA3323] hover:text-white dark:hover:bg-[#EA3323] dark:hover:text-white text-[#EA3323] dark:text-red-400 border border-red-200/80 dark:border-red-500/30 hover:border-transparent flex items-center justify-center cursor-pointer transition-all active:scale-95 shadow-2xs"
+              >
+                <HugeiconsIcon icon={PowerIcon} size={16} strokeWidth={2.2} />
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => {
@@ -4045,17 +4055,6 @@ export default function MeetingRoom() {
               <HugeiconsIcon icon={UserGroupIcon} size={16} strokeWidth={2} />
               <span>{cameraItems.length}</span>
             </button>
-
-            {(isLocalHost || isAdminOrSuperadmin) && (
-              <button
-                type="button"
-                onClick={() => setShowEndModal(true)}
-                title="Yig'ilishni yakunlash"
-                className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/15 hover:bg-[#EA3323] hover:text-white dark:hover:bg-[#EA3323] dark:hover:text-white text-[#EA3323] dark:text-red-400 border border-red-200/80 dark:border-red-500/30 hover:border-transparent flex items-center justify-center cursor-pointer transition-all active:scale-95 shadow-2xs"
-              >
-                <HugeiconsIcon icon={PowerIcon} size={16} strokeWidth={2.2} />
-              </button>
-            )}
           </div>
         </header>
       )}
