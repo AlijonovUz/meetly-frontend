@@ -39,6 +39,7 @@ import {
   Refresh01Icon,
   Refresh04Icon,
   Home04Icon,
+  PowerIcon,
   ShutDownIcon,
   CallEnd01Icon,
   Mic01Icon,
@@ -3285,6 +3286,9 @@ export default function MeetingRoom() {
       setChatMessages([])
       toast.success("Yig'ilish yakunlandi", "Barcha qatnashchilar uchun yig'ilish to'xtatildi")
       leaveLiveKit()
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
       setWaitingState('ended')
     } catch (err) {
       console.error(err)
@@ -4041,6 +4045,17 @@ export default function MeetingRoom() {
               <HugeiconsIcon icon={UserGroupIcon} size={16} strokeWidth={2} />
               <span>{cameraItems.length}</span>
             </button>
+
+            {(isLocalHost || isAdminOrSuperadmin) && (
+              <button
+                type="button"
+                onClick={() => setShowEndModal(true)}
+                title="Yig'ilishni yakunlash"
+                className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/15 hover:bg-[#EA3323] hover:text-white dark:hover:bg-[#EA3323] dark:hover:text-white text-[#EA3323] dark:text-red-400 border border-red-200/80 dark:border-red-500/30 hover:border-transparent flex items-center justify-center cursor-pointer transition-all active:scale-95 shadow-2xs"
+              >
+                <HugeiconsIcon icon={PowerIcon} size={16} strokeWidth={2.2} />
+              </button>
+            )}
           </div>
         </header>
       )}
@@ -4687,10 +4702,10 @@ export default function MeetingRoom() {
             className="relative w-full max-w-[450px] p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#0B0D11] border border-slate-100 dark:border-white/10 text-slate-900 dark:text-white shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200 overflow-hidden"
           >
             <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-              Uchrashuvni yakunlaysizmi?
+              Yig'ilishni yakunlaysizmi?
             </h3>
             <p className="mt-2.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              Uchrashuv barcha ishtirokchilar uchun to'xtatiladi va hamma chiqariladi.
+              Barcha ishtirokchilar uchun yig'ilish to'xtatiladi va xona yopiladi.
             </p>
 
             <div className="mt-6 flex items-center justify-end gap-3">
@@ -4710,7 +4725,7 @@ export default function MeetingRoom() {
                 }}
                 className="px-5 py-2.5 rounded-xl bg-[#EA3323] hover:bg-red-600 text-white text-xs sm:text-sm font-bold flex items-center gap-2 cursor-pointer shadow-md shadow-red-500/25 transition-all active:scale-95"
               >
-                <HugeiconsIcon icon={CallEnd01Icon} size={15} strokeWidth={2.2} />
+                <HugeiconsIcon icon={PowerIcon} size={15} strokeWidth={2.2} />
                 <span>Yakunlash</span>
               </button>
             </div>

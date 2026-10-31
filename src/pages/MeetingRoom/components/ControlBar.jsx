@@ -10,7 +10,6 @@ import {
   HandIcon,
   Comment01Icon,
   UserGroupIcon,
-  InformationCircleIcon,
   ArrowUp01Icon,
   ArrowDown01Icon,
   CallEnd01Icon,
@@ -631,24 +630,6 @@ export default function ControlBar({
           <HugeiconsIcon icon={UserGroupIcon} size={20} strokeWidth={2} />
           <span className="text-sm font-bold">{participantCount}</span>
         </button>
-
-        {/* 7. Meeting Info */}
-        {onToggleDetails && (
-          <button
-            type="button"
-            onClick={onToggleDetails}
-            title="Yig'ilish tafsilotlari"
-            className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 active:scale-95 ${
-              isFullScreenFocus ? 'shadow-lg shadow-black/40 backdrop-blur-md ' : ''
-            }${
-              isDetailsOpen
-                ? 'glass-droplet-btn-active'
-                : 'glass-droplet-btn'
-            }`}
-          >
-            <HugeiconsIcon icon={InformationCircleIcon} size={21} strokeWidth={2} />
-          </button>
-        )}
 
         {/* Subtle divider before Chiqish matching screenshot */}
         <div className="w-[1px] h-6 bg-slate-400/40 dark:bg-white/10 mx-0.5" />

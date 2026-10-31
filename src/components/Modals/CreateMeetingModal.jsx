@@ -20,7 +20,7 @@ const CreateMeetingModal = ({
   const [newMeetingDesc, setNewMeetingDesc] = useState("");
   const [newStartDate, setNewStartDate] = useState("");
   const [newStartTime, setNewStartTime] = useState("");
-  const [newDuration, setNewDuration] = useState("40");
+  const [newDuration, setNewDuration] = useState("");
   const [newRequireApproval, setNewRequireApproval] = useState(true);
   const [newAllowJoinBeforeHost, setNewAllowJoinBeforeHost] = useState(false);
 
@@ -54,9 +54,9 @@ const CreateMeetingModal = ({
 
   const parseDurationMinutes = (val) => {
     if (typeof val === "number") return val;
-    if (!val) return 40;
+    if (!val) return 0;
     const num = parseInt(val, 10);
-    return isNaN(num) || num <= 0 ? 40 : num;
+    return isNaN(num) || num <= 0 ? 0 : num;
   };
 
   useEffect(() => {
@@ -65,7 +65,7 @@ const CreateMeetingModal = ({
       setNewMeetingDesc("");
       setNewStartDate("");
       setNewStartTime("");
-      setNewDuration("40");
+      setNewDuration("");
       setNewRequireApproval(true);
       setNewAllowJoinBeforeHost(false);
       setDescTextareaHeight(90);
@@ -105,6 +105,39 @@ const CreateMeetingModal = ({
       newErrors.title = "Yig'ilish nomini kiritish majburiy";
     }
 
+    if (!newStartDate || !newStartDate.trim()) {
+      newErrors.startDate = "Boshlanish sanasini tanlash majburiy";
+    }
+
+    if (!newStartTime || !newStartTime.trim()) {
+      newErrors.startTime = "Boshlanish vaqtini kiritish majburiy";
+    }
+
+    if (!newDuration || !newDuration.trim()) {
+      newErrors.duration = "Davomiylikni kiritish majburiy";
+    } else {
+      const parsedDur = parseInt(newDuration, 10);
+      if (isNaN(parsedDur) || parsedDur <= 0) {
+        newErrors.duration = "Davomiylik kamida 1 daqiqa bo'lishi kerak";
+      }
+    }
+
+    if (newStartDate && newStartTime) {
+      const parts = newStartDate.split(".");
+      if (parts.length === 3) {
+        const d = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const y = parseInt(parts[2], 10);
+        const [hh, mm] = newStartTime.split(":").map(Number);
+        if (!isNaN(hh) && !isNaN(mm)) {
+          const checkDate = new Date(y, m, d, hh, mm, 0, 0);
+          if (checkDate < new Date(Date.now() - 60000)) {
+            newErrors.startTime = "Boshlanish vaqti hozirgi vaqtdan oldin bo'lishi mumkin emas";
+          }
+        }
+      }
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -114,7 +147,6 @@ const CreateMeetingModal = ({
       setIsSubmitting(true);
       setFormError(null);
 
-      // Construct start_date ISO string
       let startDateObj = new Date();
       if (newStartDate) {
         const parts = newStartDate.split(".");
@@ -133,7 +165,6 @@ const CreateMeetingModal = ({
         }
       }
 
-      // Check not in past
       if (startDateObj < new Date(Date.now() - 60000)) {
         setFormError("Boshlanish vaqti hozirgi vaqtdan oldin bo'lishi mumkin emas.");
         setIsSubmitting(false);
@@ -329,7 +360,7 @@ const CreateMeetingModal = ({
                 {/* Start Date */}
                 <div>
                   <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
-                    Boshlanish vaqti
+                    Boshlanish vaqti <span className="text-red-500">*</span>
                   </label>
                   <DatePicker
                     value={newStartDate}
@@ -342,34 +373,71 @@ const CreateMeetingModal = ({
                         const year = d.getFullYear();
                         setNewStartDate(`${day}.${month}.${year}`);
                       }
+                      if (errors.startDate) {
+                        setErrors((prev) => ({ ...prev, startDate: null }));
+                      }
+                      setFormError(null);
                     }}
+                    error={Boolean(errors.startDate)}
                     minDate={new Date()}
                     placeholder="01.01.2026"
                     className="w-full"
-                    inputClassName="h-12! rounded-2xl! border-[#E2E6F2]! dark:border-[#2B3553]! text-[13.5px]! font-medium! text-[#1A1D2E]! dark:text-white! focus-visible:border-[#3858C7]! focus-visible:ring-[#3858C7]/10!"
+                    inputClassName={`h-12! rounded-2xl! text-[13.5px]! font-medium! text-[#1A1D2E]! dark:text-white! ${
+                      errors.startDate
+                        ? "border-red-500! focus-visible:border-red-500! focus-visible:ring-red-500/20!"
+                        : "border-[#E2E6F2]! dark:border-[#2B3553]! focus-visible:border-[#3858C7]! focus-visible:ring-[#3858C7]/10!"
+                    }`}
                   />
+                  {errors.startDate && (
+                    <p className="mt-1.5 text-[12px] font-semibold text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in duration-150">
+                      <HugeiconsIcon icon={Alert02Icon} size={15} />
+                      <span>{errors.startDate}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Time */}
                 <div>
                   <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
-                    Vaqti
+                    Vaqti <span className="text-red-500">*</span>
                   </label>
                   <TimePicker
                     value={newStartTime}
-                    onChange={setNewStartTime}
+                    onChange={(val) => {
+                      setNewStartTime(val);
+                      if (errors.startTime) {
+                        setErrors((prev) => ({ ...prev, startTime: null }));
+                      }
+                      setFormError(null);
+                    }}
                     minTime={minStartTime}
                     placeholder="00:00"
-                    className="h-12!"
+                    className={`h-12! ${
+                      errors.startTime
+                        ? "border-red-500! focus:border-red-500! focus:ring-red-500/20!"
+                        : ""
+                    }`}
                   />
+                  {errors.startTime && (
+                    <p className="mt-1.5 text-[12px] font-semibold text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in duration-150">
+                      <HugeiconsIcon icon={Alert02Icon} size={15} />
+                      <span>{errors.startTime}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Duration */}
                 <div>
                   <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
-                    Davomiyligi
+                    Davomiyligi <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex items-center bg-white dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl px-4 h-12 text-[14px] text-[#1A1D2E] dark:text-white focus-within:border-[#3858C7] focus-within:ring-2 focus-within:ring-[#3858C7]/10 transition-all shadow-2xs">
+                  <div
+                    className={`flex items-center bg-white dark:bg-[#121624] border rounded-2xl px-4 h-12 text-[14px] text-[#1A1D2E] dark:text-white transition-all shadow-2xs ${
+                      errors.duration
+                        ? "border-red-500 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
+                        : "border-[#E2E6F2] dark:border-[#2B3553] focus-within:border-[#3858C7] focus-within:ring-2 focus-within:ring-[#3858C7]/10"
+                    }`}
+                  >
                     <input
                       type="text"
                       inputMode="numeric"
@@ -377,6 +445,10 @@ const CreateMeetingModal = ({
                       onChange={(e) => {
                         const onlyNums = e.target.value.replace(/\D/g, "");
                         setNewDuration(onlyNums);
+                        if (errors.duration) {
+                          setErrors((prev) => ({ ...prev, duration: null }));
+                        }
+                        setFormError(null);
                       }}
                       placeholder="40"
                       className="w-full bg-transparent text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none font-medium text-[14px]"
@@ -385,6 +457,12 @@ const CreateMeetingModal = ({
                       daqiqa
                     </span>
                   </div>
+                  {errors.duration && (
+                    <p className="mt-1.5 text-[12px] font-semibold text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in duration-150">
+                      <HugeiconsIcon icon={Alert02Icon} size={15} />
+                      <span>{errors.duration}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
