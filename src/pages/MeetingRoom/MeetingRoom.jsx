@@ -1479,7 +1479,7 @@ export default function MeetingRoom() {
       }
 
       const codeForWs = meetingDetails?.code || currentMeetingCode || rawParamId || meetingId
-      const wsUrl = `wss://${cleanWsHost}/ws/meetings/${codeForWs}/?${ticket ? `ticket=${ticket}` : `token=${jwtToken}`}`
+      const wsUrl = `wss://${cleanWsHost}/ws/meetings/${codeForWs}/?${ticket ? `ticket=${ticket}&` : ""}${jwtToken ? `token=${jwtToken}` : ""}`.replace(/[?&]$/, "")
 
       if (!hasClickedJoinRef.current) {
         return

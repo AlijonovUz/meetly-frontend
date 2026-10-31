@@ -114,7 +114,7 @@ export function NotificationProvider({ children }) {
       // Secure wss: protocol (default to wss:)
       const isLocalhost = cleanWsHost.includes("localhost") || cleanWsHost.includes("127.0.0.1");
       const wsProtocol = isLocalhost && window.location.protocol === "http:" ? "ws:" : "wss:";
-      const wsUrl = `${wsProtocol}//${cleanWsHost}/ws/notifications/?${ticket ? `ticket=${ticket}` : `token=${token}`}`;
+      const wsUrl = `${wsProtocol}//${cleanWsHost}/ws/notifications/?${ticket ? `ticket=${ticket}&` : ""}${token ? `token=${token}` : ""}`.replace(/[?&]$/, "");
 
       const ws = new WebSocket(wsUrl);
       socketRef.current = ws;
