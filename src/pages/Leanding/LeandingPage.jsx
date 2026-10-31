@@ -520,7 +520,7 @@ const LeandingPage = () => {
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText("https://meetly.uz/m1213-mxr");
+    navigator.clipboard.writeText("https://meetly.uz/join/ycy-xhvd-okx");
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
@@ -922,7 +922,7 @@ const LeandingPage = () => {
                   {/* Widget */}
                   <div className="bg-[#F1F3F9] rounded-xl p-2 sm:p-2.5 flex items-center justify-between gap-1.5 sm:gap-2 mt-3 sm:mt-4">
                     <span className="text-[11.5px] sm:text-[13px] font-bold text-[#1A1D2E] truncate pl-1 sm:pl-2">
-                      meetly.uz/m1213-mxr
+                      meetly.uz/join/ycy-xhvd-okx
                     </span>
                     <button
                       onClick={handleCopyLink}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { flushSync, createPortal } from 'react-dom'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Room, RoomEvent, VideoPresets, Track, ConnectionQuality, setLogLevel, LogLevel } from 'livekit-client'
+import { Room, RoomEvent, VideoPresets, Track, ConnectionQuality, DisconnectReason, setLogLevel, LogLevel } from 'livekit-client'
 import { getCurrentUser, getMyProfile, isAuthenticated } from '../../services/auth'
 import { axiosAPI } from '../../services/axiosAPI'
 import { removeMeetingParticipant } from '../../services/meetingsApi'
@@ -501,7 +501,7 @@ export default function MeetingRoom() {
   const typingTimeoutsRef = useRef({})
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [meetingDuration, setMeetingDuration] = useState(0)
-  const [endedReason, setEndedReason] = useState("Yig'ilish yakunlandi")
+  const [endedReason, setEndedReason] = useState("Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!")
 
   // Live Floating Reactions (Google Meet style)
   const [activeReactions, setActiveReactions] = useState([])
@@ -2631,6 +2631,16 @@ export default function MeetingRoom() {
               setRemoteParticipants(prev => prev.filter(p => p.identity !== pIdent))
             }
           }
+        } else if (decoded.type === 'meeting_ended' || decoded.type === 'meeting_cancelled') {
+          clearStoredChatMessages(meetingId)
+          setChatMessages([])
+          setEndedReason(decoded.message || (decoded.type === 'meeting_cancelled' ? "Yig'ilish tashkilotchi tomonidan bekor qilindi." : "Yig'ilish tashkilotchi tomonidan yakunlandi."))
+          setWaitingState('ended')
+          leaveLiveKit()
+          if (wsRef.current) {
+            try { wsRef.current.close() } catch {}
+            wsRef.current = null
+          }
         }
       } catch (err) {
         console.error("Data channel parslashda xato:", err)
@@ -2666,6 +2676,21 @@ export default function MeetingRoom() {
     room.on(RoomEvent.Disconnected, (reason) => {
       console.warn("LiveKit Room uzildi (Disconnected):", reason)
       setIsConnectedToLiveKit(false)
+      const isRoomEnded = (
+        reason === DisconnectReason?.ROOM_DELETED ||
+        reason === DisconnectReason?.ROOM_CLOSED ||
+        reason === 5 ||
+        reason === 10 ||
+        String(reason).toUpperCase().includes('ROOM_DELETED') ||
+        String(reason).toUpperCase().includes('ROOM_CLOSED')
+      )
+      if (isRoomEnded) {
+        clearStoredChatMessages(meetingId)
+        setChatMessages([])
+        setEndedReason("Yig'ilish tashkilotchi tomonidan yakunlandi.")
+        setWaitingState('ended')
+        return
+      }
       setWaitingState(prev => {
         if (prev === 'ended') return 'ended'
         if (prev === 'in_room') return 'left'
@@ -3281,6 +3306,14 @@ export default function MeetingRoom() {
 
   const handleEndMeetingForAll = async () => {
     try {
+      try {
+        const payload = new TextEncoder().encode(JSON.stringify({
+          type: 'meeting_ended',
+          message: "Yig'ilish tashkilotchi tomonidan yakunlandi."
+        }))
+        await roomRef.current?.localParticipant?.publishData(payload, { reliable: true })
+      } catch (e) { }
+
       await axiosAPI.post(`/meetings/${meetingId}/close/`)
       clearStoredChatMessages(meetingId)
       setChatMessages([])
@@ -3726,7 +3759,9 @@ export default function MeetingRoom() {
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 mb-7 text-center">
             {isMeetingEnded
-              ? (endedReason || "Yig'ilish tashkilotchi tomonidan yakunlandi.")
+              ? (endedReason && endedReason !== "Yig'ilish yakunlandi"
+                  ? endedReason
+                  : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!")
               : "Havola hali ham amal qiladi — istagan vaqtda qaytishingiz mumkin."}
           </p>
           <div className="flex items-center justify-center gap-3">
