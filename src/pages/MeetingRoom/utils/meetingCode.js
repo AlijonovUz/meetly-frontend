@@ -74,9 +74,14 @@ export function formatAvatarUrl(url) {
     return trimmed
   }
   const rawBase = import.meta.env.VITE_BASE_URL || ''
-  const cleanBase = rawBase.replace(/\/api\/?$/i, '').replace(/\/+$/, '')
+  let hostOrigin = ''
+  try {
+    hostOrigin = new URL(rawBase).origin
+  } catch {
+    hostOrigin = rawBase.replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '')
+  }
   const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
-  return cleanBase ? `${cleanBase}${cleanPath}` : cleanPath
+  return hostOrigin ? `${hostOrigin}${cleanPath}` : cleanPath
 }
 
 export function getAvatarGradient(name = '') {

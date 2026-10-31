@@ -34,6 +34,11 @@ export default defineConfig({
         ws: true,
         secure: false,
       },
+      '/media': {
+        target: 'https://api.meetly.uz',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })

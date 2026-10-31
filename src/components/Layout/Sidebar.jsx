@@ -21,6 +21,7 @@ import { IoMoon } from "react-icons/io5";
 import { LogOut, ChevronDown } from "lucide-react";
 import { logout, getCurrentUser } from "../../services/auth";
 import { useTheme } from "../../context/ThemeContext";
+import { formatAvatarUrl } from "../../pages/MeetingRoom/utils/meetingCode";
 
 const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   const navigate = useNavigate();
@@ -32,6 +33,11 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
     currentUser?.is_staff || currentUser?.is_superuser || currentUser?.role === "admin"
   );
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [sidebarAvatarError, setSidebarAvatarError] = useState(false);
+
+  useEffect(() => {
+    setSidebarAvatarError(false);
+  }, [currentUser?.avatar]);
   const [reportsOpen, setReportsOpen] = useState(
     location.pathname.startsWith("/reports") || true
   );
@@ -377,10 +383,11 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
               >
                 {/* Avatar */}
                 <div className="w-9 h-9 rounded-xl bg-white/20 dark:bg-white/10 text-white font-bold flex items-center justify-center text-xs shadow-inner shrink-0 backdrop-blur-xs">
-                  {currentUser?.avatar ? (
+                  {currentUser?.avatar && !sidebarAvatarError ? (
                     <img
-                      src={currentUser.avatar}
+                      src={formatAvatarUrl(currentUser.avatar)}
                       alt={displayName}
+                      onError={() => setSidebarAvatarError(true)}
                       className="w-full h-full object-cover rounded-xl"
                     />
                   ) : (

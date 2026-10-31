@@ -10,6 +10,7 @@ import { PiArrowSquareOutBold } from "react-icons/pi";
 import { Check, Lock, RefreshCw, X } from "lucide-react";
 import { getMyProfile, updateOrganization, syncAuthlyProfile } from "../../services/auth";
 import { setCurrentUser } from "../../store/slice/referencesSlice";
+import { formatAvatarUrl } from "../MeetingRoom/utils/meetingCode";
 
 const Setting = () => {
   const dispatch = useDispatch();
@@ -24,6 +25,11 @@ const Setting = () => {
   const [syncing, setSyncing] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const [previewAvatarUrl, setPreviewAvatarUrl] = useState(null);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [profileData?.avatar]);
 
   useEffect(() => {
     if (reduxUser) {
@@ -76,7 +82,7 @@ const Setting = () => {
     region: profileData.region_info?.name || profileData.region || "",
     district: profileData.district_info?.name || profileData.district || "",
     birthDate: profileData.birth_date || profileData.birthDate || "",
-    avatar: profileData.avatar,
+    avatar: formatAvatarUrl(profileData.avatar),
   };
 
   const handleSave = async (e) => {
@@ -207,11 +213,12 @@ const Setting = () => {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4.5">
           <div className="relative">
-            {user.avatar ? (
+            {user.avatar && !avatarError ? (
               <img
                 src={user.avatar}
                 alt={user.name}
                 draggable={false}
+                onError={() => setAvatarError(true)}
                 onClick={() => setPreviewAvatarUrl(user.avatar)}
                 className="w-20 h-20 md:w-[84px] md:h-[84px] rounded-2xl md:rounded-[20px] object-cover shadow-xs border border-[#E2E6F2] dark:border-[#2B3553] cursor-pointer hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all"
                 title="Rasmni kattalashtirib ko'rish"
