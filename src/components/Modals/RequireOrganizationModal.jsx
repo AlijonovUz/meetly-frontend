@@ -91,7 +91,7 @@ const RequireOrganizationModal = ({ isOpen, user, onSuccess }) => {
                 setOrganization(e.target.value);
                 if (error) setError("");
               }}
-              placeholder="Masalan: Raqamli Nazorat LLC"
+              placeholder="Masalan: Meetly LLC"
               className="w-full h-[48px] px-4 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-[#F8FAFC] dark:bg-[#121624] text-[14px] text-[#1A1D2E] dark:text-white font-medium outline-none focus:border-[#3858C7] dark:focus:border-[#4D6FE8] focus:ring-2 focus:ring-[#3858C7]/20 transition-all placeholder:text-[#8B90A5] dark:placeholder:text-[#64748B]"
             />
             {error && (

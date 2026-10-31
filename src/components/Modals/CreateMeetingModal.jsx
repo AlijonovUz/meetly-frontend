@@ -154,7 +154,8 @@ const CreateMeetingModal = ({
       const createdResponse = await createMeeting(payload);
 
       const code = createdResponse?.code || createdResponse?.id || "";
-      const newLink = `https://muloqot.raqamlinazorat.uz/join/${code}`;
+      const origin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "https://meetly.uz";
+      const newLink = `${origin}/join/${code}`;
 
       if (onMeetingCreated) {
         onMeetingCreated(createdResponse);

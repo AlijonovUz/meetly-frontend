@@ -1,10 +1,10 @@
 import { axiosAPI } from "./axiosAPI";
 
 /**
- * 1. Passport login havolasini olib o'sha manzilga yo'naltirish
- * Endpoint: GET /api/v1/auth/passport/url/
+ * 1. Authly login havolasini olib o'sha manzilga yo'naltirish
+ * Endpoint: GET /api/v1/auth/authly/url/
  */
-export const loginWithPassport = async () => {
+export const loginWithAuthly = async () => {
   try {
     const currentPath = window.location.pathname + window.location.search;
     if (
@@ -17,14 +17,13 @@ export const loginWithPassport = async () => {
       localStorage.setItem("redirect_after_login", currentPath);
     }
     const currentCallback = `${window.location.origin}/auth/callback`;
-    const response = await axiosAPI.get("auth/passport/url/", {
+    const response = await axiosAPI.get("auth/authly/url/", {
       params: { redirect_uri: currentCallback },
     });
     let loginUrl = response.data?.data?.url;
 
     if (loginUrl) {
       try {
-        // Agar backend bergan URL da redirect_uri bo'lsa, uni joriy port/domen (localhost yoki production) ga moslashtirish
         const parsedUrl = new URL(loginUrl);
         parsedUrl.searchParams.set("redirect_uri", currentCallback);
         loginUrl = parsedUrl.toString();
@@ -37,24 +36,24 @@ export const loginWithPassport = async () => {
       throw new Error("Login URL topilmadi");
     }
   } catch (error) {
-    console.error("Passport login URL olishda xatolik:", error);
+    console.error("Authly login URL olishda xatolik:", error);
     throw error;
   }
 };
 
 /**
  * 2. Callback sahifasida 'code' va 'redirect_uri' parametrini backendga yuborib JWT tokenlarni olish
- * Endpoint: POST /api/v1/auth/passport/callback/
+ * Endpoint: POST /api/v1/auth/authly/callback/
  */
-export const handlePassportCallback = async (code, redirectUri) => {
+export const handleAuthlyCallback = async (code, redirectUri) => {
   const currentRedirectUri =
     redirectUri || `${window.location.origin}/auth/callback`;
-  const response = await axiosAPI.post("auth/passport/callback/", {
+  const response = await axiosAPI.post("auth/authly/callback/", {
     code,
     redirect_uri: currentRedirectUri,
   });
   const data = response.data?.data || {};
-  const { access, refresh, passport_access_token, user } = data;
+  const { access, refresh, authly_access_token, user } = data;
 
   if (access) {
     localStorage.setItem("access_token", access);
@@ -62,8 +61,8 @@ export const handlePassportCallback = async (code, redirectUri) => {
   if (refresh) {
     localStorage.setItem("refresh_token", refresh);
   }
-  if (passport_access_token) {
-    localStorage.setItem("passport_access_token", passport_access_token);
+  if (authly_access_token) {
+    localStorage.setItem("authly_access_token", authly_access_token);
   }
   if (user) {
     localStorage.setItem("currentUser", JSON.stringify(user));
@@ -108,16 +107,16 @@ export const updateOrganization = async (organization) => {
 };
 
 /**
- * 5. Profilni Passport bilan qayta sinxronlashtirish
- * Endpoint: POST /api/v1/auth/passport/sync/
+ * 5. Profilni Authly bilan qayta sinxronlashtirish
+ * Endpoint: POST /api/v1/auth/authly/sync/
  */
-export const syncPassportProfile = async () => {
-  const passportToken = localStorage.getItem("passport_access_token");
+export const syncAuthlyProfile = async () => {
+  const authToken = localStorage.getItem("authly_access_token");
 
   const response = await axiosAPI.post(
-    "auth/passport/sync/",
+    "auth/authly/sync/",
     {
-      access_token: passportToken,
+      access_token: authToken,
     }
   );
   const syncedData = response.data?.data;
@@ -164,7 +163,7 @@ export const getCurrentUser = () => {
 export const logout = () => {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
-  localStorage.removeItem("passport_access_token");
+  localStorage.removeItem("authly_access_token");
   localStorage.removeItem("currentUser");
   window.location.href = "/leanding";
 };

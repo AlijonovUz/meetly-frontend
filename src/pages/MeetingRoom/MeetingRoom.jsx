@@ -1471,11 +1471,11 @@ export default function MeetingRoom() {
         return
       }
 
-      // Formulate WebSocket URL according to MEETINGS.md: wss://backend-muloqot.raqamlinazorat.uz/ws/meetings/{code}/?ticket=XYZ
-      const rawWsBase = import.meta.env.VITE_WS_URL || import.meta.env.VITE_BACKEND_URL || 'wss://backend-muloqot.raqamlinazorat.uz'
+      // Formulate WebSocket URL: wss://api.meetly.uz/ws/meetings/{code}/?ticket=XYZ
+      const rawWsBase = import.meta.env.VITE_WS_URL || import.meta.env.VITE_BACKEND_URL || 'wss://api.meetly.uz'
       let cleanWsHost = rawWsBase.replace(/^https?:\/\//, '').replace(/^wss?:\/\//, '').replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '')
       if (!cleanWsHost || cleanWsHost === '/api/v1' || cleanWsHost === '/api/v1/') {
-        cleanWsHost = 'backend-muloqot.raqamlinazorat.uz'
+        cleanWsHost = 'api.meetly.uz'
       }
 
       const codeForWs = meetingDetails?.code || currentMeetingCode || rawParamId || meetingId

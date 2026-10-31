@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import axios from "axios";
-import { handlePassportCallback, getCurrentUser, loginWithPassport } from "../../services/auth";
+import { handleAuthlyCallback, getCurrentUser, loginWithAuthly } from "../../services/auth";
 import {
   ArrowLeft,
   AlertCircle,
@@ -111,7 +111,7 @@ const AuthCallbackPage = () => {
     const authenticate = async () => {
       try {
         const redirectUri = `${window.location.origin}/auth/callback`;
-        await handlePassportCallback(code, redirectUri);
+        await handleAuthlyCallback(code, redirectUri);
         localStorage.removeItem("last_blocked_details");
         if (isMounted) {
           setStatus("success");
@@ -213,16 +213,16 @@ const AuthCallbackPage = () => {
       currentUser.phone_number ||
       currentUser.phoneNumber ||
       "";
-    const passportId =
-      blockedDetails?.passport_id ||
-      currentUser.passport_id ||
-      currentUser.passportId ||
+    const authlyId =
+      blockedDetails?.authly_id ||
+      currentUser.authly_id ||
+      currentUser.authlyId ||
       "";
 
     const payload = {
       user_id: uid,
       phone_number: phoneNumber,
-      passport_id: passportId,
+      authly_id: authlyId,
       message: reasonInput.trim(),
     };
 
@@ -314,9 +314,9 @@ const AuthCallbackPage = () => {
       <div className="w-full max-w-lg bg-white rounded-[24px] border border-[#E2E6F2] p-8 shadow-2xl relative z-10 text-center">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <img src="/logo2.svg" alt="Raqamli Muloqot" className="w-10 h-10" />
+          <img src="/logo2.svg" alt="Meetly" className="w-10 h-10" />
           <span className="text-[17px] font-['Unbounded',sans-serif] font-bold text-[#1A1D2E] tracking-tight">
-            Raqamli Muloqot
+            Meetly
           </span>
         </div>
 
@@ -329,7 +329,7 @@ const AuthCallbackPage = () => {
               Tizimga kirilmoqda...
             </h3>
             <p className="text-[14px] text-[#5B6078] max-w-xs mx-auto">
-              Passport ma'lumotlari tekshirilmoqda, iltimos bir necha soniya kuting.
+              Authly ma'lumotlari tekshirilmoqda, iltimos bir necha soniya kuting.
             </p>
           </div>
         )}
@@ -425,7 +425,7 @@ const AuthCallbackPage = () => {
               </h2>
               <p className="text-[13.5px] text-[#5B6078] max-w-sm mx-auto mt-1 leading-relaxed">
                 {appealData.status === "APPROVED"
-                  ? "Hisobingiz blokdan chiqarildi. Endi Passport orqali tizimga kirishingiz mumkin."
+                  ? "Hisobingiz blokdan chiqarildi. Endi Authly orqali tizimga kirishingiz mumkin."
                   : appealData.status === "REJECTED"
                   ? (appealData.rejection_reason || "Administrator murojaatingizni ko'rib chiqib rad etdi.")
                   : "Administrator murojaatingizni ko'rib chiqadi."}
@@ -520,7 +520,7 @@ const AuthCallbackPage = () => {
               {appealData.status === "APPROVED" ? (
                 <button
                   type="button"
-                  onClick={loginWithPassport}
+                  onClick={loginWithAuthly}
                   className="w-full h-[48px] rounded-xl bg-[#3858C7] hover:bg-[#2B46AC] active:scale-[0.98] text-white text-[14px] font-semibold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                 >
                   <HugeiconsIcon icon={Login03Icon} strokeWidth={2.5} size={17} />

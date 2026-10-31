@@ -8,7 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { PiArrowSquareOutBold } from "react-icons/pi";
 import { Check, Lock, RefreshCw, X } from "lucide-react";
-import { getMyProfile, updateOrganization, syncPassportProfile } from "../../services/auth";
+import { getMyProfile, updateOrganization, syncAuthlyProfile } from "../../services/auth";
 import { setCurrentUser } from "../../store/slice/referencesSlice";
 
 const Setting = () => {
@@ -114,7 +114,7 @@ const Setting = () => {
     if (syncing) return;
     setSyncing(true);
     try {
-      const res = await syncPassportProfile();
+      const res = await syncAuthlyProfile();
       if (res?.user) {
         const mergedUser = {
           ...profileData,
@@ -127,7 +127,7 @@ const Setting = () => {
       setToastMessage({
         type: "success",
         title: "Sinxronlandi",
-        description: "Profil ma'lumotlari Passport tizimi bilan sinxronlashtirildi.",
+        description: "Profil ma'lumotlari Authly tizimi bilan sinxronlashtirildi.",
       });
     } catch (err) {
       console.error(err);
@@ -138,7 +138,7 @@ const Setting = () => {
           err?.response?.data?.error?.errorMsg ||
           err?.response?.data?.message ||
           err?.message ||
-          "Passport bilan sinxronlashda xatolik yuz berdi.",
+          "Authly bilan sinxronlashda xatolik yuz berdi.",
       });
     } finally {
       setSyncing(false);
@@ -239,11 +239,11 @@ const Setting = () => {
           className="hidden sm:inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#E2E6F2] dark:border-[#2B3553] bg-white dark:bg-[#161C2E] hover:bg-[#F8FAFC] dark:hover:bg-[#1C2438] text-[13px] font-bold text-[#3858C7] dark:text-[#7C9BFF] transition-all cursor-pointer shadow-xs"
         >
           <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />
-          <span>Passport bilan sinxronlash</span>
+          <span>Authly bilan sinxronlash</span>
         </button>
       </div>
 
-      {/* Passport Information Banner */}
+      {/* Authly Information Banner */}
       <div className="bg-[#EDEFF8] dark:bg-[#161C2E] border border-[#3F57B340] dark:border-[#2B3553] rounded-2xl p-5 md:p-6 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-2xs">
         <div className="flex items-center gap-3.5 max-w-2xl">
           <div className="text-[#3F57B3] dark:text-[#7C9BFF] flex-shrink-0 mt-0.5">
@@ -251,21 +251,21 @@ const Setting = () => {
           </div>
           <div>
             <h3 className="text-[14px] font-bold text-[#1A1D2E] dark:text-white mb-1">
-              Shaxsiy ma'lumotlar Passport tizimida saqlanadi
+              Shaxsiy ma'lumotlar Authly tizimida saqlanadi
             </h3>
             <p className="text-[13px] text-[#5E6480] dark:text-[#94A3B8] leading-relaxed">
-              Ism, viloyat, tuman va tug'ilgan sana yagona kirish tizimi Passport'da o'zgartiriladi. O'zgarishlar bu yerda avtomatik yangilanadi.
+              Ism, viloyat, tuman va tug'ilgan sana yagona kirish tizimi Authly'da o'zgartiriladi. O'zgarishlar bu yerda avtomatik yangilanadi.
             </p>
           </div>
         </div>
 
         <a
-          href="http://passport.raqamlinazorat.uz"
+          href={import.meta.env.VITE_AUTHLY_FRONTEND_URL || "https://authly.uz"}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 bg-[#3F57B3] hover:bg-[#2C48B0] active:scale-[0.98] text-white font-bold text-[14px] px-5 py-3.5 rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap self-start md:self-auto"
         >
-          <span>Passport'da o'zgartirish</span>
+          <span>Authly'da o'zgartirish</span>
           <PiArrowSquareOutBold size={16} strokeWidth={2.5} />
         </a>
       </div>

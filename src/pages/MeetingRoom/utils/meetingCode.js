@@ -49,7 +49,7 @@ export function getFullMeetingUrl(id, uid, code) {
   const c = getMeetingCode(id, uid, code)
   const origin = typeof window !== 'undefined' && window.location?.origin
     ? window.location.origin
-    : 'https://muloqot.raqamlinazorat.uz'
+    : 'https://meetly.uz'
   return c ? `${origin}/join/${c}` : `${origin}/join`
 }
 

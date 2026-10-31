@@ -2,14 +2,14 @@ export const mockUserProfile = {
   id: "user-1",
   name: "Doston Ochilov",
   role: "admin",
-  email: "doston.ochilov@muloqot.uz",
+  email: "doston.ochilov@meetly.uz",
   phone: "+998 90 123 45 67",
   avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
   initial: "D",
   region: "Toshkent viloyati",
   district: "Toshkent tumani",
   birthDate: "15.04.2004",
-  organization: "Raqamli Nazorat",
+  organization: "Meetly",
   department: "Axborot texnologiyalari",
   unreadNotifications: 3,
 };
@@ -39,7 +39,7 @@ export const mockUsersList = [
   {
     id: "1",
     fullName: "Doston Dostonov Dostonovich",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     region: "Samarqand",
     district: "Samarqand shahri",
     birthDate: "14.03.1990",
@@ -253,7 +253,7 @@ export const mockDistricts = [
 ];
 
 export const mockOrganizations = [
-  "Raqamli Nazorat",
+  "Meetly",
   "Samarqand IT Park",
   "Namangan Texnopark",
   "Andijon Universiteti",
@@ -293,7 +293,7 @@ export const mockMeetingsList = [
     duration: "1 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/sprint-101",
+    link: "https://meetly.uz/join/sprint-101",
     description: "Loyiha sprint vazifalarini rejalashtirish va jamoa a'zolariga taqsimlash",
     requireApproval: false,
     participants: [
@@ -311,7 +311,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/crm-demo-22",
+    link: "https://meetly.uz/join/crm-demo-22",
     description: "Yangi CRM moduli demo taqdimoti va mijozlar bilan integratsiya",
     requireApproval: false,
     participants: [
@@ -328,7 +328,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/bux-33",
+    link: "https://meetly.uz/join/bux-33",
     description: "1C buxgalteriya tizimi bilan API integratsiyasi muhokamasi",
     requireApproval: true,
     participants: [
@@ -345,7 +345,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/mobile-ui-44",
+    link: "https://meetly.uz/join/mobile-ui-44",
     description: "Mobil ilova dizayn tizimi va foydalanuvchi tajribasi tekshiruvi",
     requireApproval: false,
     participants: [
@@ -361,7 +361,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/crm-demo-22",
+    link: "https://meetly.uz/join/crm-demo-22",
     description: "Yangi CRM moduli demo taqdimoti va mijozlar bilan integratsiya",
     requireApproval: false,
     participants: [
@@ -378,7 +378,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/bux-33",
+    link: "https://meetly.uz/join/bux-33",
     description: "1C buxgalteriya tizimi bilan API integratsiyasi muhokamasi",
     requireApproval: true,
     participants: [
@@ -395,7 +395,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/mobile-ui-44",
+    link: "https://meetly.uz/join/mobile-ui-44",
     description: "Mobil ilova dizayn tizimi va foydalanuvchi tajribasi tekshiruvi",
     requireApproval: false,
     participants: [
@@ -411,7 +411,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/crm-demo-22",
+    link: "https://meetly.uz/join/crm-demo-22",
     description: "Yangi CRM moduli demo taqdimoti va mijozlar bilan integratsiya",
     requireApproval: false,
     participants: [
@@ -428,7 +428,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/bux-33",
+    link: "https://meetly.uz/join/bux-33",
     description: "1C buxgalteriya tizimi bilan API integratsiyasi muhokamasi",
     requireApproval: true,
     participants: [
@@ -445,7 +445,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/mobile-ui-44",
+    link: "https://meetly.uz/join/mobile-ui-44",
     description: "Mobil ilova dizayn tizimi va foydalanuvchi tajribasi tekshiruvi",
     requireApproval: false,
     participants: [
@@ -461,7 +461,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/crm-demo-22",
+    link: "https://meetly.uz/join/crm-demo-22",
     description: "Yangi CRM moduli demo taqdimoti va mijozlar bilan integratsiya",
     requireApproval: false,
     participants: [
@@ -478,7 +478,7 @@ export const mockMeetingsList = [
     duration: "2 soat",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/bux-33",
+    link: "https://meetly.uz/join/bux-33",
     description: "1C buxgalteriya tizimi bilan API integratsiyasi muhokamasi",
     requireApproval: true,
     participants: [
@@ -495,7 +495,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/mobile-ui-44",
+    link: "https://meetly.uz/join/mobile-ui-44",
     description: "Mobil ilova dizayn tizimi va foydalanuvchi tajribasi tekshiruvi",
     requireApproval: false,
     participants: [
@@ -511,7 +511,7 @@ export const mockMeetingsList = [
     duration: "30 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/sec-audit-55",
+    link: "https://meetly.uz/join/sec-audit-55",
     description: "Kiberxavfsizlik va ma'lumotlar bazasi ruxsatlari auditi",
     requireApproval: true,
     participants: [
@@ -527,7 +527,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "completed",
     statusLabel: "O'tkazilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/api-doc-66",
+    link: "https://meetly.uz/join/api-doc-66",
     description: "Swagger va OpenAPI hujjatlarini yakunlash",
     requireApproval: false,
     participants: [
@@ -543,8 +543,8 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "active",
     statusLabel: "Joriy",
-    link: "https://muloqot.raqamlinazorat.uz/join/marketing-77",
-    description: "Yangi chorak uchun raqamli marketing va reklama rejalari",
+    link: "https://meetly.uz/join/marketing-77",
+    description: "Yangi chorak uchun marketing va reklama rejalari",
     requireApproval: false,
     participants: [
       { id: "1", name: "Alisher Karimov", joinTime: "30.09.2026 16:00", leaveTime: "30.09.2026 16:45", spentTime: "45 daqiqa", status: "Qatnashdi" },
@@ -561,7 +561,7 @@ export const mockMeetingsList = [
     duration: "45 daqiqa",
     status: "active",
     statusLabel: "Joriy",
-    link: "https://muloqot.raqamlinazorat.uz/join/annual-88",
+    link: "https://meetly.uz/join/annual-88",
     description: "Barcha departamentlarning yillik yakuniy hisobotlari taqdimoti",
     requireApproval: false,
     participants: [
@@ -578,7 +578,7 @@ export const mockMeetingsList = [
     duration: "30 daqiqa",
     status: "planned",
     statusLabel: "Rejalashtirilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/warehouse-99",
+    link: "https://meetly.uz/join/warehouse-99",
     description: "Ombor hisobi va logistika boshqaruvi tizimini joriy etish",
     requireApproval: false,
     participants: [],
@@ -592,7 +592,7 @@ export const mockMeetingsList = [
     duration: "1 soat",
     status: "planned",
     statusLabel: "Rejalashtirilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/payment-100",
+    link: "https://meetly.uz/join/payment-100",
     description: "Payme va Click to'lov tizimlari bilan integratsiya sinovlari",
     requireApproval: true,
     participants: [],
@@ -606,7 +606,7 @@ export const mockMeetingsList = [
     duration: "1 soat",
     status: "planned",
     statusLabel: "Rejalashtirilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/training-111",
+    link: "https://meetly.uz/join/training-111",
     description: "Yangi dasturiy ta'minotdan foydalanish bo'yicha amaliy trening",
     requireApproval: false,
     participants: [],
@@ -620,7 +620,7 @@ export const mockMeetingsList = [
     duration: "30 daqiqa",
     status: "planned",
     statusLabel: "Rejalashtirilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/client-meet-122",
+    link: "https://meetly.uz/join/client-meet-122",
     description: "Mijozlar talablari va tizim samaradorligi bo'yicha fikr-mulohazalar",
     requireApproval: false,
     participants: [],
@@ -634,7 +634,7 @@ export const mockMeetingsList = [
     duration: "30 daqiqa",
     status: "planned",
     statusLabel: "Rejalashtirilgan",
-    link: "https://muloqot.raqamlinazorat.uz/join/8f3a2c91",
+    link: "https://meetly.uz/join/8f3a2c91",
     description: "Mahalla fuqarolar yig'inlari raislari bilan oylik monitoring va vazifalar",
     requireApproval: false,
     participants: [
@@ -806,7 +806,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -815,7 +815,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -824,7 +824,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -833,7 +833,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -842,7 +842,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -851,7 +851,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -860,7 +860,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -869,7 +869,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -878,7 +878,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -887,7 +887,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -896,7 +896,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -905,7 +905,7 @@ export const mockParticipantReports = [
   {
     id: 1,
     fullName: "Alisher Karimov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 8,
     totalTime: "5 soat 40 daq",
@@ -914,7 +914,7 @@ export const mockParticipantReports = [
   {
     id: 2,
     fullName: "Dilnoza Yusupova",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 8,
     attendedCount: 7,
     totalTime: "4 soat 55 daq",
@@ -959,7 +959,7 @@ export const mockParticipantReports = [
   {
     id: 7,
     fullName: "Jasur Toshov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     invitedCount: 4,
     attendedCount: 2,
     totalTime: "1 soat 15 daq",
@@ -980,7 +980,7 @@ export const mockOrganizerReports = [
   {
     id: 1,
     organizer: "Doston Ochilov",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     createdCount: 24,
     heldCount: 21,
     avgDuration: "42 daq",
@@ -989,7 +989,7 @@ export const mockOrganizerReports = [
   {
     id: 2,
     organizer: "Alyona Sokolova",
-    organization: "Raqamli Nazorat",
+    organization: "Meetly",
     createdCount: 19,
     heldCount: 17,
     avgDuration: "35 daq",

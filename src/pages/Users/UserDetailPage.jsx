@@ -547,7 +547,7 @@ const UserDetailPage = () => {
 
         {/* Footer Explanation Note */}
         <p className="text-[12.5px] text-[#8B90A5] dark:text-[#64748B]">
-          Foydalanuvchi ma'lumotlari Passport orqali boshqariladi. Administrator ularni o'zgartira olmaydi, faqat bloklashi mumkin.
+          Foydalanuvchi ma'lumotlari Authly orqali boshqariladi. Administrator ularni o'zgartira olmaydi, faqat bloklashi mumkin.
         </p>
       </div>
 

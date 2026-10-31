@@ -168,7 +168,8 @@ const MeetingDetailPage = () => {
   const handleCopyLink = () => {
     if (isEnded) return;
     const code = meeting?.code || meeting?.id || "";
-    const fullLink = `https://muloqot.raqamlinazorat.uz/join/${code}`;
+    const origin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "https://meetly.uz";
+    const fullLink = `${origin}/join/${code}`;
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(fullLink);
     }
@@ -276,8 +277,9 @@ const MeetingDetailPage = () => {
   }, [meeting]);
 
   const inviteLinkText = useMemo(() => {
-    if (!meeting) return "https://muloqot.raqamlinazorat.uz/join/";
-    return `https://muloqot.raqamlinazorat.uz/join/${meeting.code}`;
+    const origin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "https://meetly.uz";
+    if (!meeting) return `${origin}/join/`;
+    return `${origin}/join/${meeting.code}`;
   }, [meeting]);
 
   const isChanged = useMemo(() => {

@@ -67,7 +67,7 @@ export function NotificationProvider({ children }) {
       document.hidden
     ) {
       try {
-        new Notification(title || "Raqamli Muloqot", {
+        new Notification(title || "Meetly", {
           body: body || "Yangi xabarnoma mavjud",
           icon: "/logo2.svg",
         });
@@ -100,7 +100,7 @@ export function NotificationProvider({ children }) {
         console.warn("Notification ticket fetch error, fallback to token:", err);
       }
 
-      const rawWsBase = import.meta.env.VITE_WS_URL || import.meta.env.VITE_BACKEND_URL || "wss://backend-muloqot.raqamlinazorat.uz";
+      const rawWsBase = import.meta.env.VITE_WS_URL || import.meta.env.VITE_BACKEND_URL || "wss://api.meetly.uz";
       let cleanWsHost = rawWsBase
         .replace(/^https?:\/\//, "")
         .replace(/^wss?:\/\//, "")
@@ -108,7 +108,7 @@ export function NotificationProvider({ children }) {
         .replace(/\/+$/, "");
 
       if (!cleanWsHost || cleanWsHost === "/api/v1" || cleanWsHost === "/api/v1/") {
-        cleanWsHost = "backend-muloqot.raqamlinazorat.uz";
+        cleanWsHost = "api.meetly.uz";
       }
 
       // Secure wss: protocol (default to wss:)

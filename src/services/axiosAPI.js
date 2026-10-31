@@ -47,7 +47,7 @@ axiosAPI.interceptors.response.use(
     }
 
     const isAuthRequest =
-      url.includes("auth/passport") || url.includes("auth/token/refresh");
+      url.includes("auth/authly") || url.includes("auth/token/refresh");
 
     if (status === 401 && !originalRequest._retry && !isAuthRequest) {
       originalRequest._retry = true;

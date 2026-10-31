@@ -13,7 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { FaTelegramPlane } from "react-icons/fa";
-import { logout, getCurrentUser, loginWithPassport } from "../../services/auth";
+import { logout, getCurrentUser, loginWithAuthly } from "../../services/auth";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Logout03Icon,
@@ -129,7 +129,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
     const payload = {
       user_id: user.id || user.user_id,
       phone_number: user.phone_number || user.phoneNumber || "",
-      passport_id: user.passport_id || user.passportId || "",
+      authly_id: user.authly_id || user.authlyId || "",
       message: reasonInput.trim(),
     };
 
@@ -323,7 +323,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
           {/* Subtitle */}
           <p className="text-[14px] text-[#5B6078] dark:text-[#94A3B8] max-w-md mx-auto mb-7 leading-relaxed">
             {appealData.status === "APPROVED"
-              ? "Hisobingiz administrator tomonidan blokdan chiqarildi. Endi Passport orqali tizimga kirishingiz mumkin."
+              ? "Hisobingiz administrator tomonidan blokdan chiqarildi. Endi Authly orqali tizimga kirishingiz mumkin."
               : appealData.status === "REJECTED"
                 ? (appealData.rejection_reason || "Administrator murojaatingizni ko'rib chiqib rad etdi.")
                 : "Administrator murojaatingizni ko'rib chiqadi."}
@@ -417,7 +417,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
             {appealData.status === "APPROVED" && (
               <button
                 type="button"
-                onClick={loginWithPassport}
+                onClick={loginWithAuthly}
                 className="h-11 px-6 rounded-xl bg-[#3858C7] hover:bg-[#2B46AC] active:scale-[0.98] text-white text-[13.5px] font-semibold inline-flex items-center gap-2 transition-all cursor-pointer shadow-xs"
               >
                 <HugeiconsIcon icon={Login03Icon} strokeWidth={2.5} size={16} />

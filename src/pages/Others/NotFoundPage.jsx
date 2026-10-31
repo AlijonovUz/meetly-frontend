@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { loginWithPassport, isAuthenticated } from "../../services/auth";
+import { loginWithAuthly, isAuthenticated } from "../../services/auth";
 import { ArrowLeft, Home, ShieldAlert, LogIn, ArrowRight } from "lucide-react";
 
 const NotFoundPage = () => {
@@ -8,13 +8,13 @@ const NotFoundPage = () => {
   const [loading, setLoading] = useState(false);
   const authed = isAuthenticated();
 
-  const handlePassportLogin = async () => {
+  const handleAuthlyLogin = async () => {
     if (loading) return;
     setLoading(true);
     try {
-      await loginWithPassport();
+      await loginWithAuthly();
     } catch (err) {
-      console.error("Passport login xatosi:", err);
+      console.error("Authly login xatosi:", err);
     } finally {
       setLoading(false);
     }
@@ -29,9 +29,9 @@ const NotFoundPage = () => {
       <div className="w-full max-w-xl bg-white dark:bg-[#161C2E] rounded-[28px] border border-[#E2E6F2] dark:border-[#2B3553] p-8 sm:p-12 shadow-2xl relative z-10 text-center">
         {/* Top Logo */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <img src="/logo2.svg" alt="Raqamli Muloqot" className="w-10 h-10" />
+          <img src="/logo2.svg" alt="Meetly" className="w-10 h-10" />
           <span className="text-[17px] font-['Unbounded',sans-serif] font-bold text-[#1A1D2E] dark:text-white tracking-tight">
-            Raqamli Muloqot
+            Meetly
           </span>
         </div>
 
@@ -51,7 +51,7 @@ const NotFoundPage = () => {
           Sahifa mavjud emas
         </h2>
         <p className="text-[15px] font-medium text-[#5B6078] dark:text-[#94A3B8] max-w-md mx-auto leading-relaxed mb-8">
-          Siz tashrif buyurmoqchi bo'lgan havola mavjud emas yoki bu sahifaga kirish uchun Raqamli Passport orqali tizimga kirishingiz talab etiladi.
+          Siz tashrif buyurmoqchi bo'lgan havola mavjud emas yoki bu sahifaga kirish uchun Authly orqali tizimga kirishingiz talab etiladi.
         </p>
 
         {/* Action Buttons */}
@@ -67,7 +67,7 @@ const NotFoundPage = () => {
 
           <button
             type="button"
-            onClick={handlePassportLogin}
+            onClick={handleAuthlyLogin}
             disabled={loading}
             className="w-full sm:w-auto h-[50px] px-7 rounded-full bg-gradient-to-r from-[#5272F0] to-[#3F57B3] hover:opacity-95 active:scale-[0.98] text-white text-[14.5px] font-bold inline-flex items-center justify-center gap-2 shadow-lg shadow-[#4E75FF]/25 transition-all cursor-pointer"
           >
@@ -75,7 +75,7 @@ const NotFoundPage = () => {
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <>
-                <span>Passport orqali kirish</span>
+                <span>Authly orqali kirish</span>
                 <ArrowRight size={17} />
               </>
             )}

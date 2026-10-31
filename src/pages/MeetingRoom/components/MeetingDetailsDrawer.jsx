@@ -29,7 +29,7 @@ export default function MeetingDetailsDrawer({
   const meetingCode = String(rawCode).replace(/^MT-/i, '').trim()
 
   const fullUrl = getFullMeetingUrl(meetingId, meetingDetails?.uid, meetingCode)
-  const displayUrl = fullUrl ? fullUrl.replace(/^https?:\/\//, '') : (meetingCode ? `muloqot.raqamlinazorat.uz/join/${meetingCode}` : 'muloqot.raqamlinazorat.uz')
+  const displayUrl = fullUrl ? fullUrl.replace(/^https?:\/\//, '') : (meetingCode ? `meetly.uz/join/${meetingCode}` : 'meetly.uz')
 
   const uid = meetingCode
   const title = meetingDetails?.title || meetingState?.title || projectData?.title || "Yig'ilish"

@@ -21,7 +21,7 @@ import {
   ChartBar,
 } from "lucide-react";
 import { FaTelegramPlane } from "react-icons/fa";
-import { loginWithPassport, isAuthenticated } from "../../services/auth";
+import { loginWithAuthly, isAuthenticated } from "../../services/auth";
 
 // Reusable Scroll-Reveal Component
 const Reveal = ({
@@ -506,21 +506,21 @@ const LeandingPage = () => {
   const [authLoading, setAuthLoading] = useState(false);
   const authed = isAuthenticated();
 
-  const handlePassportLogin = async (e) => {
+  const handleAuthlyLogin = async (e) => {
     if (e) e.preventDefault();
     if (authLoading) return;
     setAuthLoading(true);
     try {
-      await loginWithPassport();
+      await loginWithAuthly();
     } catch (err) {
-      console.error("Passport login xatosi:", err);
+      console.error("Authly login xatosi:", err);
     } finally {
       setAuthLoading(false);
     }
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText("https://meet.muloqot.uz/m1213-mxr");
+    navigator.clipboard.writeText("https://meetly.uz/m1213-mxr");
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
@@ -535,8 +535,8 @@ const LeandingPage = () => {
 
   const faqs = [
     {
-      q: "Muloqotdan foydalanish uchun alohida roʻyxatdan oʻtish kerakmi?",
-      a: "Yoʻq. Passport orqali Telegram yoki Google bilan kirasiz. Agar boshqa Raqamli Nazorat loyihasida Passportingiz boʻlsa, shu profil ishlaydi.",
+      q: "Meetlydan foydalanish uchun alohida roʻyxatdan oʻtish kerakmi?",
+      a: "Yoʻq. Authly orqali Telegram yoki Google bilan kirasiz. Agar boshqa loyihada Authly profilingiz boʻlsa, shu profil ishlaydi.",
     },
     {
       q: "Ishtirokchilar yigʻilishga qanday qoʻshiladi?",
@@ -566,11 +566,11 @@ const LeandingPage = () => {
           <Link to="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
             <img
               src="/logo2.svg"
-              alt="Raqamli Muloqot"
+              alt="Meetly"
               className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 group-hover:scale-105 transition-transform duration-300"
             />
             <span className="text-[13px] xs:text-[14.5px] sm:text-[16px] font-['Unbounded',sans-serif] font-bold text-white tracking-tight truncate">
-              Raqamli Muloqot
+              Meetly
             </span>
           </Link>
 
@@ -614,10 +614,10 @@ const LeandingPage = () => {
                 <ArrowRight size={14} />
               </button>
             ) : (
-              /* Passport Button */
+              /* Authly Button */
               <button
                 type="button"
-                onClick={handlePassportLogin}
+                onClick={handleAuthlyLogin}
                 disabled={authLoading}
                 className="hidden sm:flex h-[36px] sm:h-[38px] px-3.5 sm:px-5 rounded-full bg-gradient-to-r from-[#4E75FF] to-[#3B5BDB] hover:opacity-95 text-white text-[12.5px] sm:text-[13.5px] font-extrabold items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer"
               >
@@ -673,7 +673,7 @@ const LeandingPage = () => {
             <div className="pt-3 border-t border-white/10 mt-1">
               <button
                 type="button"
-                onClick={handlePassportLogin}
+                onClick={handleAuthlyLogin}
                 disabled={authLoading}
                 className="w-full h-[46px] rounded-full bg-gradient-to-r from-[#4E75FF] to-[#3B5BDB] text-white text-[14px] font-extrabold flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all shadow-lg"
               >
@@ -681,7 +681,7 @@ const LeandingPage = () => {
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <>
-                    <span>Passport orqali kirish</span>
+                    <span>Authly orqali kirish</span>
                     <img src="/user.svg" alt="" className="w-4 h-4" />
                   </>
                 )}
@@ -707,7 +707,7 @@ const LeandingPage = () => {
                       Yangi
                     </span>
                     <span className="text-[11.5px] xs:text-[12.5px] sm:text-[13.5px] md:text-[14px] font-bold text-[#3F57B3] truncate sm:whitespace-normal">
-                      Raqamli Nazorat ekotizimi, yagona Passport bilan
+                      Meetly ekotizimi, yagona Authly bilan
                     </span>
                   </div>
                 </Reveal>
@@ -723,7 +723,7 @@ const LeandingPage = () => {
                 {/* Subtitle */}
                 <Reveal animation="fade-up" delay={300}>
                   <p className="text-[13.5px] xs:text-[15px] sm:text-[17px] md:text-[18.5px] font-bold text-[#5B6078] max-w-[840px] mx-auto mt-3.5 sm:mt-5 leading-relaxed px-1 sm:px-0">
-                    Onlayn audio va video yigʻilishlar, taklif havolalari, qatnashishni hisobga olish va hisobotlar. Bitta Passport bilan barcha Raqamli Nazorat xizmatlariga kiring.
+                    Onlayn audio va video yigʻilishlar, taklif havolalari, qatnashishni hisobga olish va hisobotlar. Bitta Authly bilan barcha Meetly xizmatlariga kiring.
                   </p>
                 </Reveal>
 
@@ -733,7 +733,7 @@ const LeandingPage = () => {
                     {/* Primary CTA */}
                     <button
                       type="button"
-                      onClick={handlePassportLogin}
+                      onClick={handleAuthlyLogin}
                       disabled={authLoading}
                       className="h-[48px] sm:h-[54px] md:h-[56px] px-6 sm:px-8 rounded-full bg-gradient-to-r from-[#5272F0] to-[#3F57B3] hover:opacity-95 active:scale-[0.98] text-white text-[14px] sm:text-[15px] font-bold inline-flex items-center justify-center gap-2.5 shadow-xl shadow-[#4E75FF]/25 hover:shadow-[#4E75FF]/35 transition-all cursor-pointer"
                     >
@@ -741,7 +741,7 @@ const LeandingPage = () => {
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       ) : (
                         <>
-                          <span>Passport orqali boshlash</span>
+                          <span>Authly orqali boshlash</span>
                           <ArrowRight size={17} strokeWidth={2.5} />
                         </>
                       )}
@@ -845,7 +845,7 @@ const LeandingPage = () => {
                     30+
                   </span>
                   <span className="text-[12px] xs:text-[13px] sm:text-[14.5px] sm:text-[15px] font-medium text-[#5B6078] line-clamp-2 sm:line-clamp-none">
-                    Raqamli Nazorat loyihasi
+                    Meetly loyihasi
                   </span>
                 </div>
               </Reveal>
@@ -922,7 +922,7 @@ const LeandingPage = () => {
                   {/* Widget */}
                   <div className="bg-[#F1F3F9] rounded-xl p-2 sm:p-2.5 flex items-center justify-between gap-1.5 sm:gap-2 mt-3 sm:mt-4">
                     <span className="text-[11.5px] sm:text-[13px] font-bold text-[#1A1D2E] truncate pl-1 sm:pl-2">
-                      meet.muloqot.uz/m1213-mxr
+                      meetly.uz/m1213-mxr
                     </span>
                     <button
                       onClick={handleCopyLink}
@@ -1043,7 +1043,7 @@ const LeandingPage = () => {
                 </div>
               </Reveal>
 
-              {/* Card 6: Yagona Passport */}
+              {/* Card 6: Yagona Authly */}
               <Reveal animation="zoom-in-up" delay={300}>
                 <div className="w-full min-h-[270px] sm:h-[304px] rounded-[18px] sm:rounded-[20px] bg-gradient-to-r from-[#5272F0] to-[#3F57B3] text-white p-4.5 sm:p-6 flex flex-col justify-between shadow-xl hover-card-lift">
                   <div>
@@ -1051,7 +1051,7 @@ const LeandingPage = () => {
                       <ShieldCheck size={22} />
                     </div>
                     <h3 className="text-[17px] sm:text-[19px] font-extrabold text-white mb-1.5 sm:mb-2">
-                      Yagona Passport
+                      Yagona Authly
                     </h3>
                     <p className="text-[13px] sm:text-[14.5px] font-medium text-[#E4E9FF] leading-relaxed">
                       Alohida roʻyxatdan oʻtish yoʻq. Telegram yoki Google orqali bir marta kirasiz.
@@ -1060,7 +1060,7 @@ const LeandingPage = () => {
 
                   <button
                     type="button"
-                    onClick={handlePassportLogin}
+                    onClick={handleAuthlyLogin}
                     disabled={authLoading}
                     className="w-full h-[42px] sm:h-[44px] rounded-full bg-white text-[#3F57B3] text-[13px] sm:text-[14px] font-extrabold flex items-center justify-center gap-2 shadow-sm hover:bg-[#F8FAFC] active:scale-95 transition-all cursor-pointer mt-3 sm:mt-4"
                   >
@@ -1068,7 +1068,7 @@ const LeandingPage = () => {
                       <div className="w-4 h-4 border-2 border-[#3F57B3] border-t-transparent rounded-full animate-spin"></div>
                     ) : (
                       <>
-                        <span>Passport orqali kirish</span>
+                        <span>Authly orqali kirish</span>
                         <ExternalLink size={14} />
                       </>
                     )}
@@ -1107,7 +1107,7 @@ const LeandingPage = () => {
                     </div>
                     <div className="w-full min-h-[120px] sm:min-h-[145px] rounded-[16px] sm:rounded-[20px] bg-white p-4.5 sm:p-6 flex flex-col justify-start hover-card-lift border border-[#E2E6F2]">
                       <h4 className="text-[15.5px] sm:text-[17.5px] font-bold text-[#1A1D2E] leading-snug">
-                        Passport orqali kiring
+                        Authly orqali kiring
                       </h4>
                       <p className="text-[13px] sm:text-[14px] font-medium text-[#64748B] mt-1.5 sm:mt-2.5 leading-relaxed">
                         Telegram yoki Google bilan. Parol kerak emas.
@@ -1254,7 +1254,7 @@ const LeandingPage = () => {
             </Reveal>
           </section>
 
-          {/* ================= PASSPORT INTEGRATION SECTION ================= */}
+          {/* ================= AUTHLY INTEGRATION SECTION ================= */}
           <section className="py-12 sm:py-16 md:py-20">
             <Reveal animation="zoom-in-up">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-center bg-[#FFFFFF] p-4.5 sm:p-7 md:p-9 lg:p-12 lg:pl-14 rounded-[20px] sm:rounded-[26px] md:rounded-[28px] shadow-sm hover-card-lift">
@@ -1265,16 +1265,16 @@ const LeandingPage = () => {
                       YAGONA KIRISH
                     </span>
                     <h2 className="text-[24px] xs:text-[28px] sm:text-[34px] md:text-[38px] font-['Unbounded',sans-serif] font-medium text-[#1A1D2E] tracking-tight leading-tight">
-                      Bitta Passport, <br className="hidden sm:inline" />
+                      Bitta Authly, <br className="hidden sm:inline" />
                       barcha loyihalar
                     </h2>
                     <p className="text-[13.5px] sm:text-[15.5px] font-medium text-[#5B6078] leading-relaxed max-w-[520px] mt-2 sm:mt-3">
-                      Muloqot Raqamli Nazorat ekotizimining bir qismi. Passport orqali bir marta roʻyxatdan oʻting va boshqa loyihalarga ham shu profil bilan kiring. Shaxsiy maʼlumotlar Passport tizimida saqlanadi.
+                      Meetly yagona Authly ekotizimining bir qismi. Authly orqali bir marta roʻyxatdan oʻting va boshqa loyihalarga ham shu profil bilan kiring. Shaxsiy maʼlumotlar Authly tizimida saqlanadi.
                     </p>
 
                     {/* Ecosystem Badges */}
                     <div className="flex flex-wrap gap-1.5 sm:gap-2.5 pt-3 sm:pt-4 max-w-[520px]">
-                      {["Raqamli salon", "Raqamli taksi", "Raqamli choyxona", "Raqamli dorixona", "Raqamli barber"].map(
+                      {["Meetly salon", "Meetly taxi", "Meetly pay", "Meetly market", "Meetly delivery"].map(
                         (name) => (
                           <span
                             key={name}
@@ -1293,7 +1293,7 @@ const LeandingPage = () => {
                     <div className="pt-4 sm:pt-6">
                       <button
                         type="button"
-                        onClick={handlePassportLogin}
+                        onClick={handleAuthlyLogin}
                         disabled={authLoading}
                         className="w-full sm:w-auto sm:min-w-[220px] h-[48px] sm:h-[54px] px-6 sm:px-8 rounded-full bg-gradient-to-r from-[#5272F0] to-[#3F57B3] text-white text-[14px] sm:text-[15px] font-extrabold inline-flex items-center justify-center gap-2 shadow-lg shadow-[#3F57B3]/25 transition-all cursor-pointer hover:opacity-95 active:scale-95"
                       >
@@ -1301,7 +1301,7 @@ const LeandingPage = () => {
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         ) : (
                           <>
-                            <span>Passport orqali kirish</span>
+                            <span>Authly orqali kirish</span>
                             <ExternalLink size={15} />
                           </>
                         )}
@@ -1310,14 +1310,14 @@ const LeandingPage = () => {
                   </div>
                 </Reveal>
 
-                {/* Right Passport Login Mockup Card */}
+                {/* Right Authly Login Mockup Card */}
                 <Reveal animation="fade-left" delay={200} className="lg:col-span-5 flex justify-center w-full">
                   <div className="w-full max-w-[400px] min-h-[310px] sm:h-[340px] rounded-[18px] sm:rounded-[20px] bg-white border border-[#E2E6F2] p-4.5 sm:p-6 shadow-xl flex flex-col justify-between hover-card-lift">
-                    {/* Header with Passport Logo */}
+                    {/* Header with Authly Logo */}
                     <div className="flex items-center gap-2.5">
                       <img src="/user1.svg" className="pointer-events-none w-5 h-5" alt="" />
                       <span className="text-[14px] sm:text-[15px] font-['Unbounded',sans-serif] font-extrabold text-[#1A1D2E]">
-                        Passport
+                        Authly
                       </span>
                     </div>
 
@@ -1333,7 +1333,7 @@ const LeandingPage = () => {
                     {/* Telegram Button */}
                     <button
                       type="button"
-                      onClick={handlePassportLogin}
+                      onClick={handleAuthlyLogin}
                       disabled={authLoading}
                       className="w-full h-[46px] sm:h-[50px] rounded-[14px] bg-[#229ED9] hover:bg-[#1E8EC4] text-white text-[13.5px] sm:text-[14.5px] font-extrabold flex items-center justify-center gap-2.5 shadow-sm transition-all cursor-pointer active:scale-95"
                     >
@@ -1357,7 +1357,7 @@ const LeandingPage = () => {
                     {/* Google Button */}
                     <button
                       type="button"
-                      onClick={handlePassportLogin}
+                      onClick={handleAuthlyLogin}
                       disabled={authLoading}
                       className="w-full h-[46px] sm:h-[50px] rounded-[14px] bg-white border border-[#E2E6F2] hover:bg-[#F8FAFC] text-[#1A1D2E] text-[13.5px] sm:text-[14.5px] font-extrabold flex items-center justify-center gap-2.5 shadow-2xs transition-all cursor-pointer active:scale-95"
                     >
@@ -1390,7 +1390,7 @@ const LeandingPage = () => {
                     savollar
                   </h2>
                   <p className="text-[13.5px] sm:text-[15.5px] font-medium text-[#5B6078] leading-relaxed max-w-[340px] mt-2 sm:mt-3">
-                    Javob topilmadimi? Raqamli Nazorat jamoasiga yozing.
+                    Javob topilmadimi? Meetly jamoasiga yozing.
                   </p>
                 </div>
               </Reveal>
@@ -1463,14 +1463,14 @@ const LeandingPage = () => {
                     bugun oʻtkazing
                   </h2>
                   <p className="text-[13.5px] sm:text-[16px] md:text-[17px] font-medium text-[#E4E9FF]">
-                    Passport orqali kiring, yigʻilish yarating va havolani ulashing.
+                    Authly orqali kiring, yigʻilish yarating va havolani ulashing.
                   </p>
                 </div>
 
                 {/* White Button */}
                 <button
                   type="button"
-                  onClick={handlePassportLogin}
+                  onClick={handleAuthlyLogin}
                   disabled={authLoading}
                   className="w-full md:w-auto md:min-w-[250px] h-[48px] sm:h-[54px] md:h-[56px] px-6 sm:px-8 rounded-full bg-white text-[#3F57B3] hover:bg-[#F8FAFC] active:scale-[0.98] text-[14px] sm:text-[15px] font-extrabold inline-flex items-center justify-center gap-2.5 shadow-xl shrink-0 relative z-10 transition-all cursor-pointer"
                 >
@@ -1478,7 +1478,7 @@ const LeandingPage = () => {
                     <div className="w-5 h-5 border-2 border-[#3F57B3] border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <>
-                      <span>Passport orqali boshlash</span>
+                      <span>Authly orqali boshlash</span>
                       <ArrowRight size={16} strokeWidth={2.5} />
                     </>
                   )}
@@ -1499,10 +1499,10 @@ const LeandingPage = () => {
                 <img src="/logo2.svg" className="pointer-events-none w-8 h-8 sm:w-10 sm:h-10" alt="" />
                 <div className="flex flex-col text-center md:text-left">
                   <span className="text-[17px] sm:text-[19px] font-['Unbounded',sans-serif] font-extrabold text-[#0D1117] leading-none">
-                    Raqamli Muloqot
+                    Meetly
                   </span>
                   <span className="text-[12px] sm:text-[13.5px] font-bold text-[#5B6078] mt-0.5">
-                    Raqamli Nazorat loyihasi
+                    Xavfsiz video aloqa platformasi
                   </span>
                 </div>
               </div>
@@ -1541,13 +1541,13 @@ const LeandingPage = () => {
 
             {/* Bottom Copyright & Link */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 text-[12px] sm:text-[13px] text-[#8F95A8] font-medium text-center sm:text-left">
-              <span>© {new Date().getFullYear()} Raqamli Nazorat. Barcha huquqlar himoyalangan.</span>
+              <span>© {new Date().getFullYear()} Meetly. Barcha huquqlar himoyalangan.</span>
               <button
                 type="button"
-                onClick={handlePassportLogin}
+                onClick={handleAuthlyLogin}
                 className="text-[#3F57B3] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
               >
-                <span>Passport orqali yagona kirish</span>
+                <span>Authly orqali yagona kirish</span>
                 <ExternalLink size={12} />
               </button>
             </div>
