@@ -3759,9 +3759,11 @@ export default function MeetingRoom() {
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 mb-7 text-center">
             {isMeetingEnded
-              ? (endedReason && !["Yig'ilish yakunlandi", "Yig'ilish tashkilotchi tomonidan yakunlandi.", "Yig'ilish tashkilotchi tomonidan yakunlangan."].includes(endedReason)
-                  ? endedReason
-                  : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!")
+              ? (isLocalHost
+                  ? "Siz ushbu yig'ilishni yakunladingiz. Barcha ishtirokchilar uchun xona yopildi."
+                  : (endedReason && !["Yig'ilish yakunlandi", "Yig'ilish tashkilotchi tomonidan yakunlandi.", "Yig'ilish tashkilotchi tomonidan yakunlangan."].includes(endedReason)
+                      ? endedReason
+                      : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!"))
               : "Havola hali ham amal qiladi — istagan vaqtda qaytishingiz mumkin."}
           </p>
           <div className="flex items-center justify-center gap-3">
