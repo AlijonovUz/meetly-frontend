@@ -3752,7 +3752,7 @@ export default function MeetingRoom() {
       aloneDeadlineRef.current = Date.now() + 120 * 1000
       setAloneCountdown(120)
       setIsAloneModalOpen(true)
-      playParticipantJoinedSound()
+      playHandRaisedSound()
     }, 5 * 60 * 1000)
 
     return () => {
