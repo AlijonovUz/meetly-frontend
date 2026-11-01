@@ -151,6 +151,48 @@ function RemoteAudioPlayer({ audioTrack, isMicEnabled }) {
   return <audio ref={audioRef} autoPlay playsInline />
 }
 
+function AutoRedirectCountdown({ timeLeft = 60, total = 60 }) {
+  const radius = 17
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference - (timeLeft / total) * circumference
+
+  return (
+    <div className="fixed top-5 left-5 sm:top-7 sm:left-8 flex items-center gap-3 z-50 select-none animate-in fade-in duration-300">
+      <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
+        <svg className="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
+          <circle
+            cx="20"
+            cy="20"
+            r={radius}
+            fill="transparent"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            className="text-blue-100 dark:text-blue-950/60"
+          />
+          <circle
+            cx="20"
+            cy="20"
+            r={radius}
+            fill="transparent"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="text-[#1a73e8] dark:text-blue-400 transition-all duration-1000 ease-linear"
+          />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#1a73e8] dark:text-blue-400 tabular-nums">
+          {timeLeft}
+        </span>
+      </div>
+      <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">
+        Bosh ekranga qaytmoqda
+      </span>
+    </div>
+  )
+}
+
 // Storage helpers for meeting chat persistence
 const CHAT_STORAGE_PREFIX = 'meeting_chat_'
 
@@ -502,6 +544,30 @@ export default function MeetingRoom() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [meetingDuration, setMeetingDuration] = useState(0)
   const [endedReason, setEndedReason] = useState("Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!")
+  const [redirectCountdown, setRedirectCountdown] = useState(60)
+
+  useEffect(() => {
+    const isExitState = waitingState === 'ended' || waitingState === 'left' || waitingState === 'kicked'
+    if (!isExitState) {
+      setRedirectCountdown(60)
+      return
+    }
+
+    setRedirectCountdown(60)
+    const interval = setInterval(() => {
+      setRedirectCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          clearStoredChatMessages(meetingId)
+          navigate('/')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [waitingState, meetingId, navigate])
 
   // Live Floating Reactions (Google Meet style)
   const [activeReactions, setActiveReactions] = useState([])
@@ -3737,9 +3803,10 @@ export default function MeetingRoom() {
 
     return (
       <div className="fixed inset-0 w-full h-full bg-[#F8FAFC] dark:bg-[#0B0D11] text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 select-none z-50 transition-colors animate-in fade-in duration-300">
+        <AutoRedirectCountdown timeLeft={redirectCountdown} total={60} />
         <div className="text-center max-w-lg w-full my-auto flex flex-col items-center animate-in zoom-in-95 duration-200">
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-            {isMeetingEnded ? "Yig'ilish yakunlandi" : "Siz yig'ilishdan chiqdingiz"}
+            {isMeetingEnded ? "Yig'ilish yakunlandi" : "Majlisni tark etdingiz"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 mb-7 text-center">
             {isMeetingEnded
@@ -3760,9 +3827,8 @@ export default function MeetingRoom() {
                   setWaitingState('lobby')
                   setNetworkStatus('online')
                 }}
-                className="px-5 py-2.5 rounded-xl bg-[#3E5CBA] hover:bg-[#344F9F] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
+                className="px-6 py-2.5 rounded-full border border-slate-300 dark:border-white/20 bg-white dark:bg-transparent text-[#1a73e8] dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-white/5 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-2xs"
               >
-                <HugeiconsIcon icon={Refresh04Icon} size={17} strokeWidth={2.2} />
                 <span>Qayta qo'shilish</span>
               </button>
             )}
@@ -3772,10 +3838,9 @@ export default function MeetingRoom() {
                 clearStoredChatMessages(meetingId)
                 navigate('/')
               }}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/15 bg-white dark:bg-black text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-xs"
+              className="px-6 py-2.5 rounded-full bg-[#1a73e8] hover:bg-blue-600 dark:bg-[#3B59BA] dark:hover:bg-[#324DAE] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
             >
-              <HugeiconsIcon icon={Home04Icon} size={17} strokeWidth={2.2} />
-              <span>Bosh sahifaga</span>
+              <span>Bosh sahifani ochish</span>
             </button>
           </div>
         </div>
@@ -3783,12 +3848,12 @@ export default function MeetingRoom() {
     )
   }
 
-  // Render Kicked / Removed by Host state matching Figma design
   if (waitingState === 'kicked') {
     const meetingTitle = meetingDetails?.title || meetingState?.title || "Meet nomi"
 
     return (
       <div className="fixed inset-0 w-full h-full bg-[#F8FAFC] dark:bg-[#0B0D11] text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 select-none z-50 transition-colors animate-in fade-in duration-300 font-['Manrope',sans-serif]">
+        <AutoRedirectCountdown timeLeft={redirectCountdown} total={60} />
         <div className="text-center max-w-lg w-full my-auto flex flex-col items-center animate-in zoom-in-95 duration-200 px-4">
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             Sizni yig'ilishdan chiqarishdi
@@ -3805,9 +3870,8 @@ export default function MeetingRoom() {
                 setWaitingState('lobby')
                 setNetworkStatus('online')
               }}
-              className="px-5 py-2.5 rounded-xl bg-[#3B59BA] hover:bg-[#324D9E] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
+              className="px-6 py-2.5 rounded-full border border-slate-300 dark:border-white/20 bg-white dark:bg-transparent text-[#1a73e8] dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-white/5 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-2xs"
             >
-              <HugeiconsIcon icon={Refresh04Icon} size={17} strokeWidth={2.2} />
               <span>Qo'shilishni so'rash</span>
             </button>
             <button
@@ -3816,10 +3880,9 @@ export default function MeetingRoom() {
                 clearStoredChatMessages(meetingId)
                 navigate('/')
               }}
-              className="px-5 py-2.5 rounded-xl bg-[#EDF2F7] dark:bg-[#1A202C] hover:bg-[#E2E8F0] dark:hover:bg-[#2D3748] text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-2xs"
+              className="px-6 py-2.5 rounded-full bg-[#1a73e8] hover:bg-blue-600 dark:bg-[#3B59BA] dark:hover:bg-[#324DAE] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
             >
-              <HugeiconsIcon icon={Home04Icon} size={17} strokeWidth={2.2} />
-              <span>Bosh sahifaga</span>
+              <span>Bosh sahifani ochish</span>
             </button>
           </div>
         </div>
