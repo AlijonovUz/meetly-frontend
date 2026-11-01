@@ -73,7 +73,7 @@ const UserDetailPage = () => {
       const res = await getMeetings(params);
       setUserMeetings(res.results || []);
     } catch (err) {
-      console.error("Foydalanuvchi yig'ilishlarini yuklashda xatolik:", err);
+      console.error("Foydalanuvchi majlislarini yuklashda xatolik:", err);
       setUserMeetings([]);
     } finally {
       setMeetingsLoading(false);
@@ -95,7 +95,7 @@ const UserDetailPage = () => {
         });
       }
     } catch (err) {
-      console.error("Yig'ilishlar sonini olishda xatolik:", err);
+      console.error("Majlislar sonini olishda xatolik:", err);
     }
   }, [id]);
 
@@ -554,7 +554,7 @@ const UserDetailPage = () => {
       {/* Meeting History Section */}
       <div className="space-y-4 pt-2">
         <h2 className="text-base font-bold text-[#1A1D2E] dark:text-white">
-          Yig'ilishlar tarixi
+          Majlislar tarixi
         </h2>
 
         {/* Filter Pills */}
@@ -624,7 +624,7 @@ const UserDetailPage = () => {
                         {index + 1}
                       </td>
                       <td className="py-3.5 px-4 font-medium text-[#1A1D2E] dark:text-white group-hover:text-[#3858C7] dark:group-hover:text-[#7C9BFF] transition-colors truncate max-w-[250px]">
-                        {meeting.title || meeting.name || "Nomsiz yig'ilish"}
+                        {meeting.title || meeting.name || "Nomsiz majlis"}
                       </td>
                       <td className="py-3.5 text-right px-4 text-[#1A1D2E] dark:text-[#94A3B8]">
                         {meeting.created_at
@@ -663,7 +663,7 @@ const UserDetailPage = () => {
               ) : (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-[#8B90A5] dark:text-[#64748B] text-sm">
-                    Yig'ilishlar topilmadi
+                    Majlislar topilmadi
                   </td>
                 </tr>
               )}
@@ -692,7 +692,7 @@ const UserDetailPage = () => {
 
             {/* Description Text */}
             <p className="text-[14px] text-[#5B6078] dark:text-[#94A3B8] leading-relaxed">
-              {fullName} tizimga kira olmaydi va yig'ilishlarga qo'shila olmaydi. Keyinroq blokdan chiqarish mumkin.
+              {fullName} tizimga kira olmaydi va majlislarga qo'shila olmaydi. Keyinroq blokdan chiqarish mumkin.
             </p>
 
             <form onSubmit={handleConfirmBlock} className="space-y-4">
@@ -762,7 +762,7 @@ const UserDetailPage = () => {
 
             {/* Description Text */}
             <p className="text-[14px] text-[#5B6078] dark:text-[#94A3B8] leading-relaxed">
-              {fullName} yana tizimga kira oladi va yig'ilishlarga qo'shila oladi.
+              {fullName} yana tizimga kira oladi va majlislarga qo'shila oladi.
             </p>
 
             {/* Modal Actions */}

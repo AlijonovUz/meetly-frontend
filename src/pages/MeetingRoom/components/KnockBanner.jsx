@@ -59,7 +59,7 @@ export default function KnockBanner({ requests = [], onAdmit, onReject }) {
               {displayName}
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate font-normal">
-              uchrashuvga qo'shilmoqchi
+              majlisga qo'shilmoqchi
             </p>
           </div>
 

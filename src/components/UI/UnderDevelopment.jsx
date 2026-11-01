@@ -140,7 +140,7 @@ const UnderDevelopment = ({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white dark:bg-[#161C2E] hover:bg-gray-50 dark:hover:bg-[#1C2438] border border-gray-200 dark:border-[#2B3553] text-gray-700 dark:text-gray-200 text-sm font-semibold transition-all duration-150 cursor-pointer active:scale-95"
           >
             <HugeiconsIcon icon={Folder02Icon} size={18} className="text-blue-600 dark:text-blue-400" />
-            <span>Yig‘ilishlar ro‘yxati</span>
+            <span>Majlislar ro‘yxati</span>
           </button>
         </div>
 

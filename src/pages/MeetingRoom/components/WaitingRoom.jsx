@@ -16,12 +16,12 @@ import { IoCopyOutline } from 'react-icons/io5'
 import { formatAvatarUrl } from '../utils/meetingCode'
 
 export default function WaitingRoom({
-  title = "Yig'ilish",
+  title = "Majlis",
   meetingDetails,
   meetingState,
   meetingId,
   isRejected = false,
-  rejectedMessage = "Tashkilotchi yig'ilishga kirishingizni rad etdi.",
+  rejectedMessage = "Tashkilotchi majlisga kirishingizni rad etdi.",
   waitingState = 'lobby', // 'lobby' | 'connecting' | 'waiting_organizer' | 'waiting_approval' | 'rejected'
   localStream = null,
   isCameraEnabled = false,
@@ -165,10 +165,10 @@ export default function WaitingRoom({
     statusDesc = "So'rov tashkilotchiga yuborildi. U tasdiqlagach siz avtomatik qo'shilasiz."
   } else if (waitingState === 'waiting_organizer') {
     statusTitle = "Tashkilotchi kutilmoqda"
-    statusDesc = "Tashkilotchi hali yig'ilishga kirmagan. U kirishi bilanoq tizim avtomatik ulaydi."
+    statusDesc = "Tashkilotchi hali majlisga kirmagan. U kirishi bilanoq tizim avtomatik ulaydi."
   } else if (waitingState === 'connecting' || isJoining) {
     statusTitle = "Ulanmoqda..."
-    statusDesc = "Yig'ilish xonasiga ulanish o'rnatilmoqda..."
+    statusDesc = "Majlis xonasiga ulanish o'rnatilmoqda..."
   }
 
   const isWaitingPhase = waitingState !== 'lobby'
@@ -286,7 +286,7 @@ export default function WaitingRoom({
             /* 1. Lobby: "Ready to join" screen */
             <div className="w-full flex flex-col items-start">
               <h1 className="text-2xl sm:text-[28px] font-bold text-slate-900 dark:text-white tracking-tight leading-snug">
-                Uchrashuvga qo'shilish
+                Majlisga qo'shilish
               </h1>
               <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5 line-clamp-2">
                 {meetingDetails?.title || meetingState?.title || title}
@@ -332,7 +332,7 @@ export default function WaitingRoom({
               </button>
 
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-4 leading-relaxed">
-                Tashkilotchi ruxsat bergach uchrashuvga kirasiz.
+                Tashkilotchi ruxsat bergach majlisga kirasiz.
               </p>
             </div>
           ) : (

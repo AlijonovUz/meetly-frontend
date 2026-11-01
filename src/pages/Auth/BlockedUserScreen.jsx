@@ -242,7 +242,7 @@ const BlockedUserScreen = ({ onAppealSubmitted }) => {
     : "";
 
   const blockReason =
-    customBlockedReason || user.blocked_reason || "Yig'ilishlarda spam xabarlar yuborgan.";
+    customBlockedReason || user.blocked_reason || "Majlislarda spam xabarlar yuborgan.";
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] sm:bg-[#F8FAFC] dark:bg-[#0B0F19] sm:dark:bg-[#0B0F19] font-['Manrope',sans-serif] flex items-center justify-center p-4 sm:p-6 text-[#1A1D2E] dark:text-white relative overflow-hidden">

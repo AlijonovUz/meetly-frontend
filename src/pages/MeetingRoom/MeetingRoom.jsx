@@ -543,7 +543,7 @@ export default function MeetingRoom() {
   const typingTimeoutsRef = useRef({})
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [meetingDuration, setMeetingDuration] = useState(0)
-  const [endedReason, setEndedReason] = useState("Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!")
+  const [endedReason, setEndedReason] = useState("Tashkilotchi ushbu majlisni yakunladi. Ishtirokingiz uchun tashakkur!")
   const [redirectCountdown, setRedirectCountdown] = useState(60)
 
   useEffect(() => {
@@ -958,7 +958,7 @@ export default function MeetingRoom() {
       }
       if (d.status === 'completed' || d.status === 'cancelled' || d.is_active === false || d.status === 'closed' || d.is_closed === true) {
         setWaitingState('ended')
-        setEndedReason(d.cancellation_reason || (d.status === 'cancelled' ? "Yig'ilish tashkilotchi tomonidan bekor qilindi." : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!"))
+        setEndedReason(d.cancellation_reason || (d.status === 'cancelled' ? "Majlis tashkilotchi tomonidan bekor qilindi." : "Tashkilotchi ushbu majlisni yakunladi. Ishtirokingiz uchun tashakkur!"))
       }
     }
 
@@ -987,7 +987,7 @@ export default function MeetingRoom() {
             return
           }
         } catch (err) {
-          console.warn("Yig'ilish ma'lumotlarini ID orqali olishda xatolik:", err)
+          console.warn("Majlis ma'lumotlarini ID orqali olishda xatolik:", err)
         }
       }
 
@@ -1023,7 +1023,7 @@ export default function MeetingRoom() {
             }
           }
         } catch (err) {
-          console.warn("Yig'ilishni qidirishda xato:", err)
+          console.warn("Majlisni qidirishda xato:", err)
         }
       }
     }
@@ -1180,7 +1180,7 @@ export default function MeetingRoom() {
         // Faqat qabul qilish huquqiga ega bo'lganlar (host, admin, superadmin, loyiha menejeri) ga signal beriladi
         if (canAdmitParticipantsRef.current) {
           playKnockRequestSound()
-          triggerInRoomAlert('bell', `${resolvedName || 'Foydalanuvchi'} yig'ilishga kirishni so'ramoqda`, 'knock')
+          triggerInRoomAlert('bell', `${resolvedName || 'Foydalanuvchi'} majlisga kirishni so'ramoqda`, 'knock')
         }
         if (reqUserId) {
           setPeerProfiles(prev => ({
@@ -1239,7 +1239,7 @@ export default function MeetingRoom() {
           setIsJoining(false)
           if (waitingState === 'waiting_approval') {
             setWaitingState('rejected')
-            setRejectedMessage(msg.message || "Tashkilotchi yig'ilishga kirishingizni rad etdi.")
+            setRejectedMessage(msg.message || "Tashkilotchi majlisga kirishingizni rad etdi.")
           }
         }
         break
@@ -1267,13 +1267,13 @@ export default function MeetingRoom() {
       case 'participant_joined_event': {
         const pName = msg.full_name || msg.username || "Yangi ishtirokchi"
         playParticipantJoinedSound()
-        triggerInRoomAlert('join', `${pName} yig'ilishga qo'shildi`, 'join')
+        triggerInRoomAlert('join', `${pName} majlisga qo'shildi`, 'join')
         break
       }
 
       case 'participant_left_event': {
         const pName = msg.full_name || msg.username || "Ishtirokchi"
-        triggerInRoomAlert('info', `${pName} yig'ilishdan chiqdi`, 'info')
+        triggerInRoomAlert('info', `${pName} majlisdan chiqdi`, 'info')
         break
       }
 
@@ -1487,7 +1487,7 @@ export default function MeetingRoom() {
         clearStoredChatMessages(meetingId)
         setChatMessages([])
         setWaitingState('ended')
-        setEndedReason(msg.message || (msg.type === 'meeting_cancelled' ? "Yig'ilish tashkilotchi tomonidan bekor qilindi." : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!"))
+        setEndedReason(msg.message || (msg.type === 'meeting_cancelled' ? "Majlis tashkilotchi tomonidan bekor qilindi." : "Tashkilotchi ushbu majlisni yakunladi. Ishtirokingiz uchun tashakkur!"))
         leaveLiveKit()
         if (wsRef.current) {
           try { wsRef.current.close() } catch {}
@@ -1515,7 +1515,7 @@ export default function MeetingRoom() {
   const handleWsMessageRef = useRef(null)
   handleWsMessageRef.current = handleWsMessage
 
-  // 2. WebSocket Connection (Faqat foydalanuvchi yig'ilishga kirishni bosganda chaqiriladi!)
+  // 2. WebSocket Connection (Faqat foydalanuvchi majlisga kirishni bosganda chaqiriladi!)
   const connectWs = useCallback(async () => {
     if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
       return
@@ -1608,7 +1608,7 @@ export default function MeetingRoom() {
 
   // Helper to determine if a participant is the host/organizer
   const checkIsHost = useCallback((participantObj, identity, name) => {
-    // Faqat va faqat yig'ilish organizatori ID va ma'lumotlariga qarab aniqlaymiz
+    // Faqat va faqat majlis organizatori ID va ma'lumotlariga qarab aniqlaymiz
     const organizerId = getMeetingOrganizerId(meetingDetails, meetingState)
     if (!organizerId) return false
 
@@ -1639,7 +1639,7 @@ export default function MeetingRoom() {
     return false
   }, [meetingDetails, meetingState])
 
-  // Lobby sahifasidan "Yig'ilishga kirish" tugmasi bosilganda
+  // Lobby sahifasidan "Majlisga kirish" tugmasi bosilganda
   const handleJoinFromLobby = useCallback(() => {
     hasClickedJoinRef.current = true
     setIsJoining(true)
@@ -2071,7 +2071,7 @@ export default function MeetingRoom() {
       setIsCameraEnabled(initialCam)
       setIsMicEnabled(initialMic)
 
-      // Faqat yig'ilishni yaratgan user (organizer) host hisoblanadi
+      // Faqat majlisni yaratgan user (organizer) host hisoblanadi
       const initialOrgId = getMeetingOrganizerId(meetingDetails, meetingState)
       const isInitialLocalHost = Boolean(
         user?.id &&
@@ -2171,7 +2171,7 @@ export default function MeetingRoom() {
       const pIsHost = checkIsHost(participant, participant.identity, participant.name)
       playParticipantJoinedSound()
       const pName = participant.name || participant.identity || "Yangi ishtirokchi"
-      triggerInRoomAlert('join', `${pName} yig'ilishga qo'shildi`, 'join')
+      triggerInRoomAlert('join', `${pName} majlisga qo'shildi`, 'join')
       setParticipantTracks(prev => ({
         ...prev,
         [participant.identity]: {
@@ -2709,7 +2709,7 @@ export default function MeetingRoom() {
         } else if (decoded.type === 'meeting_ended' || decoded.type === 'meeting_cancelled') {
           clearStoredChatMessages(meetingId)
           setChatMessages([])
-          setEndedReason(decoded.message || (decoded.type === 'meeting_cancelled' ? "Yig'ilish tashkilotchi tomonidan bekor qilindi." : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!"))
+          setEndedReason(decoded.message || (decoded.type === 'meeting_cancelled' ? "Majlis tashkilotchi tomonidan bekor qilindi." : "Tashkilotchi ushbu majlisni yakunladi. Ishtirokingiz uchun tashakkur!"))
           setWaitingState('ended')
           leaveLiveKit()
           if (wsRef.current) {
@@ -2762,7 +2762,7 @@ export default function MeetingRoom() {
       if (isRoomEnded) {
         clearStoredChatMessages(meetingId)
         setChatMessages([])
-        setEndedReason("Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!")
+        setEndedReason("Tashkilotchi ushbu majlisni yakunladi. Ishtirokingiz uchun tashakkur!")
         setWaitingState('ended')
         return
       }
@@ -3126,7 +3126,7 @@ export default function MeetingRoom() {
     })
 
     setKnockRequests(prev => prev.filter(k => k.user_id !== userId))
-    toast.success("Tasdiqlandi", "Foydalanuvchiga yig'ilishga kirishga ruxsat berildi")
+    toast.success("Tasdiqlandi", "Foydalanuvchiga majlisga kirishga ruxsat berildi")
   }
 
   const handleRejectUser = async (userId) => {
@@ -3316,7 +3316,7 @@ export default function MeetingRoom() {
     }
   }
 
-  // Tashkilotchi tomonidan ishtirokchini yig'ilishdan chiqarish (Remove Participant)
+  // Tashkilotchi tomonidan ishtirokchini majlisdan chiqarish (Remove Participant)
   const handleRemoveParticipant = async (targetParticipant) => {
     if (!isLocalHost || !targetParticipant) return
     const targetIdentity = targetParticipant.identity || targetParticipant.id
@@ -3364,7 +3364,7 @@ export default function MeetingRoom() {
       }
 
       // 4. Trigger host in-room alert pill (Screenshot 4)
-      triggerInRoomAlert('user_removed', `${displayName} yig'ilishdan chiqarildi`, 'user_removed')
+      triggerInRoomAlert('user_removed', `${displayName} majlisdan chiqarildi`, 'user_removed')
 
       // 5. Clean up local participant track state
       setParticipantTracks(prev => {
@@ -3384,7 +3384,7 @@ export default function MeetingRoom() {
       try {
         const payload = new TextEncoder().encode(JSON.stringify({
           type: 'meeting_ended',
-          message: "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!"
+          message: "Tashkilotchi ushbu majlisni yakunladi. Ishtirokingiz uchun tashakkur!"
         }))
         await roomRef.current?.localParticipant?.publishData(payload, { reliable: true })
       } catch (e) { }
@@ -3392,7 +3392,7 @@ export default function MeetingRoom() {
       await axiosAPI.post(`/meetings/${meetingId}/close/`)
       clearStoredChatMessages(meetingId)
       setChatMessages([])
-      toast.success("Yig'ilish yakunlandi", "Barcha qatnashchilar uchun yig'ilish to'xtatildi")
+      toast.success("Majlis yakunlandi", "Barcha qatnashchilar uchun majlis to'xtatildi")
       leaveLiveKit()
       if (wsRef.current) {
         wsRef.current.close()
@@ -3400,7 +3400,7 @@ export default function MeetingRoom() {
       setWaitingState('ended')
     } catch (err) {
       console.error(err)
-      toast.error("Xatolik", "Yig'ilishni to'xtatishda xatolik")
+      toast.error("Xatolik", "Majlisni to'xtatishda xatolik")
     }
   }
 
@@ -3471,7 +3471,7 @@ export default function MeetingRoom() {
     })
 
   const meetingOrganizerId = getMeetingOrganizerId(meetingDetails, meetingState)
-  // Faqat va faqat yig'ilishni yaratgan foydalanuvchi (organizer) host bo'ladi.
+  // Faqat va faqat majlisni yaratgan foydalanuvchi (organizer) host bo'ladi.
   // Role (admin, superadmin) dan qat'iy nazar, faqat user.id === organizerId bo'lgandagina true bo'ladi!
   const isLocalHost = Boolean(
     user?.id &&
@@ -3483,7 +3483,7 @@ export default function MeetingRoom() {
     isLocalHostRef.current = isLocalHost
   }, [isLocalHost])
 
-  // Loyiha menejeri ID si (agar yig'ilish loyihaga tegishli bo'lsa)
+  // Loyiha menejeri ID si (agar majlis loyihaga tegishli bo'lsa)
   const projectManagerId = (
     projectData?.manager?.id ??
     projectData?.manager_info?.id ??
@@ -3775,7 +3775,7 @@ export default function MeetingRoom() {
   ) {
     return (
       <WaitingRoom
-        title={meetingDetails?.title || meetingState?.title || "Yig'ilish"}
+        title={meetingDetails?.title || meetingState?.title || "Majlis"}
         meetingDetails={meetingDetails}
         meetingState={meetingState}
         meetingId={meetingId}
@@ -3806,15 +3806,15 @@ export default function MeetingRoom() {
         <AutoRedirectCountdown timeLeft={redirectCountdown} total={60} />
         <div className="text-center max-w-lg w-full my-auto flex flex-col items-center animate-in zoom-in-95 duration-200">
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-            {isMeetingEnded ? "Yig'ilish yakunlandi" : "Majlisni tark etdingiz"}
+            {isMeetingEnded ? "Majlis yakunlandi" : "Majlisni tark etdingiz"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 mb-7 text-center">
             {isMeetingEnded
               ? (isLocalHost
-                  ? "Siz ushbu yig'ilishni yakunladingiz. Barcha ishtirokchilar uchun xona yopildi."
-                  : (endedReason && !["Yig'ilish yakunlandi", "Yig'ilish tashkilotchi tomonidan yakunlandi.", "Yig'ilish tashkilotchi tomonidan yakunlangan."].includes(endedReason)
+                  ? "Siz ushbu majlisni yakunladingiz. Barcha ishtirokchilar uchun xona yopildi."
+                  : (endedReason && !["Majlis yakunlandi", "Majlis tashkilotchi tomonidan yakunlandi.", "Majlis tashkilotchi tomonidan yakunlangan.", "Majlis yakunlandi", "Majlis tashkilotchi tomonidan yakunlandi.", "Majlis tashkilotchi tomonidan yakunlangan."].includes(endedReason)
                       ? endedReason
-                      : "Tashkilotchi ushbu yig'ilishni yakunladi. Ishtirokingiz uchun tashakkur!"))
+                      : "Tashkilotchi ushbu majlisni yakunladi. Ishtirokingiz uchun tashakkur!"))
               : "Havola hali ham amal qiladi — istagan vaqtda qaytishingiz mumkin."}
           </p>
           <div className="flex items-center justify-center gap-3">
@@ -3827,8 +3827,9 @@ export default function MeetingRoom() {
                   setWaitingState('lobby')
                   setNetworkStatus('online')
                 }}
-                className="px-6 py-2.5 rounded-full border border-slate-300 dark:border-white/20 bg-white dark:bg-transparent text-[#1a73e8] dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-white/5 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                className="px-5 py-2.5 rounded-xl bg-[#3E5CBA] hover:bg-[#344F9F] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
               >
+                <HugeiconsIcon icon={Refresh04Icon} size={17} strokeWidth={2.2} />
                 <span>Qayta qo'shilish</span>
               </button>
             )}
@@ -3838,9 +3839,10 @@ export default function MeetingRoom() {
                 clearStoredChatMessages(meetingId)
                 navigate('/')
               }}
-              className="px-6 py-2.5 rounded-full bg-[#1a73e8] hover:bg-blue-600 dark:bg-[#3B59BA] dark:hover:bg-[#324DAE] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/15 bg-white dark:bg-black text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-xs"
             >
-              <span>Bosh sahifani ochish</span>
+              <HugeiconsIcon icon={Home04Icon} size={17} strokeWidth={2.2} />
+              <span>Bosh sahifaga</span>
             </button>
           </div>
         </div>
@@ -3856,10 +3858,10 @@ export default function MeetingRoom() {
         <AutoRedirectCountdown timeLeft={redirectCountdown} total={60} />
         <div className="text-center max-w-lg w-full my-auto flex flex-col items-center animate-in zoom-in-95 duration-200 px-4">
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Sizni yig'ilishdan chiqarishdi
+            Sizni majlisdan chiqarishdi
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2.5 mb-7 text-center max-w-md leading-relaxed font-medium">
-            Tashkilotchi sizni «{meetingTitle}» yig'ilishidan chiqardi. Qayta qo'shilish uchun uning tasdig'i kerak.
+            Tashkilotchi sizni «{meetingTitle}» majlisidan chiqardi. Qayta qo'shilish uchun uning tasdig'i kerak.
           </p>
           <div className="flex items-center justify-center gap-3">
             <button
@@ -3870,8 +3872,9 @@ export default function MeetingRoom() {
                 setWaitingState('lobby')
                 setNetworkStatus('online')
               }}
-              className="px-6 py-2.5 rounded-full border border-slate-300 dark:border-white/20 bg-white dark:bg-transparent text-[#1a73e8] dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-white/5 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-2xs"
+              className="px-5 py-2.5 rounded-xl bg-[#3B59BA] hover:bg-[#324D9E] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
             >
+              <HugeiconsIcon icon={Refresh04Icon} size={17} strokeWidth={2.2} />
               <span>Qo'shilishni so'rash</span>
             </button>
             <button
@@ -3880,9 +3883,10 @@ export default function MeetingRoom() {
                 clearStoredChatMessages(meetingId)
                 navigate('/')
               }}
-              className="px-6 py-2.5 rounded-full bg-[#1a73e8] hover:bg-blue-600 dark:bg-[#3B59BA] dark:hover:bg-[#324DAE] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
+              className="px-5 py-2.5 rounded-xl bg-[#EDF2F7] dark:bg-[#1A202C] hover:bg-[#E2E8F0] dark:hover:bg-[#2D3748] text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-2xs"
             >
-              <span>Bosh sahifani ochish</span>
+              <HugeiconsIcon icon={Home04Icon} size={17} strokeWidth={2.2} />
+              <span>Bosh sahifaga</span>
             </button>
           </div>
         </div>
@@ -4046,7 +4050,7 @@ export default function MeetingRoom() {
                   return next
                 })
               }}
-              title="Yig'ilish tafsilotlari"
+              title="Majlis tafsilotlari"
               className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${isDetailsOpen
                   ? 'text-blue-600 dark:text-blue-400 scale-110'
                   : 'text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
@@ -4118,7 +4122,7 @@ export default function MeetingRoom() {
               <button
                 type="button"
                 onClick={() => setShowEndModal(true)}
-                title="Yig'ilishni yakunlash"
+                title="Majlisni yakunlash"
                 className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/15 hover:bg-[#EA3323] hover:text-white dark:hover:bg-[#EA3323] dark:hover:text-white text-[#EA3323] dark:text-red-400 border border-red-200/80 dark:border-red-500/30 hover:border-transparent flex items-center justify-center cursor-pointer transition-all active:scale-95 shadow-2xs"
               >
                 <HugeiconsIcon icon={PowerIcon} size={16} strokeWidth={2.2} />
@@ -4789,10 +4793,10 @@ export default function MeetingRoom() {
             className="relative w-full max-w-[450px] p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#0B0D11] border border-slate-100 dark:border-white/10 text-slate-900 dark:text-white shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200 overflow-hidden"
           >
             <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-              Yig'ilishni yakunlaysizmi?
+              Majlisni yakunlaysizmi?
             </h3>
             <p className="mt-2.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              Barcha ishtirokchilar uchun yig'ilish to'xtatiladi va xona yopiladi.
+              Barcha ishtirokchilar uchun majlis to'xtatiladi va xona yopiladi.
             </p>
 
             <div className="mt-6 flex items-center justify-end gap-3">

@@ -88,7 +88,7 @@ const SignaturesReportPage = () => {
       setMeetsPage(targetPage);
       setMeetsHasMore(Boolean(data.next || (data.total_pages && targetPage < data.total_pages)));
     } catch (err) {
-      console.error("Yig'ilishlarni yuklashda xatolik:", err);
+      console.error("Majlislarni yuklashda xatolik:", err);
     } finally {
       setMeetsLoading(false);
       setMeetsLoadingMore(false);
@@ -375,12 +375,12 @@ const SignaturesReportPage = () => {
         },
         {
           key: "meeting",
-          label: "Yig'ilish",
+          label: "Majlis",
           formatter: (val) => (val?.title ? `${val.title} (${val.code || ""})` : val || ""),
         },
         {
           key: "meeting_date",
-          label: "Yig'ilish sanasi",
+          label: "Majlis sanasi",
           formatter: (val) => (val ? dayjs(val).format("DD.MM.YYYY HH:mm") : ""),
         },
         {
@@ -429,7 +429,7 @@ const SignaturesReportPage = () => {
 
   // Meeting dropdown options
   const meetingOptions = useMemo(() => {
-    const base = [{ value: "", label: "Yig'ilishni tanlang" }];
+    const base = [{ value: "", label: "Majlisni tanlang" }];
     const items = meetingsList.map((m) => ({
       value: m.id,
       label: m.title ? `${m.title} ${m.code ? `(${m.code})` : ""}` : m.code || m.id,
@@ -551,13 +551,13 @@ const SignaturesReportPage = () => {
 
             <div>
               <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
-                Yig'ilish
+                Majlis
               </label>
               <CustomSelect
                 value={meetingId}
                 onChange={(v) => setMeetingId(v)}
                 options={meetingOptions}
-                placeholder="Yig'ilishni tanlang"
+                placeholder="Majlisni tanlang"
                 searchable={true}
                 onSearch={handleSearchMeetings}
                 onLoadMore={handleLoadMoreMeetings}
@@ -660,8 +660,8 @@ const SignaturesReportPage = () => {
                 <tr className="border-b border-[#F1F3F9] dark:border-[#1E263C] text-[#5B6078] dark:text-[#94A3B8] text-[13px] font-medium">
                   <th className="py-3 px-3 w-12 font-medium">№</th>
                   <th className="py-3 px-3 font-medium">Ishtirokchi</th>
-                  <th className="py-3 px-3 font-medium">Yig'ilish</th>
-                  <th className="py-3 px-3 font-medium text-right">Yig'ilish sanasi</th>
+                  <th className="py-3 px-3 font-medium">Majlis</th>
+                  <th className="py-3 px-3 font-medium text-right">Majlis sanasi</th>
                   <th className="py-3 px-3 font-medium text-right">Imzolangan vaqti</th>
                   <th className="py-3 px-3 font-medium text-center">Imzo</th>
                   <th className="py-3 px-3 font-medium text-right pr-4">Holati</th>
@@ -691,7 +691,7 @@ const SignaturesReportPage = () => {
                         row.participant?.full_name ||
                         row.participant?.name ||
                         (typeof row.participant === "string" ? row.participant : "");
-                      const meetingTitle = row.meeting?.title || "Nomsiz yig'ilish";
+                      const meetingTitle = row.meeting?.title || "Nomsiz majlis";
                       const meetingCode = row.meeting?.code || "";
                       const meetingDateFormatted = row.meeting_date
                         ? dayjs(row.meeting_date).format("DD.MM.YYYY HH:mm")

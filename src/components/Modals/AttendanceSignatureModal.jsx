@@ -37,7 +37,7 @@ export default function AttendanceSignatureModal({
     extraData.meeting_name ||
     extraData.title ||
     notificationData?.title?.replace(/^Imzo kutilmoqda\s*[-–:]*\s*/i, "") ||
-    "Mahalla raislari yig'ilishi";
+    "Mahalla raislari majlisi";
 
   const meetingDate = extraData.date || extraData.start_date
     ? new Date(extraData.date || extraData.start_date).toLocaleDateString("ru-RU", {
@@ -284,7 +284,7 @@ export default function AttendanceSignatureModal({
 
         {/* Warning Notice Box */}
         <div className="p-3 sm:p-3.5 rounded-xl bg-[#FFFBEB] dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 text-amber-800 dark:text-amber-200 text-xs font-medium leading-relaxed">
-          Imzo qo'yilmasa, yig'ilishdagi qatnashishingiz tasdiqlanmagan hisoblanadi.
+          Imzo qo'yilmasa, majlisdagi qatnashishingiz tasdiqlanmagan hisoblanadi.
         </div>
 
         {/* Action Buttons */}

@@ -198,7 +198,7 @@ const MeetingsReportPage = () => {
         setHasMore(hasNext);
         setIsGenerated(true);
       } catch (err) {
-        console.error("Yig'ilishlar hisobotini olishda xatolik:", err);
+        console.error("Majlislar hisobotini olishda xatolik:", err);
         setError("Hisobot ma'lumotlarini yuklashda xatolik yuz berdi");
         setHasMore(false);
       } finally {
@@ -255,7 +255,7 @@ const MeetingsReportPage = () => {
       const format = e.detail?.format || "excel";
       const columns = [
         { key: "index", label: "№", formatter: (_, __, idx) => idx + 1, align: "center" },
-        { key: "title", label: "Yig'ilish", formatter: (t, r) => (r.code ? `${t || ""} (${r.code})` : t || "") },
+        { key: "title", label: "Majlis", formatter: (t, r) => (r.code ? `${t || ""} (${r.code})` : t || "") },
         {
           key: "organizer",
           label: "Tashkilotchi",
@@ -283,7 +283,7 @@ const MeetingsReportPage = () => {
         },
       ];
 
-      const title = "Yig'ilishlar bo'yicha hisobot";
+      const title = "Majlislar bo'yicha hisobot";
       const filename = "yigilishlar_hisoboti";
 
       if (format === "excel") {
@@ -291,21 +291,21 @@ const MeetingsReportPage = () => {
         setToastMessage({
           type: "success",
           title: "Excel yuklab olindi",
-          description: "Yig'ilishlar hisoboti Excel (.xlsx) formatida muvaffaqiyatli saqlandi.",
+          description: "Majlislar hisoboti Excel (.xlsx) formatida muvaffaqiyatli saqlandi.",
         });
       } else if (format === "pdf") {
         exportReportToPDF(reportsData, columns, title, periodLabelText, filename);
         setToastMessage({
           type: "success",
           title: "PDF yuklab olindi",
-          description: "Yig'ilishlar hisoboti PDF formatida muvaffaqiyatli saqlandi.",
+          description: "Majlislar hisoboti PDF formatida muvaffaqiyatli saqlandi.",
         });
       } else {
         exportReportToCSV(reportsData, columns, title, periodLabelText, filename);
         setToastMessage({
           type: "success",
           title: "CSV yuklab olindi",
-          description: "Yig'ilishlar hisoboti CSV formatida muvaffaqiyatli saqlandi.",
+          description: "Majlislar hisoboti CSV formatida muvaffaqiyatli saqlandi.",
         });
       }
     };
@@ -561,7 +561,7 @@ const MeetingsReportPage = () => {
               <thead className="sticky top-0 z-10 bg-[#F8F9FC] dark:bg-[#161B22]">
                 <tr className="border-b border-[#F1F3F9] dark:border-[#1E263C] text-[#5B6078] dark:text-[#94A3B8] text-[13px] font-medium">
                   <th className="py-3 px-3 w-12 font-medium">№</th>
-                  <th className="py-3 px-3 font-medium">Yig'ilish</th>
+                  <th className="py-3 px-3 font-medium">Majlis</th>
                   <th className="py-3 px-3 font-medium">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 bg-[#4AC99B] rounded-full"></span>
@@ -581,21 +581,21 @@ const MeetingsReportPage = () => {
                     <td colSpan={8} className="py-20 text-center text-[#8B90A5] dark:text-[#64748B]">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Loader2 size={24} className="animate-spin text-[#3858C7]" />
-                        <span className="text-[13px]">Yig'ilishlar hisoboti yuklanmoqda...</span>
+                        <span className="text-[13px]">Majlislar hisoboti yuklanmoqda...</span>
                       </div>
                     </td>
                   </tr>
                 ) : reportsData.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-20 text-center text-[#8B90A5] dark:text-[#64748B] text-[13.5px]">
-                      Tanlangan parametrlar bo'yicha hech qanday yig'ilish topilmadi.
+                      Tanlangan parametrlar bo'yicha hech qanday majlis topilmadi.
                     </td>
                   </tr>
                 ) : (
                   <>
                     {reportsData.map((row, idx) => {
                       const rowIdx = idx + 1;
-                      const title = row.title || row.name || "Nomsiz yig'ilish";
+                      const title = row.title || row.name || "Nomsiz majlis";
                       const code = row.code || "";
                       const organizerName =
                         row.organizer?.full_name ||

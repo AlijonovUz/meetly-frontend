@@ -433,7 +433,7 @@ const Analytics = () => {
     return dashboardData?.signatures || dashboardData?.my_signatures || dashboardData?.pending_signatures || [];
   }, [dashboardData]);
 
-  // Bugungi yig'ilishlar
+  // Bugungi majlislar
   const todayMeetings = useMemo(() => {
     return dashboardData?.today_meetings || [];
   }, [dashboardData]);
@@ -659,11 +659,11 @@ const Analytics = () => {
 
       {/* 4 KPI Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        {/* Card 1: Foydalanuvchilar / Qatnashgan yig'ilishlarim */}
+        {/* Card 1: Foydalanuvchilar / Qatnashgan majlislarim */}
         <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
-              {card1?.label || (isStaff ? "FOYDALANUVCHILAR" : "QATNASHGAN YIG'ILISHLARIM")}
+              {card1?.label || (isStaff ? "FOYDALANUVCHILAR" : "QATNASHGAN MAJLISLARIM")}
             </span>
             <div className="text-[26px] font-extrabold text-[#1A1D2E] dark:text-white my-1 tracking-tight">
               {card1?.current !== undefined
@@ -696,11 +696,11 @@ const Analytics = () => {
           {renderMiniBars(card1?.sparkline)}
         </div>
 
-        {/* Card 2: Jami yig'ilishlar / Qatnashish foizim */}
+        {/* Card 2: Jami majlislar / Qatnashish foizim */}
         <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
-              {card2?.label || (isStaff ? "JAMI YIG'ILISHLAR" : "QATNASHISH FOIZIM")}
+              {card2?.label || (isStaff ? "JAMI MAJLISLAR" : "QATNASHISH FOIZIM")}
             </span>
             <div className="text-[26px] font-extrabold text-[#1A1D2E] dark:text-white my-1 tracking-tight">
               {card2?.current !== undefined
@@ -728,7 +728,7 @@ const Analytics = () => {
           {renderMiniBars(card2?.sparkline)}
         </div>
 
-        {/* Card 3: Joriy yig'ilishlar / Imzo kutilmoqda */}
+        {/* Card 3: Joriy majlislar / Imzo kutilmoqda */}
         <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
@@ -988,7 +988,7 @@ const Analytics = () => {
         >
           <div className="flex items-center justify-between h-5 mb-2">
             <span className="text-[11px] sm:text-[11.5px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
-              {isStaff ? "HOLAT BO'YICHA" : "MENING YIG'ILISHLARIM"}
+              {isStaff ? "HOLAT BO'YICHA" : "MENING MAJLISLARIM"}
             </span>
             <span
               style={{ color: activeStatusItem ? activeStatusItem.color : "#8F95A8" }}
@@ -1108,11 +1108,11 @@ const Analytics = () => {
 
       {/* Bottom Section: 3 Columns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Col 1: Bugungi yig'ilishlar */}
+        {/* Col 1: Bugungi majlislar */}
         <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 shadow-2xs hover-card-lift flex flex-col justify-between transition-all">
           <div className="flex items-center justify-between mb-4">
             <span className="text-[11.5px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase">
-              {isStaff ? "BUGUNGI YIG'ILISHLAR" : "BUGUNGI YIG'ILISHLARIM"}
+              {isStaff ? "BUGUNGI MAJLISLAR" : "BUGUNGI MAJLISLARIM"}
             </span>
             {isStaff && (
               <Link
@@ -1128,13 +1128,13 @@ const Analytics = () => {
             {todayMeetings.length === 0 ? (
               <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-[#8B90A5] dark:text-[#64748B]">
                 <p className="text-[13px] font-medium">
-                  Bugun rejalashtirilgan yig'ilishlar yo'q
+                  Bugun rejalashtirilgan majlislar yo'q
                 </p>
               </div>
             ) : (
               todayMeetings.slice(0, 5).map((m, idx) => {
                 const time = m.time || (m.start_date ? dayjs(m.start_date).format("HH:mm") : m.start_time || "—");
-                const title = m.title || m.name || "Nomsiz yig'ilish";
+                const title = m.title || m.name || "Nomsiz majlis";
                 const organizer =
                   m.organizer_name ||
                   m.organizer?.full_name ||
@@ -1298,7 +1298,7 @@ const Analytics = () => {
                 </div>
               ) : (
                 userSignatures.slice(0, 5).map((sig, idx) => {
-                  const title = sig.meeting?.title || sig.title || sig.name || "Nomsiz yig'ilish";
+                  const title = sig.meeting?.title || sig.title || sig.name || "Nomsiz majlis";
                   const organizer =
                     sig.meeting?.organizer?.full_name ||
                     sig.meeting?.organizer?.name ||

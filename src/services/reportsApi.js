@@ -11,7 +11,7 @@ export const getDashboardStats = async (params = {}) => {
 };
 
 /**
- * Yig'ilishlar bo'yicha hisobotni olish
+ * Majlislar bo'yicha hisobotni olish
  * Endpoint: GET /api/v1/reports/meetings/
  * @param {Object} params - { start_date, end_date, organizer, status, duration, signature, search, ordering, page }
  */
@@ -181,7 +181,7 @@ export const getParticipantsList = async (params = {}) => {
 };
 
 /**
- * Yig'ilishlar ro'yxati (Dropdown uchun)
+ * Majlislar ro'yxati (Dropdown uchun)
  * Endpoint: GET /api/v1/meetings/
  */
 export const getMeetingsList = async (params = {}) => {
@@ -197,13 +197,13 @@ export const getMeetingsList = async (params = {}) => {
       total_pages: data?.total_pages ?? 1,
     };
   } catch (error) {
-    console.error("Yig'ilishlar ro'yxatini olishda xatolik:", error);
+    console.error("Majlislar ro'yxatini olishda xatolik:", error);
     return { results: [], count: 0, next: null, page: 1, total_pages: 1 };
   }
 };
 
 /**
- * Yig'ilish orqali imzo topshirish
+ * Majlis orqali imzo topshirish
  * Endpoint: POST /api/v1/meetings/{meeting_id}/signature/
  */
 export const submitMeetingSignature = async (meetingId, signaturePayload) => {

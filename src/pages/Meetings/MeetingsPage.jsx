@@ -164,7 +164,7 @@ const MeetingsPage = () => {
         });
       }
     } catch (err) {
-      console.error("Yig'ilishlar sonini yuklashda xatolik:", err);
+      console.error("Majlislar sonini yuklashda xatolik:", err);
     }
   }, []);
 
@@ -210,8 +210,8 @@ const MeetingsPage = () => {
         const results = res.results || [];
         setMeetings(results);
       } catch (err) {
-        console.error("Yig'ilishlarni yuklashda xatolik:", err);
-        setError("Yig'ilishlarni yuklab bo'lmadi");
+        console.error("Majlislarni yuklashda xatolik:", err);
+        setError("Majlislarni yuklab bo'lmadi");
       } finally {
         setLoading(false);
       }
@@ -449,13 +449,13 @@ const MeetingsPage = () => {
                 <td colSpan={7} className="py-20 text-center text-[#8B90A5] dark:text-[#64748B]">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Loader2 className="w-6 h-6 text-[#3858C7] animate-spin" />
-                    <span>Yig'ilishlar yuklanmoqda...</span>
+                    <span>Majlislar yuklanmoqda...</span>
                   </div>
                 </td>
               </tr>
             ) : meetings.length > 0 ? (
               meetings.map((meeting, index) => {
-                const title = meeting.title || meeting.name || "Nomsiz yig'ilish";
+                const title = meeting.title || meeting.name || "Nomsiz majlis";
                 const orgName = meeting.organizer_info
                   ? `${meeting.organizer_info.first_name || ""} ${meeting.organizer_info.last_name || ""
                     }`.trim()
@@ -521,7 +521,7 @@ const MeetingsPage = () => {
                   colSpan={7}
                   className="py-16 text-center text-[#8B90A5] dark:text-[#64748B] text-[13.5px]"
                 >
-                  Yig'ilishlar topilmadi
+                  Majlislar topilmadi
                 </td>
               </tr>
             )}

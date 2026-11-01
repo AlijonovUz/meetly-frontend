@@ -61,7 +61,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
       : []),
     {
       to: "/meetings",
-      label: "Yig‘ilishlar",
+      label: "Majlislar",
       icon: Folder02Icon,
     },
   ];
@@ -70,7 +70,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
     {
       to: "/reports/meetings",
       altTo: "/reports",
-      label: "Yig'ilishlar bo'yicha",
+      label: "Majlislar bo'yicha",
     },
     {
       to: "/reports/participants",
@@ -277,7 +277,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 </div>
               </button>
 
-              {/* Sub-items (Yig'ilishlar, Ishtirokchilar, Tashkilotchilar) */}
+              {/* Sub-items (Majlislar, Ishtirokchilar, Tashkilotchilar) */}
               <div
                 className={`space-y-1 pl-4 pr-1 overflow-hidden transition-all duration-300 ease-in-out ${
                   !sidebarCollapsed && reportsOpen

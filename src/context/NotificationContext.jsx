@@ -242,7 +242,7 @@ export function NotificationProvider({ children }) {
             is_read: true,
             is_signed: true,
             title: "Imzo saqlandi",
-            message: `«${n.extra_data?.meeting_title || "Yig'ilish"}»da qatnashganingiz tasdiqlandi.`,
+            message: `«${n.extra_data?.meeting_title || "Majlis"}»da qatnashganingiz tasdiqlandi.`,
             extra_data: {
               ...(n.extra_data || {}),
               is_signed: true,

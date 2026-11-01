@@ -82,19 +82,19 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
     }
     if (pathname === "/meetings") {
       return [
-        { label: "Yig'ilishlar", to: "/meetings" },
+        { label: "Majlislar", to: "/meetings" },
       ];
     }
     if (pathname.startsWith("/meetings/")) {
       const id = pathname.replace("/meetings/", "").split("/")[0];
-      const meetingTitle = dynamicTitles[id] || location.state?.title || location.state?.name || "Yig'ilish tafsiloti";
+      const meetingTitle = dynamicTitles[id] || location.state?.title || location.state?.name || "Majlis tafsiloti";
       return [
-        { label: "Yig'ilishlar", to: "/meetings" },
+        { label: "Majlislar", to: "/meetings" },
         { label: meetingTitle },
       ];
     }
     if (pathname.startsWith("/reports")) {
-      let sub = "Yig'ilishlar bo'yicha";
+      let sub = "Majlislar bo'yicha";
       if (pathname.includes("participants")) sub = "Ishtirokchilar bo'yicha";
       if (pathname.includes("organizers")) sub = "Tashkilotchilar bo'yicha";
       if (pathname.includes("signatures")) sub = "Imzolar bo'yicha";
@@ -189,7 +189,7 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
             className="hidden sm:inline-flex items-center gap-2 bg-white dark:bg-[#1C2438] hover:bg-white/95 dark:hover:bg-[#232E47] text-[#1A1D2E] dark:text-white text-[13px] font-semibold px-3.5 py-2 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
           >
             <img src={isDark ? "/meeting_icon_dark.svg" : "/meet_icon.svg"} alt="" className="pointer-events-none w-4.5 h-4.5" />
-            <span>Yig'ilish qo'shish</span>
+            <span>Majlis qo'shish</span>
           </button>
         )}
 
@@ -386,7 +386,7 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                             {isSignatureReq && !isSigned
                               ? `«${meetingTitle}» yakunlandi. Qatnashganingizni imzo bilan tasdiqlang.`
                               : isSigned
-                                ? `«${meetingTitle}» yig'ilishidagi qatnashishingiz tasdiqlandi.`
+                                ? `«${meetingTitle}» majlisidagi qatnashishingiz tasdiqlandi.`
                                 : n.message}
                           </p>
 

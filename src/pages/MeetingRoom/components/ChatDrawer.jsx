@@ -290,7 +290,7 @@ export default function ChatDrawer({
           {/* Informational Callout matching Figma */}
           <div className="mt-3.5 mb-3 p-3 sm:p-3.5 rounded-2xl bg-[#F0F3F7] dark:bg-[#181C24] shrink-0 select-none">
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
-              Xabarlar uchrashuv tugagach o'chiriladi. Keyin qo'shilganlar eski xabarlarni ko'rmaydi.
+              Xabarlar majlis tugagach o'chiriladi. Keyin qo'shilganlar eski xabarlarni ko'rmaydi.
             </p>
           </div>
 
@@ -309,7 +309,7 @@ export default function ChatDrawer({
                   Hali xabar yo'q
                 </h4>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                  Uchrashuv davomida stiker va xabarlar yozishingiz mumkin
+                  Majlis davomida stiker va xabarlar yozishingiz mumkin
                 </p>
               </div>
             ) : (
