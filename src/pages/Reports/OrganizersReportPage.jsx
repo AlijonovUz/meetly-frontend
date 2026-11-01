@@ -498,7 +498,7 @@ const OrganizersReportPage = () => {
 
             <div>
               <label className="block text-[12px] font-medium text-[#5E6480] dark:text-[#94A3B8] mb-1.5">
-                Majlis holati
+                Yig'ilish holati
               </label>
               <CustomSelect
                 value={meetingStatus}

@@ -1,7 +1,7 @@
 import { axiosAPI } from "./axiosAPI";
 
 /**
- * Majlislar ro'yxatini olish
+ * Yig'ilishlar ro'yxatini olish
  * Endpoint: GET /api/v1/meetings/
  * @param {Object} params - { search, status, page, page_size, start_date, end_date }
  */
@@ -22,7 +22,7 @@ export const getMeetings = async (params = {}) => {
 };
 
 /**
- * Bitta majlis ma'lumotlarini olish
+ * Bitta yig'ilish ma'lumotlarini olish
  * Endpoint: GET /api/v1/meetings/{id}/
  */
 export const getMeetingById = async (id) => {
@@ -31,7 +31,7 @@ export const getMeetingById = async (id) => {
 };
 
 /**
- * Yangi majlis yaratish
+ * Yangi yig'ilish yaratish
  * Endpoint: POST /api/v1/meetings/
  * @param {Object} payload - { title, description, start_date, duration, requires_approval, allow_join_before_host }
  */
@@ -41,7 +41,7 @@ export const createMeeting = async (payload) => {
 };
 
 /**
- * Majlis ma'lumotlarini to'liq/qisman yangilash
+ * Yig'ilish ma'lumotlarini to'liq/qisman yangilash
  * Endpoint: PATCH /api/v1/meetings/{id}/ yoki PUT /api/v1/meetings/{id}/
  */
 export const updateMeeting = async (id, payload) => {
@@ -50,7 +50,7 @@ export const updateMeeting = async (id, payload) => {
 };
 
 /**
- * Majlisni o'chirish
+ * Yig'ilishni o'chirish
  * Endpoint: DELETE /api/v1/meetings/{id}/
  */
 export const deleteMeeting = async (id) => {
@@ -59,7 +59,7 @@ export const deleteMeeting = async (id) => {
 };
 
 /**
- * Majlisni bekor qilish
+ * Yig'ilishni bekor qilish
  * Endpoint: POST /api/v1/meetings/{id}/cancel/
  * @param {string} id
  * @param {Object} data - { reason }
@@ -70,7 +70,7 @@ export const cancelMeeting = async (id, { reason }) => {
 };
 
 /**
- * Majlis qatnashuvchilari (attendances) ro'yxatini olish
+ * Yig'ilish qatnashuvchilari (attendances) ro'yxatini olish
  * Endpoint: GET /api/v1/meetings/attendances/
  * @param {Object} params - { meeting, is_late, ordering, page, start_date, end_date, user }
  */
@@ -91,7 +91,7 @@ export const getMeetingAttendances = async (params = {}) => {
 };
 
 /**
- * Majlislar sonini olish (statuslar bo'yicha)
+ * Yig'ilishlar sonini olish (statuslar bo'yicha)
  * Endpoint: GET /api/v1/meetings/counts/
  * @param {Object} params - ixtiyoriy filtrlash parametrlari
  */
@@ -101,9 +101,9 @@ export const getMeetingCounts = async (params = {}) => {
 };
 
 /**
- * Majlisdan qatnashchini chiqarish
+ * Yig'ilishdan qatnashchini chiqarish
  * Endpoint: POST /api/v1/meetings/{id}/remove-participant/
- * @param {string} meetingId - majlis ID yoki UUID
+ * @param {string} meetingId - yig'ilish ID yoki UUID
  * @param {Object} payload - { user_id, participant_identity }
  */
 export const removeMeetingParticipant = async (meetingId, payload = {}) => {
@@ -112,9 +112,9 @@ export const removeMeetingParticipant = async (meetingId, payload = {}) => {
 };
 
 /**
- * Majlis qatnashuviga imzo qo'yish (Attendance Signature)
+ * Yig'ilish qatnashuviga imzo qo'yish (Attendance Signature)
  * Endpoint: POST /api/v1/meetings/attendances/{id}/signature/
- * @param {string} attendanceId - Majlis qatnashuvi UUID
+ * @param {string} attendanceId - Yig'ilish qatnashuvi UUID
  * @param {File|Blob|string|FormData} signaturePayload - Imzo fayli yoki base64
  */
 export const submitAttendanceSignature = async (attendanceId, signaturePayload) => {
@@ -151,7 +151,7 @@ export const submitAttendanceSignature = async (attendanceId, signaturePayload) 
 };
 
 /**
- * Majlis orqali to'g'ridan-to'g'ri imzo topshirish (Meeting Signature)
+ * Yig'ilish orqali to'g'ridan-to'g'ri imzo topshirish (Meeting Signature)
  * Endpoint: POST /api/v1/meetings/{meeting_id}/signature/
  * @param {string} meetingId
  * @param {File|Blob|string|FormData} signaturePayload

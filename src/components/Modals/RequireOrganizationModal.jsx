@@ -71,7 +71,7 @@ const RequireOrganizationModal = ({ isOpen, user, onSuccess }) => {
               Salom, {fullName}!
             </p>
             <p className="text-[12.5px] opacity-90">
-              Tizimdan to'liq foydalanish va majlislarda qatnashish uchun tashkilotingiz nomini kiritishingiz shart. Tashkilot kiritilmaguncha tizimdan foydalanib bo'lmaydi.
+              Tizimdan to'liq foydalanish va yig'ilishlarda qatnashish uchun tashkilotingiz nomini kiritishingiz shart. Tashkilot kiritilmaguncha tizimdan foydalanib bo'lmaydi.
             </p>
           </div>
         </div>

@@ -144,8 +144,8 @@ const MeetingDetailPage = () => {
       setDurationVal(String(data.duration || 30));
       setRequiresApprovalVal(data.requires_approval ? "true" : "false");
     } catch (err) {
-      console.error("Majlis tafsilotlarini yuklashda xatolik:", err);
-      setError("Majlis ma'lumotlarini yuklab bo'lmadi");
+      console.error("Yig'ilish tafsilotlarini yuklashda xatolik:", err);
+      setError("Yig'ilish ma'lumotlarini yuklab bo'lmadi");
     } finally {
       setLoading(false);
     }
@@ -216,7 +216,7 @@ const MeetingDetailPage = () => {
       setToastMessage({
         type: "success",
         title: "Muvaffaqiyatli saqlandi",
-        description: "Majlis ma'lumotlari yangilandi.",
+        description: "Yig'ilish ma'lumotlari yangilandi.",
       });
     } catch (err) {
       console.error("Saqlashda xatolik:", err);
@@ -247,8 +247,8 @@ const MeetingDetailPage = () => {
 
       setToastMessage({
         type: "success",
-        title: "Majlis bekor qilindi",
-        description: "Majlis muvaffaqiyatli bekor qilindi.",
+        title: "Yig'ilish bekor qilindi",
+        description: "Yig'ilish muvaffaqiyatli bekor qilindi.",
       });
     } catch (err) {
       console.error("Bekor qilishda xatolik:", err);
@@ -257,7 +257,7 @@ const MeetingDetailPage = () => {
         title: "Xatolik yuz berdi",
         description:
           err?.response?.data?.message ||
-          "Majlisni bekor qilishda xatolik yuz berdi.",
+          "Yig'ilishni bekor qilishda xatolik yuz berdi.",
       });
     } finally {
       setIsCancelling(false);
@@ -357,7 +357,7 @@ const MeetingDetailPage = () => {
     setToastMessage({
       type: "success",
       title: "Imzo saqlandi",
-      description: "Majlisga imzo muvaffaqiyatli qo'yildi.",
+      description: "Yig'ilishga imzo muvaffaqiyatli qo'yildi.",
     });
     await fetchMeeting();
   };
@@ -395,7 +395,7 @@ const MeetingDetailPage = () => {
     return (
       <div className="p-10 flex flex-col items-center justify-center min-h-[50vh] text-[#8B90A5] gap-3 font-['Manrope',sans-serif]">
         <Loader2 className="w-8 h-8 text-[#4763E4] animate-spin" />
-        <span className="text-sm font-medium">Majlis ma'lumotlari yuklanmoqda...</span>
+        <span className="text-sm font-medium">Yig'ilish ma'lumotlari yuklanmoqda...</span>
       </div>
     );
   }
@@ -406,7 +406,7 @@ const MeetingDetailPage = () => {
         <div className="bg-red-50 border border-red-200 text-red-700 p-5 rounded-2xl flex items-center justify-between">
           <div>
             <h3 className="font-bold text-base">Xatolik</h3>
-            <p className="text-sm mt-0.5">{error || "Majlis topilmadi"}</p>
+            <p className="text-sm mt-0.5">{error || "Yig'ilish topilmadi"}</p>
           </div>
           <button
             type="button"
@@ -425,11 +425,11 @@ const MeetingDetailPage = () => {
       {/* Header Section */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl sm:text-[26px] font-bold text-[#1A1D2E] dark:text-white tracking-tight truncate max-w-full">
-          {meeting.title || meeting.name || "Majlis"}
+          {meeting.title || meeting.name || "Yig'ilish"}
         </h1>
 
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Imzo qo'yish tugmasi (faqat majlis qatnashchisi bo'lsa, imzo qo'yilmagan va bekor qilinmagan bo'lsa) */}
+          {/* Imzo qo'yish tugmasi (faqat yig'ilish qatnashchisi bo'lsa, imzo qo'yilmagan va bekor qilinmagan bo'lsa) */}
           {Boolean(myAttendance) && !isSigned && !isCancelled && isCompleted && (
             <button
               type="button"
@@ -459,7 +459,7 @@ const MeetingDetailPage = () => {
               className="inline-flex items-center gap-2 px-4 py-3 border bg-white dark:bg-[#161C2E] border-[#EF4444] text-[#EF4444] hover:bg-[#FEF2F2] dark:hover:bg-[#EF4444]/10 active:scale-[0.98] rounded-xl text-[13.5px] font-extrabold transition-all shadow-2xs cursor-pointer"
             >
               <Ban size={16} strokeWidth={2.2} />
-              <span>Majlisni bekor qilish</span>
+              <span>Yig'ilishni bekor qilish</span>
             </button>
           ) : (
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#3858C7] dark:text-[#7F95E6] bg-[#EEF2FB] dark:bg-[#3858C7]/15 border border-[#BFDBFE] dark:border-[#3858C7]/30">
@@ -474,7 +474,7 @@ const MeetingDetailPage = () => {
       {isCancelled && (
         <div className="bg-[#FEF2F2] dark:bg-red-950/25 border border-[#FCA5A5] dark:border-red-900/40 rounded-2xl p-4 sm:p-5 text-[13px] text-[#1A1D2E] dark:text-slate-200 space-y-1 animate-in fade-in duration-200">
           <h4 className="font-bold text-[#DC2626] dark:text-red-400 text-[14px]">
-            Majlis bekor qilingan
+            Yig'ilish bekor qilingan
           </h4>
           <p className="text-[#4B5563] dark:text-slate-400 leading-relaxed">
             {formatDisplayDateTime(meeting.updated_at || meeting.completed_at)},{" "}
@@ -630,7 +630,7 @@ const MeetingDetailPage = () => {
       {isScheduled && (
         <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
           <p className="text-[12.5px] text-[#8B90A5] dark:text-[#64748B]">
-            Majlis boshlanmaguncha sana, vaqt va davomiylikni o'zgartirish mumkin.
+            Yig'ilish boshlanmaguncha sana, vaqt va davomiylikni o'zgartirish mumkin.
           </p>
           <button
             type="button"
@@ -656,7 +656,7 @@ const MeetingDetailPage = () => {
 
         {isCancelled ? (
           <div className="p-6 text-center text-[#8B90A5] dark:text-[#64748B] text-[13.5px]">
-            Majlis bekor qilingani haqida ishtirokchilarga xabar yuborildi. Taklif havolasi endi ishlamaydi.
+            Yig'ilish bekor qilingani haqida ishtirokchilarga xabar yuborildi. Taklif havolasi endi ishlamaydi.
           </div>
         ) : (
           <div className="overflow-auto h-[calc(100vh-450px)]">
@@ -761,14 +761,14 @@ const MeetingDetailPage = () => {
         )}
       </div>
 
-      {/* ================= MODAL: MAJLISNI BEKOR QILISH ================= */}
+      {/* ================= MODAL: YIG'ILISHNI BEKOR QILISH ================= */}
       {cancelModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150">
           <div className="bg-white dark:bg-[#161C2E] rounded-3xl shadow-2xl border border-[#E2E6F2] dark:border-[#2B3553] w-full max-w-[540px] overflow-hidden p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150 relative">
             {/* Header */}
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-[#1A1D2E] dark:text-white tracking-tight">
-                Majlisni bekor qilish
+                Yig'ilishni bekor qilish
               </h3>
               <button
                 type="button"
@@ -794,7 +794,7 @@ const MeetingDetailPage = () => {
                 required
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Tashkilotchi xizmat safarida, majlis keyingi haftaga ko'chiriladi."
+                placeholder="Tashkilotchi xizmat safarida, yig'ilish keyingi haftaga ko'chiriladi."
                 className="w-full bg-[#FAFAFA] dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-4 text-[13.5px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none focus:border-[#EF4444] focus:bg-white dark:focus:bg-[#121624] focus:ring-2 focus:ring-[#EF4444]/10 transition-all shadow-2xs resize-none"
               />
             </div>
@@ -821,7 +821,7 @@ const MeetingDetailPage = () => {
                 ) : (
                   <Ban size={17} strokeWidth={2.4} />
                 )}
-                <span>Majlisni bekor qilish</span>
+                <span>Yig'ilishni bekor qilish</span>
               </button>
             </div>
           </div>

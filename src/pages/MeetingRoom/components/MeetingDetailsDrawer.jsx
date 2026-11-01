@@ -32,13 +32,13 @@ export default function MeetingDetailsDrawer({
   const displayUrl = fullUrl ? fullUrl.replace(/^https?:\/\//, '') : (meetingCode ? `meetly.uz/join/${meetingCode}` : 'meetly.uz')
 
   const uid = meetingCode
-  const title = meetingDetails?.title || meetingState?.title || projectData?.title || "Majlis"
+  const title = meetingDetails?.title || meetingState?.title || projectData?.title || "Yig'ilish"
 
   const handleCopyLink = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(fullUrl).then(() => {
         setCopiedLink(true)
-        toast.success('Nusxa olindi', "Majlis havolasi nusxalandi")
+        toast.success('Nusxa olindi', "Yig'ilish havolasi nusxalandi")
         setTimeout(() => setCopiedLink(false), 2000)
       }).catch(() => {
         toast.error('Xatolik', 'Havolani nusxalashda xatolik yuz berdi')
@@ -115,7 +115,7 @@ export default function MeetingDetailsDrawer({
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight select-none">
-                  Majlis tafsilotlari
+                  Yig'ilish tafsilotlari
                 </h3>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 select-none">
                   Havola va rasmiy ma'lumotlar
@@ -145,7 +145,7 @@ export default function MeetingDetailsDrawer({
                   QO'SHILISH MA'LUMOTLARI
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-[#EAEFF7] dark:bg-[#1E2634] text-[11px] font-semibold text-slate-700 dark:text-slate-300 select-none">
-                  Majlis havolasi
+                  Yig'ilish havolasi
                 </span>
               </div>
 
@@ -160,13 +160,13 @@ export default function MeetingDetailsDrawer({
 
             {/* Helper Text under Card 1 */}
             <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed px-1 select-none">
-              Havolani boshqa ishtirokchilarga yuborib, ularni majlisga taklif qilishingiz mumkin.
+              Havolani boshqa ishtirokchilarga yuborib, ularni yig'ilishga taklif qilishingiz mumkin.
             </p>
 
-            {/* Card 2: Majlis parametrlari */}
+            {/* Card 2: Yig'ilish parametrlari */}
             <div className="p-3.5 sm:p-4 rounded-3xl border border-slate-200/70 dark:border-white/10 bg-[#F8FAFC] dark:bg-[#12161F] space-y-2.5">
               <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase block px-1 select-none">
-                MAJLIS PARAMETRLARI
+                YIG'ILISH PARAMETRLARI
               </span>
 
               {/* Row 1: Rasmiy UID */}
@@ -194,14 +194,14 @@ export default function MeetingDetailsDrawer({
                 </button>
               </div>
 
-              {/* Row 2: Majlis mavzusi */}
+              {/* Row 2: Yig'ilish mavzusi */}
               <div className="bg-white dark:bg-[#0B0D11] border border-slate-200/60 dark:border-white/5 p-2.5 sm:p-3 rounded-2xl flex items-center gap-2.5 shadow-xs">
                 <div className="w-9 h-9 rounded-xl bg-[#EAF0F8] dark:bg-[#18202D] text-[#3E5CBA] dark:text-[#8E9DB7] flex items-center justify-center shrink-0">
                   <HugeiconsIcon icon={PencilEdit02Icon} size={18} strokeWidth={2} />
                 </div>
                 <div className="min-w-0">
                   <div className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
-                    Majlis mavzusi
+                    Yig'ilish mavzusi
                   </div>
                   <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                     {title}

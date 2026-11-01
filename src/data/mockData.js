@@ -17,7 +17,7 @@ export const mockUserProfile = {
 export const mockNotifications = [
   {
     id: 1,
-    title: "Yangi majlis rejalashtirildi",
+    title: "Yangi yig'ilish rejalashtirildi",
     time: "10 daqiqa oldin",
     unread: true,
   },
@@ -613,7 +613,7 @@ export const mockMeetingsList = [
   },
   {
     id: "12",
-    name: "Mijozlar bilan majlis",
+    name: "Mijozlar bilan yig'ilish",
     organizer: "Doston Ochilov",
     createdAt: "24.03.2024 09:30",
     startTime: "26.03.2024 15:30",
@@ -627,7 +627,7 @@ export const mockMeetingsList = [
   },
   {
     id: "13",
-    name: "Mahalla raislari majlisi",
+    name: "Mahalla raislari yig'ilishi",
     organizer: "Doston Ochilov",
     createdAt: "29.09.2026 14:00",
     startTime: "01.10.2026 15:00",
@@ -748,7 +748,7 @@ export const mockMeetingReports = [
   },
   {
     id: 3,
-    name: "Mijozlar bilan majlis",
+    name: "Mijozlar bilan yig'ilish",
     organizer: "Doston Ochilov",
     date: "10.09.2026 11:30",
     participantsCount: "5 / 6",

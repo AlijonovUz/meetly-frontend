@@ -159,9 +159,9 @@ export default function ParticipantsDrawer({
             </div>
           </div>
 
-          {/* Section Header: MAJLISDA */}
+          {/* Section Header: YIG'ILISHDA */}
           <div className="flex items-center justify-between text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase px-1 mb-3 shrink-0">
-            <span>Majlisda</span>
+            <span>Yig'ilishda</span>
             {isLocalHost && hasUnmutedGuests && onMuteAll && (
               <button
                 type="button"
@@ -394,7 +394,7 @@ export default function ParticipantsDrawer({
                         <span>{p.isCameraEnabled ? "Kamerani o'chirish" : "Kamerani yoqishni so'rash"}</span>
                       </button>
 
-                      {/* Item 3: Majlisdan chiqarish (Red button) */}
+                      {/* Item 3: Yig'ilishdan chiqarish (Red button) */}
                       <button
                         type="button"
                         onClick={(e) => {
@@ -405,7 +405,7 @@ export default function ParticipantsDrawer({
                         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-[#DC2626] bg-[#FEF2F2] dark:bg-red-950/30 hover:bg-[#FEE2E2] dark:hover:bg-red-950/50 transition-colors cursor-pointer text-left mt-1"
                       >
                         <FaUserXmark size={15} className="text-[#DC2626] shrink-0" />
-                        <span>Majlisdan chiqarish</span>
+                        <span>Yig'ilishdan chiqarish</span>
                       </button>
                     </div>
                   )}
@@ -446,7 +446,7 @@ export default function ParticipantsDrawer({
 
             {/* Description */}
             <p className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              {removeTargetParticipant.name || 'Ishtirokchi'} majlisdan chiqariladi. Havola orqali qayta kirmoqchi bo'lsa, sizning tasdiqingiz kerak bo'ladi.
+              {removeTargetParticipant.name || 'Ishtirokchi'} yig'ilishdan chiqariladi. Havola orqali qayta kirmoqchi bo'lsa, sizning tasdiqingiz kerak bo'ladi.
             </p>
 
             {/* Action Buttons */}

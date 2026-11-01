@@ -164,7 +164,7 @@ const InteractiveDynamicsChart = () => {
       <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
         <div>
           <span className="text-[10px] sm:text-[11px] font-extrabold text-[#5B6078] uppercase tracking-wider block">
-            MAJLISLAR DINAMIKASI, 12 HAFTA
+            YIG'ILISHLAR DINAMIKASI, 12 HAFTA
           </span>
           <div className="flex items-center gap-2.5 sm:gap-3 mt-1">
             <span className="text-[26px] sm:text-[32px] font-['Unbounded',sans-serif] font-semibold text-[#1A1D2E] leading-none">
@@ -264,7 +264,7 @@ const InteractiveDynamicsChart = () => {
         >
           <div className="bg-[#1A1D2E] text-white text-[10.5px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg shadow-xl whitespace-nowrap border border-white/10 flex flex-col items-center">
             <span className="text-[#38C98D] text-[9.5px] sm:text-[10px] font-extrabold">{activeData.fullLabel} ({activeData.date})</span>
-            <span className="text-white text-[11px] sm:text-[12px] font-black">{activeData.count} ta majlis</span>
+            <span className="text-white text-[11px] sm:text-[12px] font-black">{activeData.count} ta yig'ilish</span>
             <div className="w-2 h-2 bg-[#1A1D2E] rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2 border-r border-b border-white/10"></div>
           </div>
         </div>
@@ -539,7 +539,7 @@ const LeandingPage = () => {
       a: "Yoʻq. Authly orqali Telegram yoki Google bilan kirasiz. Agar boshqa loyihada Authly profilingiz boʻlsa, shu profil ishlaydi.",
     },
     {
-      q: "Ishtirokchilar majlisga qanday qoʻshiladi?",
+      q: "Ishtirokchilar yig'ilishga qanday qoʻshiladi?",
       a: "Tashkilotchi tomonidan yuborilgan yagona taklif havolasi orqali brauzerda toʻgʻridan-toʻgʻri yoki ilova orqali bir bosishda qoʻshilish mumkin.",
     },
     {
@@ -547,12 +547,12 @@ const LeandingPage = () => {
       a: "Har bir ishtirokchining kirish va chiqish vaqtlari avtomatik qayd etiladi va davomat hisobotida toʻliq koʻrsatiladi.",
     },
     {
-      q: "Majlis vaqtini oʻzgartirish mumkinmi?",
-      a: "Ha, tashkilotchi istalgan vaqtda majlis sanasi va vaqtini tahrirlashi mumkin. Barcha ishtirokchilar oʻzgarish haqida xabardor qilinadi.",
+      q: "Yig'ilish vaqtini oʻzgartirish mumkinmi?",
+      a: "Ha, tashkilotchi istalgan vaqtda yig'ilish sanasi va vaqtini tahrirlashi mumkin. Barcha ishtirokchilar oʻzgarish haqida xabardor qilinadi.",
     },
     {
       q: "Hisobotlarni yuklab olsa boʻladimi?",
-      a: "Ha, majlislar, qatnashuvchilar va tashkilotchilar boʻyicha barcha hisobotlarni Excel hamda PDF formatlarida bir tugma bilan yuklab olish mumkin.",
+      a: "Ha, yig'ilishlar, qatnashuvchilar va tashkilotchilar boʻyicha barcha hisobotlarni Excel hamda PDF formatlarida bir tugma bilan yuklab olish mumkin.",
     },
   ];
 
@@ -715,7 +715,7 @@ const LeandingPage = () => {
                 {/* Headline */}
                 <Reveal animation="fade-up" delay={200}>
                   <h1 className="text-[26px] xs:text-[32px] sm:text-[42px] md:text-[50px] lg:text-[56px] xl:text-[60px] font-['Unbounded',sans-serif] font-medium text-[#1A1D2E] tracking-tight leading-[1.18] sm:leading-[1.14] max-w-[1080px] mx-auto mt-4 sm:mt-6">
-                    Majlislarni bir joyda <br className="hidden sm:inline" />
+                    Yig'ilishlarni bir joyda <br className="hidden sm:inline" />
                     tashkil eting va kuzating
                   </h1>
                 </Reveal>
@@ -723,7 +723,7 @@ const LeandingPage = () => {
                 {/* Subtitle */}
                 <Reveal animation="fade-up" delay={300}>
                   <p className="text-[13.5px] xs:text-[15px] sm:text-[17px] md:text-[18.5px] font-bold text-[#5B6078] max-w-[840px] mx-auto mt-3.5 sm:mt-5 leading-relaxed px-1 sm:px-0">
-                    Onlayn audio va video majlislar, taklif havolalari, qatnashishni hisobga olish va hisobotlar. Bitta Authly bilan barcha Meetly xizmatlariga kiring.
+                    Onlayn audio va video yig'ilishlar, taklif havolalari, qatnashishni hisobga olish va hisobotlar. Bitta Authly bilan barcha Meetly xizmatlariga kiring.
                   </p>
                 </Reveal>
 
@@ -821,7 +821,7 @@ const LeandingPage = () => {
                     256
                   </span>
                   <span className="text-[12px] xs:text-[13px] sm:text-[14.5px] sm:text-[15px] font-medium text-[#5B6078]">
-                    oʻtkazilgan majlis
+                    oʻtkazilgan yig'ilish
                   </span>
                 </div>
               </Reveal>
@@ -860,7 +860,7 @@ const LeandingPage = () => {
                   IMKONIYATLAR
                 </span>
                 <h2 className="text-[22px] xs:text-[26px] sm:text-[32px] md:text-[38px] font-['Unbounded',sans-serif] font-medium text-[#1A1D2E] tracking-tight leading-tight">
-                  Majlis uchun kerak boʻlgan <br className="hidden sm:inline" />
+                  Yig'ilish uchun kerak boʻlgan <br className="hidden sm:inline" />
                   hamma narsa bitta joyda
                 </h2>
                 <p className="text-[13.5px] sm:text-[15.5px] md:text-[16px] font-medium text-[#5B6078] mt-2 sm:mt-3">
@@ -871,7 +871,7 @@ const LeandingPage = () => {
 
             {/* 6 Feature Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-              {/* Card 1: Majlis yaratish */}
+              {/* Card 1: Yig'ilish yaratish */}
               <Reveal animation="zoom-in-up" delay={0}>
                 <div className="w-full min-h-[270px] sm:h-[304px] rounded-[18px] sm:rounded-[20px] bg-white border border-[#E2E6F2] p-4.5 sm:p-6 flex flex-col justify-between shadow-2xs hover-card-lift hover:border-[#3F57B3]/40">
                   <div>
@@ -879,7 +879,7 @@ const LeandingPage = () => {
                       <CalendarPlus2 size={21} />
                     </div>
                     <h3 className="text-[17px] sm:text-[19px] font-extrabold text-[#1A1D2E] mb-1.5 sm:mb-2">
-                      Majlis yaratish
+                      Yig'ilish yaratish
                     </h3>
                     <p className="text-[13px] sm:text-[14.5px] font-medium text-[#5B6078] leading-relaxed">
                       Nomi, tavsifi, sana, vaqt va davomiylikni kiriting. Tasdiqlash talabini yoqib qoʻyish mumkin.
@@ -915,7 +915,7 @@ const LeandingPage = () => {
                       Taklif havolasi
                     </h3>
                     <p className="text-[13px] sm:text-[14.5px] font-medium text-[#5B6078] leading-relaxed">
-                      Tizim majlis uchun alohida havola beradi. Ishtirokchilar faqat shu havola orqali qoʻshiladi.
+                      Tizim yig'ilish uchun alohida havola beradi. Ishtirokchilar faqat shu havola orqali qoʻshiladi.
                     </p>
                   </div>
 
@@ -977,7 +977,7 @@ const LeandingPage = () => {
                       Holatlar real vaqtda
                     </h3>
                     <p className="text-[13px] sm:text-[14.5px] font-medium text-[#5B6078] leading-relaxed">
-                      Rejalashtirilgan, joriy, oʻtkazilgan va bekor qilingan majlislar bir qarashda.
+                      Rejalashtirilgan, joriy, oʻtkazilgan va bekor qilingan yig'ilishlar bir qarashda.
                     </p>
                   </div>
 
@@ -1007,7 +1007,7 @@ const LeandingPage = () => {
                       Hisobotlar
                     </h3>
                     <p className="text-[13px] sm:text-[14.5px] font-medium text-[#5B6078] leading-relaxed">
-                      Majlislar, ishtirokchilar va tashkilotchilar boʻyicha hisobotlar. Yuklab olish bir bosishda.
+                      Yig'ilishlar, ishtirokchilar va tashkilotchilar boʻyicha hisobotlar. Yuklab olish bir bosishda.
                     </p>
                   </div>
 
@@ -1015,7 +1015,7 @@ const LeandingPage = () => {
                   <div className="space-y-1.5 sm:space-y-2 mt-3 sm:mt-4">
                     <div>
                       <span className="text-[11px] sm:text-[11.5px] font-semibold text-[#5B6078] block mb-0.5 sm:mb-1">
-                        Majlislar boʻyicha
+                        Yig'ilishlar boʻyicha
                       </span>
                       <div className="w-full h-[5px] rounded-full bg-[#EEF1F7] overflow-hidden">
                         <div className="w-[88%] h-full rounded-full bg-[#3F57B3] transition-all duration-1000"></div>
@@ -1086,7 +1086,7 @@ const LeandingPage = () => {
                   QANDAY ISHLAYDI
                 </span>
                 <h2 className="text-[22px] xs:text-[26px] sm:text-[32px] md:text-[38px] font-['Unbounded',sans-serif] font-medium text-[#1A1D2E] tracking-tight leading-tight">
-                  Toʻrt qadamda birinchi majlis
+                  Toʻrt qadamda birinchi yig'ilish
                 </h2>
               </div>
             </Reveal>
@@ -1126,7 +1126,7 @@ const LeandingPage = () => {
                     </div>
                     <div className="w-full min-h-[120px] sm:min-h-[145px] rounded-[16px] sm:rounded-[20px] bg-white p-4.5 sm:p-6 flex flex-col justify-start hover-card-lift border border-[#E2E6F2]">
                       <h4 className="text-[15.5px] sm:text-[17.5px] font-bold text-[#1A1D2E] leading-snug">
-                        Majlis yarating
+                        Yig'ilish yarating
                       </h4>
                       <p className="text-[13px] sm:text-[14px] font-medium text-[#64748B] mt-1.5 sm:mt-2.5 leading-relaxed">
                         Nomi, sana, vaqt va davomiylikni kiriting.
@@ -1191,11 +1191,11 @@ const LeandingPage = () => {
                         STATISTIKA
                       </span>
                       <h2 className="text-[24px] xs:text-[28px] sm:text-[34px] md:text-[38px] font-['Unbounded',sans-serif] font-medium text-[#E6EDF3] tracking-tight leading-tight">
-                        Har bir majlis <br className="hidden sm:inline" />
+                        Har bir yig'ilish <br className="hidden sm:inline" />
                         raqamlarda
                       </h2>
                       <p className="text-[13.5px] sm:text-[15.5px] font-medium text-[#B9C0D6] leading-relaxed mt-2 sm:mt-3">
-                        Tashkilotchi va rahbar uchun aniq manzara: qancha majlis oʻtdi, kim qatnashdi, qayerda kechikish bor.
+                        Tashkilotchi va rahbar uchun aniq manzara: qancha yig'ilish oʻtdi, kim qatnashdi, qayerda kechikish bor.
                       </p>
 
                       <div className="space-y-2.5 sm:space-y-3 pt-3.5 sm:pt-5">
@@ -1442,11 +1442,11 @@ const LeandingPage = () => {
 
                 <div className="space-y-2 sm:space-y-3 max-w-[700px] relative z-10 text-center md:text-left">
                   <h2 className="text-[22px] xs:text-[26px] sm:text-[32px] md:text-[38px] font-['Unbounded',sans-serif] font-medium text-white tracking-tight leading-tight">
-                    Birinchi majlisingizni <br className="hidden sm:inline" />
+                    Birinchi yig'ilishingizni <br className="hidden sm:inline" />
                     bugun oʻtkazing
                   </h2>
                   <p className="text-[13.5px] sm:text-[16px] md:text-[17px] font-medium text-[#E4E9FF]">
-                    Authly orqali kiring, majlis yarating va havolani ulashing.
+                    Authly orqali kiring, yig'ilish yarating va havolani ulashing.
                   </p>
                 </div>
 

@@ -102,7 +102,7 @@ const CreateMeetingModal = ({
     e.preventDefault();
     const newErrors = {};
     if (!newMeetingName.trim()) {
-      newErrors.title = "Majlis nomini kiritish majburiy";
+      newErrors.title = "Yig'ilish nomini kiritish majburiy";
     }
 
     if (!newStartDate || !newStartDate.trim()) {
@@ -200,11 +200,11 @@ const CreateMeetingModal = ({
         link: newLink,
       });
     } catch (err) {
-      console.error("Majlis yaratishda xatolik:", err);
+      console.error("Yig'ilish yaratishda xatolik:", err);
       setFormError(
         err?.response?.data?.detail ||
           err?.response?.data?.message ||
-          "Majlis yaratishda xatolik yuz berdi"
+          "Yig'ilish yaratishda xatolik yuz berdi"
       );
     } finally {
       setIsSubmitting(false);
@@ -215,14 +215,14 @@ const CreateMeetingModal = ({
 
   return (
     <>
-      {/* ================= MODAL: YANGI MAJLIS ================= */}
+      {/* ================= MODAL: YANGI YIG'ILISH ================= */}
       {isOpen && !createdModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150 font-['Manrope',sans-serif]">
           <div className="bg-white dark:bg-[#161C2E] rounded-[28px] shadow-2xl border border-[#E2E6F2] dark:border-[#2B3553] w-full max-w-2xl overflow-visible animate-in zoom-in-95 duration-150 relative p-6 sm:p-7 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3">
               <h3 className="text-xl sm:text-[22px] font-bold text-[#1A1D2E] dark:text-white tracking-tight">
-                Yangi majlis
+                Yangi yig'ilish
               </h3>
               <button
                 type="button"
@@ -244,7 +244,7 @@ const CreateMeetingModal = ({
               {/* Meeting Name */}
               <div>
                 <label className="block text-[13px] font-medium text-[#5B6078] dark:text-[#94A3B8] mb-1.5">
-                  Majlis nomi <span className="text-red-500">*</span>
+                  Yig'ilish nomi <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -256,7 +256,7 @@ const CreateMeetingModal = ({
                       setErrors((prev) => ({ ...prev, title: null }));
                     }
                   }}
-                  placeholder="Majlis nomini kiriting"
+                  placeholder="Yig'ilish nomini kiriting"
                   className={`w-full bg-white dark:bg-[#121624] border rounded-2xl px-4 h-12 text-[14px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none transition-all shadow-2xs ${
                     errors.title
                       ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
@@ -278,7 +278,7 @@ const CreateMeetingModal = ({
                     Tasdiqlash talabi
                   </h4>
                   <p className="text-[11.5px] sm:text-[12px] text-[#64748B] dark:text-[#94A3B8] leading-relaxed max-w-[500px]">
-                    Yoqilsa, majlisga qo‘shilmoqchi bo‘lgan har bir ishtirokchini majlis yaratuvchisi tasdiqlaydi.
+                    Yoqilsa, yig'ilishga qo‘shilmoqchi bo‘lgan har bir ishtirokchini yig'ilish yaratuvchisi tasdiqlaydi.
                   </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer shrink-0">
@@ -341,7 +341,7 @@ const CreateMeetingModal = ({
                     style={{ height: `${descTextareaHeight}px` }}
                     value={newMeetingDesc}
                     onChange={(e) => setNewMeetingDesc(e.target.value)}
-                    placeholder="Majlis haqida qisqacha ma'lumot..."
+                    placeholder="Yig'ilish haqida qisqacha ma'lumot..."
                     className="w-full bg-white dark:bg-[#121624] border border-[#E2E6F2] dark:border-[#2B3553] rounded-2xl p-4 pb-6 text-[14px] text-[#1A1D2E] dark:text-white placeholder-[#8B90A5] dark:placeholder-[#64748B] focus:outline-none focus:border-[#3858C7] focus:ring-2 focus:ring-[#3858C7]/10 transition-all shadow-2xs resize-none"
                   />
                   {/* Resizer bottom center handle */}
@@ -495,14 +495,14 @@ const CreateMeetingModal = ({
         </div>
       )}
 
-      {/* ================= MODAL: MAJLIS YARATILDI (HAVOLA) ================= */}
+      {/* ================= MODAL: YIG'ILISH YARATILDI (HAVOLA) ================= */}
       {createdModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-150 font-['Manrope',sans-serif]">
           <div className="bg-white dark:bg-[#161C2E] rounded-3xl shadow-2xl border border-[#E2E6F2] dark:border-[#2B3553] w-full max-w-[600px] overflow-hidden p-6 space-y-5 animate-in zoom-in-95 duration-150">
             {/* Header */}
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-[#1A1D2E] dark:text-white tracking-tight">
-                Majlis yaratildi
+                Yig'ilish yaratildi
               </h3>
               <button
                 type="button"

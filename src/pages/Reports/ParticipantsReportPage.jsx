@@ -314,7 +314,7 @@ const ParticipantsReportPage = () => {
         { key: "index", label: "№", formatter: (_, __, idx) => idx + 1, align: "center" },
         { key: "full_name", label: "F.I.Sh." },
         { key: "organization", label: "Tashkilot" },
-        { key: "meetings_count", label: "Majlislar", formatter: (_, r) => r.meetings_count ?? r.invitedCount ?? r.meetingsCount ?? 0, align: "center" },
+        { key: "meetings_count", label: "Yig'ilishlar", formatter: (_, r) => r.meetings_count ?? r.invitedCount ?? r.meetingsCount ?? 0, align: "center" },
         { key: "signed_count", label: "Imzolagan", formatter: (_, r) => r.signed_count ?? r.attendedCount ?? r.signedCount ?? 0, align: "center" },
         {
           key: "total_duration",
@@ -590,7 +590,7 @@ const ParticipantsReportPage = () => {
                   <th className="py-3 px-3 w-12 font-medium">№</th>
                   <th className="py-3 px-3 font-medium">F.I.Sh.</th>
                   <th className="py-3 px-3 font-medium">Tashkilot</th>
-                  <th className="py-3 px-3 font-medium text-right">Majlislar</th>
+                  <th className="py-3 px-3 font-medium text-right">Yig'ilishlar</th>
                   <th className="py-3 px-3 font-medium text-right">Imzolagan</th>
                   <th className="py-3 px-3 font-medium text-right">Jami vaqt</th>
                   <th className="py-3 px-3 font-medium text-right">O'rt. vaqt</th>
