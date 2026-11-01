@@ -3955,10 +3955,14 @@ export default function MeetingRoom() {
       {/* Top Header Bar matching Figma screenshots */}
       {!isScreenFocused && (
         <header className={`relative ${mainStageItem ? 'h-11 sm:h-12' : 'h-13 sm:h-14'} px-3 sm:px-6 flex items-center justify-between bg-transparent z-20 shrink-0 select-none`}>
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Realtime Elapsed Meeting Duration (e.g. 05:23 or 01:15:30) */}
             <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 select-none tabular-nums font-mono">
               {currentTime}
+            </span>
+
+            <span className="text-slate-300 dark:text-slate-600 select-none font-light text-xs sm:text-sm" aria-hidden="true">
+              |
             </span>
 
             {/* Meeting Name */}
