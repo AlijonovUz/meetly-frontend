@@ -545,6 +545,13 @@ export default function MeetingRoom() {
   const [meetingDuration, setMeetingDuration] = useState(0)
   const [endedReason, setEndedReason] = useState("Tashkilotchi ushbu majlisni yakunladi. Ishtirokingiz uchun tashakkur!")
   const [redirectCountdown, setRedirectCountdown] = useState(60)
+  const [isAloneModalOpen, setIsAloneModalOpen] = useState(false)
+  const [aloneCountdown, setAloneCountdown] = useState(120)
+  const aloneTimerRef = useRef(null)
+  const aloneCountdownIntervalRef = useRef(null)
+  const aloneDeadlineRef = useRef(0)
+  const handleEndMeetingRef = useRef(null)
+  const handleLeaveMeetingRef = useRef(null)
 
   useEffect(() => {
     const isExitState = waitingState === 'ended' || waitingState === 'left' || waitingState === 'kicked'
@@ -3413,6 +3420,9 @@ export default function MeetingRoom() {
     setWaitingState('left')
   }
 
+  handleEndMeetingRef.current = handleEndMeetingForAll
+  handleLeaveMeetingRef.current = handleLeaveMeeting
+
   // Toggle fullscreen
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -3725,6 +3735,55 @@ export default function MeetingRoom() {
     handleToggleHandRaise,
     isScreenFocused
   ])
+
+  useEffect(() => {
+    const isAloneInMeeting = waitingState === 'in_room' && isConnectedToLiveKit && remoteParticipants.length === 0
+
+    if (!isAloneInMeeting) {
+      if (aloneTimerRef.current) clearTimeout(aloneTimerRef.current)
+      if (aloneCountdownIntervalRef.current) clearInterval(aloneCountdownIntervalRef.current)
+      setIsAloneModalOpen(false)
+      return
+    }
+
+    if (isAloneModalOpen) return
+
+    aloneTimerRef.current = setTimeout(() => {
+      aloneDeadlineRef.current = Date.now() + 120 * 1000
+      setAloneCountdown(120)
+      setIsAloneModalOpen(true)
+      playParticipantJoinedSound()
+    }, 5 * 60 * 1000)
+
+    return () => {
+      if (aloneTimerRef.current) clearTimeout(aloneTimerRef.current)
+    }
+  }, [waitingState, isConnectedToLiveKit, remoteParticipants.length, isAloneModalOpen])
+
+  useEffect(() => {
+    if (!isAloneModalOpen) {
+      if (aloneCountdownIntervalRef.current) clearInterval(aloneCountdownIntervalRef.current)
+      return
+    }
+
+    aloneCountdownIntervalRef.current = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((aloneDeadlineRef.current - Date.now()) / 1000))
+      setAloneCountdown(remaining)
+      if (remaining <= 0) {
+        clearInterval(aloneCountdownIntervalRef.current)
+        setIsAloneModalOpen(false)
+        if (isLocalHostRef.current) {
+          handleEndMeetingRef.current?.()
+        } else {
+          handleLeaveMeetingRef.current?.()
+        }
+      }
+    }, 1000)
+
+    return () => {
+      if (aloneCountdownIntervalRef.current) clearInterval(aloneCountdownIntervalRef.current)
+    }
+  }, [isAloneModalOpen])
 
   const handleToggleScreenFocus = (identity) => {
     withViewTransition(() => {
@@ -4818,6 +4877,59 @@ export default function MeetingRoom() {
               >
                 <HugeiconsIcon icon={PowerIcon} size={15} strokeWidth={2.2} />
                 <span>Yakunlash</span>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {isAloneModalOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsAloneModalOpen(false)
+          }}
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-200 select-none"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-[450px] p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#0B0D11] border border-slate-100 dark:border-white/10 text-slate-900 dark:text-white shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200 overflow-hidden"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                Majlisda yolg'izsiz
+              </h3>
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 tabular-nums">
+                {Math.floor(aloneCountdown / 60)}:{String(aloneCountdown % 60).padStart(2, '0')}
+              </span>
+            </div>
+            <p className="mt-2.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              Majlisda boshqa hech kim yo'q. Agar davom ettirishni tanlamasangiz, majlis {Math.floor(aloneCountdown / 60)}:{String(aloneCountdown % 60).padStart(2, '0')} dan so'ng avtomatik yakunlanadi.
+            </p>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAloneModalOpen(false)
+                  if (isLocalHostRef.current) {
+                    handleEndMeetingRef.current?.()
+                  } else {
+                    handleLeaveMeetingRef.current?.()
+                  }
+                }}
+                className="px-4 sm:px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/15 bg-white dark:bg-transparent text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+              >
+                <span>Majlisni tark etish</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAloneModalOpen(false)
+                }}
+                className="px-5 py-2.5 rounded-xl bg-[#3E5CBA] hover:bg-[#344F9F] text-white text-xs sm:text-sm font-bold flex items-center gap-2 cursor-pointer shadow-md shadow-blue-500/25 transition-all active:scale-95"
+              >
+                <span>Davom ettirish</span>
               </button>
             </div>
           </div>
