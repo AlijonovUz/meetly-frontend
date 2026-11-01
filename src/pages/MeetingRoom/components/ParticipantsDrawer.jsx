@@ -446,7 +446,7 @@ export default function ParticipantsDrawer({
 
             {/* Description */}
             <p className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              {removeTargetParticipant.name ? removeTargetParticipant.name.split(' ')[0] : 'Ishtirokchi'} majlisdan chiqariladi. Havola orqali qayta kirmoqchi bo'lsa, sizning tasdiqingiz kerak bo'ladi.
+              {removeTargetParticipant.name || 'Ishtirokchi'} majlisdan chiqariladi. Havola orqali qayta kirmoqchi bo'lsa, sizning tasdiqingiz kerak bo'ladi.
             </p>
 
             {/* Action Buttons */}
