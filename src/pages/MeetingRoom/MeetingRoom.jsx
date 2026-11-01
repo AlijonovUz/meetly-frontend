@@ -3442,11 +3442,7 @@ export default function MeetingRoom() {
   // 1) Yig'ilish tashkilotchisi (organizer)
   // 2) Admin va Superadminlar
   // 3) Loyiha menejeri (agar loyiha bo'yicha yig'ilish bo'lsa)
-  const canAdmitParticipants = Boolean(
-    isLocalHost ||
-    isAdminOrSuperadmin ||
-    isProjectManager
-  )
+  const canAdmitParticipants = Boolean(isLocalHost)
 
   useEffect(() => {
     canAdmitParticipantsRef.current = canAdmitParticipants
@@ -4063,7 +4059,7 @@ export default function MeetingRoom() {
           )}
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {(isLocalHost || isAdminOrSuperadmin) && (
+            {isLocalHost && (
               <button
                 type="button"
                 onClick={() => setShowEndModal(true)}
