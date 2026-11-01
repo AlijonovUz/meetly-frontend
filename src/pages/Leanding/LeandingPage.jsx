@@ -1272,23 +1272,6 @@ const LeandingPage = () => {
                       Meetly yagona Authly ekotizimining bir qismi. Authly orqali bir marta roʻyxatdan oʻting va boshqa loyihalarga ham shu profil bilan kiring. Shaxsiy maʼlumotlar Authly tizimida saqlanadi.
                     </p>
 
-                    {/* Ecosystem Badges */}
-                    <div className="flex flex-wrap gap-1.5 sm:gap-2.5 pt-3 sm:pt-4 max-w-[520px]">
-                      {["Meetly salon", "Meetly taxi", "Meetly pay", "Meetly market", "Meetly delivery"].map(
-                        (name) => (
-                          <span
-                            key={name}
-                            className="h-[30px] sm:h-[34px] px-2.5 sm:px-3.5 rounded-full bg-[#F1F3F9] text-[#3F57B3] text-[11.5px] sm:text-[13px] font-extrabold flex items-center justify-center hover:bg-[#EEF2FF] transition-colors"
-                          >
-                            {name}
-                          </span>
-                        )
-                      )}
-                      <span className="h-[30px] sm:h-[34px] px-2.5 sm:px-3.5 rounded-full bg-gradient-to-r from-[#5272F0] to-[#3F57B3] text-white text-[11.5px] sm:text-[13px] font-extrabold flex items-center justify-center shadow-xs">
-                        +25 loyiha
-                      </span>
-                    </div>
-
                     {/* CTA Button */}
                     <div className="pt-4 sm:pt-6">
                       <button
