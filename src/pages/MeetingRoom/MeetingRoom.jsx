@@ -623,7 +623,8 @@ export default function MeetingRoom() {
       id: reactionId,
       emoji: emoji || '👍',
       emojiCode: emojiCode || null,
-      senderName,
+      senderName: senderName || null,
+      startX: Math.round(Math.random() * 70),
       driftX: Math.round((Math.random() - 0.5) * 50),
       duration: 1.8,
     }
@@ -1340,7 +1341,15 @@ export default function MeetingRoom() {
       case 'reaction_received': {
         if (msg.reaction) {
           const emojiCode = getAppleCodeFromChar(msg.reaction)
-          triggerReaction(msg.reaction, emojiCode, msg.full_name || msg.username || "Ishtirokchi")
+          const isMe = Boolean(user && (
+            (user.id && String(msg.user_id) === String(user.id)) ||
+            (user.pk && String(msg.user_id) === String(user.pk)) ||
+            (user.authly_id && String(msg.user_id) === String(user.authly_id))
+          ))
+          const profile = peerProfiles[msg.user_id] || (meetingDetails?.participants_info?.find(p => String(p.id) === String(msg.user_id)))
+          const resolvedName = msg.full_name || msg.username || profile?.full_name || profile?.name || "Ishtirokchi"
+          const senderName = isMe ? "Siz" : resolvedName
+          triggerReaction(msg.reaction, emojiCode, senderName)
         }
         break
       }
