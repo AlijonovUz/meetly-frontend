@@ -732,7 +732,7 @@ const Analytics = () => {
         <div className="bg-white dark:bg-[#161C2E] border border-[#E2E6F2] dark:border-[#2B3553] hover:border-[#3858C7]/50 rounded-2xl p-5 flex items-center justify-between shadow-2xs hover-card-lift transition-all">
           <div>
             <span className="text-[11px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
-              {card3?.label || (isStaff ? "JORIY YIGʻILISHLAR" : "IMZO KUTILMOQDA")}
+              {card3?.label || (isStaff ? "JORIY MAJLISLAR" : "IMZO KUTILMOQDA")}
             </span>
             <div className="text-[26px] font-extrabold text-[#1A1D2E] dark:text-white my-1 tracking-tight">
               {card3?.count !== undefined
@@ -816,7 +816,7 @@ const Analytics = () => {
             <div>
               <span className="text-[11px] sm:text-[11.5px] font-bold text-[#8B90A5] dark:text-[#94A3B8] tracking-wider uppercase block">
                 {isStaff
-                  ? `YIGʻILISHLAR DINAMIKASI, ${dynamicsWeeks.length} HAFTA`
+                  ? `MAJLISLAR DINAMIKASI, ${dynamicsWeeks.length} HAFTA`
                   : `MENING QATNASHISHIM, ${dynamicsWeeks.length} HAFTA`}
               </span>
               <div className="flex items-center gap-2.5 mt-1">
@@ -941,7 +941,7 @@ const Analytics = () => {
                     {activeDynamicsData.fullLabel} {activeDynamicsData.date ? `(${activeDynamicsData.date})` : ""}
                   </span>
                   <span className="text-white text-[11px] sm:text-[12px] font-black">
-                    {activeDynamicsData.count} ta yigʻilish
+                    {activeDynamicsData.count} ta majlis
                   </span>
                   <div className="w-2 h-2 bg-[#1A1D2E] dark:bg-[#1C2438] rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2 border-r border-b border-white/10 dark:border-[#2B3553]"></div>
                 </div>

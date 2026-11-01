@@ -284,7 +284,7 @@ const MeetingsReportPage = () => {
       ];
 
       const title = "Majlislar bo'yicha hisobot";
-      const filename = "yigilishlar_hisoboti";
+      const filename = "majlislar_hisoboti";
 
       if (format === "excel") {
         exportReportToExcel(reportsData, columns, title, periodLabelText, filename);

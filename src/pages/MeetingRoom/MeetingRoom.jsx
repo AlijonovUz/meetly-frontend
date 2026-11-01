@@ -664,7 +664,7 @@ export default function MeetingRoom() {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(currentMeetingUrl).then(() => {
         setCopiedHeaderLink(true)
-        toast.success('Nusxa olindi', 'Yig\'ilish havolasi nusxalandi')
+        toast.success('Nusxa olindi', 'Majlis havolasi nusxalandi')
         setTimeout(() => setCopiedHeaderLink(false), 2000)
       }).catch(() => { })
     }
