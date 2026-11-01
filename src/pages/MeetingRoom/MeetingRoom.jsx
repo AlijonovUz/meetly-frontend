@@ -3430,27 +3430,6 @@ export default function MeetingRoom() {
     (typeof meetingDetails?.project?.manager === 'number' || typeof meetingDetails?.project?.manager === 'string' ? meetingDetails.project.manager : null)
   )
 
-  const isProjectManager = Boolean(
-    user?.id &&
-    projectManagerId &&
-    String(user.id) === String(projectManagerId)
-  )
-
-  const isAdminOrSuperadmin = Boolean(
-    user?.is_superuser ||
-    user?.is_staff ||
-    user?.role === 'admin' ||
-    user?.role === 'superadmin' ||
-    user?.active_role === 'admin' ||
-    user?.active_role === 'superadmin' ||
-    user?.roles?.includes?.('admin') ||
-    user?.roles?.includes?.('superadmin')
-  )
-
-  // Ishtirokchini qabul qilish / rad etish huquqi:
-  // 1) Yig'ilish tashkilotchisi (organizer)
-  // 2) Admin va Superadminlar
-  // 3) Loyiha menejeri (agar loyiha bo'yicha yig'ilish bo'lsa)
   const canAdmitParticipants = Boolean(isLocalHost)
 
   useEffect(() => {
