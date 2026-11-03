@@ -236,12 +236,28 @@ export default function ParticipantsDrawer({
                       <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
                         {/* Hand Raised indicator */}
                         {p.hasHandRaised && (
-                          <span
-                            className="w-7 h-7 flex items-center justify-center rounded-full bg-[#3B59BA] dark:bg-[#344879] text-white shadow-xs animate-in zoom-in-75 duration-200"
-                            title="Qo'l ko'targan"
-                          >
-                            <HugeiconsIcon icon={HandIcon} size={15} strokeWidth={2} />
-                          </span>
+                          isLocalHost && !isMe ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!p.isMicEnabled) {
+                                  onAskUnmuteParticipant && onAskUnmuteParticipant(p.identity)
+                                }
+                              }}
+                              className="h-7 px-2.5 flex items-center gap-1.5 rounded-full bg-[#3B59BA] hover:bg-[#324D9E] text-white text-[11px] font-semibold shadow-xs animate-in zoom-in-75 duration-200 cursor-pointer active:scale-95"
+                              title="So'z berish (mikrofon yoqishni so'rash)"
+                            >
+                              <HugeiconsIcon icon={HandIcon} size={13} strokeWidth={2.2} />
+                              <span>So'z berish</span>
+                            </button>
+                          ) : (
+                            <span
+                              className="w-7 h-7 flex items-center justify-center rounded-full bg-[#3B59BA] dark:bg-[#344879] text-white shadow-xs animate-in zoom-in-75 duration-200"
+                              title="Qo'l ko'targan"
+                            >
+                              <HugeiconsIcon icon={HandIcon} size={15} strokeWidth={2} />
+                            </span>
+                          )
                         )}
 
                       {/* Microphone control / indicator */}
@@ -373,7 +389,7 @@ export default function ParticipantsDrawer({
                         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer text-left"
                       >
                         <HugeiconsIcon icon={p.isMicEnabled ? Mic01Icon : MicOff01Icon} size={17} strokeWidth={2} className="text-slate-500 dark:text-slate-400 shrink-0" />
-                        <span>{p.isMicEnabled ? "Mikrofonni o'chirish" : "Mikrofonni yoqishni so'rash"}</span>
+                        <span>{p.isMicEnabled ? "Mikrofonni o'chirish" : (p.hasHandRaised ? "So'z berish (mikrofon yoqishni so'rash)" : "Mikrofonni yoqishni so'rash")}</span>
                       </button>
 
                       {/* Item 2: Kamerani o'chirish / yoqish */}

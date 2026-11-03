@@ -511,6 +511,19 @@ export default function MeetingRoom() {
     isCameraEnabledRef.current = isCameraEnabled
   }, [isCameraEnabled])
 
+  const [isMicLockedByHost, setIsMicLockedByHost] = useState(false)
+  const [isCameraLockedByHost, setIsCameraLockedByHost] = useState(false)
+  const isMicLockedByHostRef = useRef(false)
+  const isCameraLockedByHostRef = useRef(false)
+
+  useEffect(() => {
+    isMicLockedByHostRef.current = isMicLockedByHost
+  }, [isMicLockedByHost])
+
+  useEffect(() => {
+    isCameraLockedByHostRef.current = isCameraLockedByHost
+  }, [isCameraLockedByHost])
+
   const [isScreenSharing, setIsScreenSharing] = useState(false)
   const [localScreenTrack, setLocalScreenTrack] = useState(null)
   const [screenShareVersion, setScreenShareVersion] = useState(0)
@@ -554,7 +567,7 @@ export default function MeetingRoom() {
   const handleLeaveMeetingRef = useRef(null)
 
   useEffect(() => {
-    const isExitState = waitingState === 'ended' || waitingState === 'left' || waitingState === 'kicked'
+    const isExitState = waitingState === 'ended' || waitingState === 'left' || waitingState === 'kicked' || waitingState === 'room_full'
     if (!isExitState) {
       setRedirectCountdown(60)
       return
@@ -1102,6 +1115,13 @@ export default function MeetingRoom() {
           return
         }
 
+        if (msg.is_full) {
+          setIsJoining(false)
+          setWaitingState('room_full')
+          toast.warning("Yig'ilish to'lgan", "Yig'ilishda maksimal ishtirokchilar soniga (50 ta) yetildi.")
+          break
+        }
+
         // Direct token provision in meeting_state (MEETINGS.md section 4.2)
         if (msg.token && msg.server_url && (msg.is_host || msg.is_approved || (!msg.requires_approval && msg.allow_join_before_host) || (!msg.requires_approval && msg.organizer_joined))) {
           setIsJoining(false)
@@ -1248,6 +1268,10 @@ export default function MeetingRoom() {
             setWaitingState('rejected')
             setRejectedMessage(msg.message || "Tashkilotchi yig'ilishga kirishingizni rad etdi.")
           }
+        } else if (msg.status === 'room_full') {
+          setIsJoining(false)
+          setWaitingState('room_full')
+          toast.warning("Yig'ilish to'lgan", msg.message || "Yig'ilishda maksimal ishtirokchilar soniga (50 ta) yetildi.")
         }
         break
       }
@@ -1267,6 +1291,9 @@ export default function MeetingRoom() {
           setWaitingState('waiting_organizer')
         } else if (msg.status === 'kicked') {
           setWaitingState('kicked')
+        } else if (msg.status === 'room_full') {
+          setWaitingState('room_full')
+          toast.warning("Yig'ilish to'lgan", msg.message || "Yig'ilishda maksimal ishtirokchilar soniga (50 ta) yetildi.")
         }
         break
       }
@@ -1438,6 +1465,8 @@ export default function MeetingRoom() {
             } catch {}
             setIsMicEnabled(false)
             isMicEnabledRef.current = false
+            setIsMicLockedByHost(true)
+            isMicLockedByHostRef.current = true
             notifyMicMutedByHost()
           } else if (msg.track_source === 'camera' && msg.muted) {
             try {
@@ -1445,6 +1474,8 @@ export default function MeetingRoom() {
             } catch {}
             setIsCameraEnabled(false)
             isCameraEnabledRef.current = false
+            setIsCameraLockedByHost(true)
+            isCameraLockedByHostRef.current = true
             notifyCameraTurnedOffByHost()
           }
         } else if (msg.target_identity) {
@@ -2603,6 +2634,8 @@ export default function MeetingRoom() {
             if (decoded.targetUserId === 'ALL' && isLocalHostRef.current) {
               return
             }
+            setIsMicLockedByHost(true)
+            isMicLockedByHostRef.current = true
             if (isMicEnabledRef.current) {
               if (room.localParticipant) {
                 const micPub = room.localParticipant.getTrackPublication(Track.Source.Microphone)
@@ -2624,6 +2657,8 @@ export default function MeetingRoom() {
             if (decoded.targetUserId === 'ALL' && isLocalHostRef.current) {
               return
             }
+            setIsCameraLockedByHost(true)
+            isCameraLockedByHostRef.current = true
             if (isCameraEnabledRef.current) {
               if (room.localParticipant) {
                 const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera)
@@ -2818,6 +2853,10 @@ export default function MeetingRoom() {
 
   // 4. In-Room Collaboration Handlers
   const handleToggleMic = async () => {
+    if (!isMicEnabled && isMicLockedByHostRef.current) {
+      toast.info("Mikrofon o'chirilgan", "Tashkilotchi mikrofoningizni o'chirib qo'ygan. Gapirish uchun qo'l ko'taring.")
+      return
+    }
     const next = !isMicEnabled
     setIsMicEnabled(next)
     if (roomRef.current?.localParticipant) {
@@ -2842,6 +2881,10 @@ export default function MeetingRoom() {
   }
 
   const handleToggleCamera = async () => {
+    if (!isCameraEnabled && isCameraLockedByHostRef.current) {
+      toast.info("Kamera o'chirilgan", "Tashkilotchi kamerangizni o'chirib qo'ygan. Yoqish uchun qo'l ko'taring.")
+      return
+    }
     const next = !isCameraEnabled
     setIsCameraEnabled(next)
     if (roomRef.current?.localParticipant) {
@@ -3909,6 +3952,50 @@ export default function MeetingRoom() {
     )
   }
 
+  if (waitingState === 'room_full') {
+    const meetingTitle = meetingDetails?.title || meetingState?.title || "Yig'ilish"
+
+    return (
+      <div className="fixed inset-0 w-full h-full bg-[#F8FAFC] dark:bg-[#0B0D11] text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 select-none z-50 transition-colors animate-in fade-in duration-300 font-['Manrope',sans-serif]">
+        <AutoRedirectCountdown timeLeft={redirectCountdown} total={60} />
+        <div className="text-center max-w-lg w-full my-auto flex flex-col items-center animate-in zoom-in-95 duration-200 px-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Yig'ilish to'lgan
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2.5 mb-7 text-center max-w-md leading-relaxed font-medium">
+            «{meetingTitle}» yig'ilishida maksimal ishtirokchilar soniga (50 ta) yetildi. Ishtirokchilardan biri chiqib ketgach qayta urinib ko'rishingiz mumkin.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                hasClickedJoinRef.current = false
+                setIsJoining(false)
+                setWaitingState('lobby')
+                setNetworkStatus('online')
+              }}
+              className="px-5 py-2.5 rounded-xl bg-[#3B59BA] hover:bg-[#324D9E] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
+            >
+              <HugeiconsIcon icon={Refresh04Icon} size={17} strokeWidth={2.2} />
+              <span>Qayta urinish</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                clearStoredChatMessages(meetingId)
+                navigate('/')
+              }}
+              className="px-5 py-2.5 rounded-xl bg-[#EDF2F7] dark:bg-[#1A202C] hover:bg-[#E2E8F0] dark:hover:bg-[#2D3748] text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shadow-2xs"
+            >
+              <HugeiconsIcon icon={Home04Icon} size={17} strokeWidth={2.2} />
+              <span>Bosh sahifaga</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (waitingState === 'kicked') {
     const meetingTitle = meetingDetails?.title || meetingState?.title || "Meet nomi"
 
@@ -4682,8 +4769,13 @@ export default function MeetingRoom() {
                   type="button"
                   onClick={async () => {
                     try {
+                      isMicLockedByHostRef.current = false
+                      setIsMicLockedByHost(false)
                       if (!isMicEnabled) {
                         await handleToggleMic()
+                      }
+                      if (isHandRaised) {
+                        handleToggleHandRaise()
                       }
 
                       // 1. Send over WebSocket (MEETINGS.md section 4.3 (8))
@@ -4802,6 +4894,8 @@ export default function MeetingRoom() {
                   type="button"
                   onClick={async () => {
                     try {
+                      isCameraLockedByHostRef.current = false
+                      setIsCameraLockedByHost(false)
                       if (!isCameraEnabled) {
                         await handleToggleCamera()
                       }
