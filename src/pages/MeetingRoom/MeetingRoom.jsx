@@ -1110,6 +1110,53 @@ export default function MeetingRoom() {
           })
         }
 
+        if (Array.isArray(msg.knock_requests) && msg.knock_requests.length > 0) {
+          const newRequests = []
+          msg.knock_requests.forEach(req => {
+            const resolvedName = req.full_name || req.name || req.username || req.email || req.phone_number || ''
+            const reqUserId = req.user_id || req.guest_id || req.id
+            if (reqUserId) {
+              setPeerProfiles(prev => ({
+                ...prev,
+                [String(reqUserId)]: {
+                  id: reqUserId,
+                  name: resolvedName,
+                  full_name: req.full_name,
+                  email: req.email,
+                  phone_number: req.phone_number,
+                  avatar: req.avatar,
+                  role: 'guest',
+                }
+              }))
+              newRequests.push({
+                user_id: reqUserId,
+                username: resolvedName || req.username,
+                full_name: req.full_name || resolvedName,
+                name: resolvedName,
+                email: req.email,
+                phone_number: req.phone_number,
+                avatar: req.avatar
+              })
+            }
+          })
+          if (newRequests.length > 0) {
+            setKnockRequests(prev => {
+              const existingIds = new Set(prev.map(k => String(k.user_id)))
+              const merged = [...prev]
+              newRequests.forEach(r => {
+                if (!existingIds.has(String(r.user_id))) {
+                  merged.push(r)
+                }
+              })
+              return merged
+            })
+            if (msg.is_host) {
+              playKnockRequestSound()
+              triggerInRoomAlert('bell', `${newRequests.length} ta ishtirokchi kirish uchun tasdiqlash kutmoqda`, 'knock')
+            }
+          }
+        }
+
         // Agar foydalanuvchi hali Lobby sahifasida bo'lsa va "Kirish" tugmasini bosmagan bo'lsa, kutiladi
         if (!hasClickedJoinRef.current) {
           return
@@ -1196,6 +1243,8 @@ export default function MeetingRoom() {
               device_name: 'Web Browser'
             })
           }
+        } else if (waitingState === 'waiting_approval') {
+          sendWs({ action: 'ask_to_join' })
         }
         break
       }
