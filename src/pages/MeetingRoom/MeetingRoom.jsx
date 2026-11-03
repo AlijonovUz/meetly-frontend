@@ -839,6 +839,10 @@ export default function MeetingRoom() {
 
   // Complete hardware toggle for Camera in WaitingRoom (stops tracks / restarts getUserMedia)
   const handleToggleLobbyCamera = useCallback(async () => {
+    if (!isCameraEnabledRef.current && isCameraLockedByHostRef.current) {
+      toast.info("Kamera o'chirilgan", "Tashkilotchi kamerangizni o'chirib qo'ygan. Gapirish uchun qo'l ko'taring.")
+      return
+    }
     const stream = localStream || previewStreamRef.current
     const activeVideoTracks = stream ? stream.getVideoTracks() : []
     const hasLiveVideo = activeVideoTracks.some(t => t.readyState === 'live')
@@ -895,6 +899,10 @@ export default function MeetingRoom() {
 
   // Complete hardware toggle for Mic in WaitingRoom (stops tracks / restarts getUserMedia)
   const handleToggleLobbyMic = useCallback(async () => {
+    if (!isMicEnabledRef.current && isMicLockedByHostRef.current) {
+      toast.info("Mikrofon o'chirilgan", "Tashkilotchi mikrofoningizni o'chirib qo'ygan. Gapirish uchun qo'l ko'taring.")
+      return
+    }
     const stream = localStream || previewStreamRef.current
     const activeAudioTracks = stream ? stream.getAudioTracks() : []
     const hasLiveAudio = activeAudioTracks.some(t => t.readyState === 'live')
@@ -1157,6 +1165,23 @@ export default function MeetingRoom() {
           }
         }
 
+        if (msg.is_mic_locked !== undefined) {
+          setIsMicLockedByHost(Boolean(msg.is_mic_locked))
+          isMicLockedByHostRef.current = Boolean(msg.is_mic_locked)
+          if (msg.is_mic_locked) {
+            setIsMicEnabled(false)
+            isMicEnabledRef.current = false
+          }
+        }
+        if (msg.is_camera_locked !== undefined) {
+          setIsCameraLockedByHost(Boolean(msg.is_camera_locked))
+          isCameraLockedByHostRef.current = Boolean(msg.is_camera_locked)
+          if (msg.is_camera_locked) {
+            setIsCameraEnabled(false)
+            isCameraEnabledRef.current = false
+          }
+        }
+
         // Agar foydalanuvchi hali Lobby sahifasida bo'lsa va "Kirish" tugmasini bosmagan bo'lsa, kutiladi
         if (!hasClickedJoinRef.current) {
           return
@@ -1298,6 +1323,22 @@ export default function MeetingRoom() {
         }
         if (msg.status === 'approved' || msg.decision === 'approve') {
           setIsJoining(false)
+          if (msg.is_mic_locked !== undefined) {
+            setIsMicLockedByHost(Boolean(msg.is_mic_locked))
+            isMicLockedByHostRef.current = Boolean(msg.is_mic_locked)
+            if (msg.is_mic_locked) {
+              setIsMicEnabled(false)
+              isMicEnabledRef.current = false
+            }
+          }
+          if (msg.is_camera_locked !== undefined) {
+            setIsCameraLockedByHost(Boolean(msg.is_camera_locked))
+            isCameraLockedByHostRef.current = Boolean(msg.is_camera_locked)
+            if (msg.is_camera_locked) {
+              setIsCameraEnabled(false)
+              isCameraEnabledRef.current = false
+            }
+          }
           if (!hasClickedJoinRef.current) {
             return
           }
@@ -1327,6 +1368,22 @@ export default function MeetingRoom() {
 
       case 'token_response': {
         setIsJoining(false)
+        if (msg.is_mic_locked !== undefined) {
+          setIsMicLockedByHost(Boolean(msg.is_mic_locked))
+          isMicLockedByHostRef.current = Boolean(msg.is_mic_locked)
+          if (msg.is_mic_locked) {
+            setIsMicEnabled(false)
+            isMicEnabledRef.current = false
+          }
+        }
+        if (msg.is_camera_locked !== undefined) {
+          setIsCameraLockedByHost(Boolean(msg.is_camera_locked))
+          isCameraLockedByHostRef.current = Boolean(msg.is_camera_locked)
+          if (msg.is_camera_locked) {
+            setIsCameraEnabled(false)
+            isCameraEnabledRef.current = false
+          }
+        }
         if (!hasClickedJoinRef.current) {
           console.warn("token_response keldi, lekin foydalanuvchi hali Lobby'da! Ulanish to'xtatildi.")
           return
@@ -2132,8 +2189,8 @@ export default function MeetingRoom() {
       }
 
       // Enable or disable local mic & camera strictly respecting user choices from waiting room!
-      const initialCam = isCameraEnabledRef.current
-      const initialMic = isMicEnabledRef.current
+      const initialCam = isCameraLockedByHostRef.current ? false : isCameraEnabledRef.current
+      const initialMic = isMicLockedByHostRef.current ? false : isMicEnabledRef.current
 
       try {
         if (initialCam) {
